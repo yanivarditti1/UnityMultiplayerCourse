@@ -98,6 +98,18 @@ public class LobbyManager : MonoBehaviour, INetworkRunnerCallbacks
             return;
         }
 
+        if (string.IsNullOrEmpty(roomName))
+        {
+            OnRoomCreateFailed?.Invoke("Invalid room name. Must not be empty");
+            return;
+        }
+
+        if (maxPlayers > 10 || maxPlayers < 2)
+        {
+            OnRoomCreateFailed?.Invoke("Maximum players must be between 2 and 10");
+            return;
+        }
+
         var args = new StartGameArgs()
         {
             GameMode = GameMode.Host,
@@ -109,6 +121,14 @@ public class LobbyManager : MonoBehaviour, INetworkRunnerCallbacks
 
         if (result.Ok)
         {
+            if (!Runner.IsServer)
+            {
+                Debug.LogWarning($"[LobbyManager] Room '{roomName}'already exists.");
+                await Runner.Shutdown(false);
+                OnRoomCreateFailed?.Invoke($"Room '{roomName}'already exists.");
+                return;
+            }
+            
             IsInRoom = true;
             _roomPlayers.Clear();
             _roomPlayers.Add(Runner.LocalPlayer, null);
@@ -130,6 +150,19 @@ public class LobbyManager : MonoBehaviour, INetworkRunnerCallbacks
             OnRoomJoinFailed?.Invoke("Network runner is not initialized");
             return; 
         }
+        
+        var session = _sessionsList?.Find(s => s.Name == roomName);
+        if (session == null)
+        {
+            OnRoomJoinFailed?.Invoke($"Room '{roomName}' not found");
+            return;
+        }
+
+        if (session.PlayerCount >= session.MaxPlayers)
+        {
+            OnRoomJoinFailed?.Invoke($"Room '{roomName}' is full");
+            return;
+        }
 
         var args = new StartGameArgs()
         {
@@ -147,7 +180,7 @@ public class LobbyManager : MonoBehaviour, INetworkRunnerCallbacks
         }
         else
         {
-            Debug.LogWarning($"[LobbyManager] Failed to join room: '{roomName}'");
+            Debug.LogWarning($"[Lobby Manager] Failed to join room: '{roomName}'");
             OnRoomJoinFailed?.Invoke(result.ShutdownReason.ToString());
         }
     }
