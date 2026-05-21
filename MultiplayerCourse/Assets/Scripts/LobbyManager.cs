@@ -4,7 +4,6 @@ using System.Threading.Tasks;
 using Fusion;
 using Fusion.Sockets;
 using UnityEngine;
-using UnityEngine.Events;
 
 public class LobbyManager : MonoBehaviour, INetworkRunnerCallbacks
 {
@@ -14,20 +13,19 @@ public class LobbyManager : MonoBehaviour, INetworkRunnerCallbacks
     [Header("Network")]
     [SerializeField] private NetworkRunner _networkRunner;
     
-    //events
-    [Header("Lobby Events")] 
-    public UnityEvent OnLobbyJoined;
-    public UnityEvent<string> OnLobbyJoinFailed; //string = reason
-    public UnityEvent OnLobbyLeave;
-    public UnityEvent<List<SessionInfo>> OnSessionListRefreshed;
+    //lobby events
+    public event Action OnLobbyJoined;
+    public event Action<string> OnLobbyJoinFailed; //string = reason
+    public event Action OnLobbyLeave;
+    public event Action<List<SessionInfo>> OnSessionListRefreshed;
     
-    [Header("Room Events")] 
-    public UnityEvent<SessionInfo> OnRoomCreated;
-    public UnityEvent<string> OnRoomCreateFailed;
-    public UnityEvent OnRoomJoined;
-    public UnityEvent<string> OnRoomJoinFailed;
-    public UnityEvent OnRoomLeft;
-    public UnityEvent<List<PlayerRef>> OnRoomListUpdate;
+    //room events
+    public event Action <SessionInfo> OnRoomCreated;
+    public event Action <string> OnRoomCreateFailed;
+    public event Action  OnRoomJoined;
+    public event Action <string> OnRoomJoinFailed;
+    public event Action  OnRoomLeft;
+    public event Action <List<PlayerRef>> OnRoomListUpdate;
     
     //lobby state
     public NetworkRunner Runner { get; private set; }

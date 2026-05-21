@@ -59,35 +59,34 @@ public class LobbyUiManager : MonoBehaviour
         var manager = LobbyManager.Instance;
         if (manager == null) return;
 
-        manager.OnLobbyJoined.AddListener(HandleLobbyJoined);
-        manager.OnLobbyJoinFailed.AddListener(HandleLobbyJoinFailed);
-        manager.OnLobbyLeave.AddListener(HandleLobbyLeave);
-        manager.OnSessionListRefreshed.AddListener(HandleSessionListRefreshed);
-        manager.OnRoomCreated.AddListener(HandleRoomCreated);
-        manager.OnRoomCreateFailed.AddListener(HandleRoomCreateFailed);
-        manager.OnRoomJoined.AddListener(HandleRoomJoined);
-        manager.OnRoomJoinFailed.AddListener(HandleRoomJoinFailed);
-        manager.OnRoomLeft.AddListener(HandleRoomLeft);
-        manager.OnRoomListUpdate.AddListener(HandleRoomListUpdate);
+        manager.OnLobbyJoined           += HandleLobbyJoined;
+        manager.OnLobbyJoinFailed       += HandleLobbyJoinFailed;
+        manager.OnLobbyLeave            += HandleLobbyLeave;
+        manager.OnSessionListRefreshed  += HandleSessionListRefreshed;
+        manager.OnRoomCreated           += HandleRoomCreated;
+        manager.OnRoomCreateFailed      += HandleRoomCreateFailed;
+        manager.OnRoomJoined            += HandleRoomJoined;
+        manager.OnRoomJoinFailed        += HandleRoomJoinFailed;
+        manager.OnRoomLeft              += HandleRoomLeft;
+        manager.OnRoomListUpdate        += HandleRoomListUpdate;
     }
 
     private void UnsubscribeFromManager()
     {
         var manager = LobbyManager.Instance;
         if (manager == null) return;
-        
-        manager.OnLobbyJoined.RemoveListener(HandleLobbyJoined);
-        manager.OnLobbyJoinFailed.RemoveListener(HandleLobbyJoinFailed);
-        manager.OnLobbyLeave.RemoveListener(HandleLobbyLeave);
-        manager.OnSessionListRefreshed.RemoveListener(HandleSessionListRefreshed);
-        manager.OnRoomCreated.RemoveListener(HandleRoomCreated);
-        manager.OnRoomCreateFailed.RemoveListener(HandleRoomCreateFailed);
-        manager.OnRoomJoined.RemoveListener(HandleRoomJoined);
-        manager.OnRoomJoinFailed.RemoveListener(HandleRoomJoinFailed);
-        manager.OnRoomLeft.RemoveListener(HandleRoomLeft);
-        manager.OnRoomListUpdate.RemoveListener(HandleRoomListUpdate);
+
+        manager.OnLobbyJoined           -= HandleLobbyJoined;
+        manager.OnLobbyJoinFailed       -= HandleLobbyJoinFailed;
+        manager.OnLobbyLeave            -= HandleLobbyLeave;
+        manager.OnSessionListRefreshed  -= HandleSessionListRefreshed;
+        manager.OnRoomCreated           -= HandleRoomCreated;
+        manager.OnRoomCreateFailed      -= HandleRoomCreateFailed;
+        manager.OnRoomJoined            -= HandleRoomJoined;
+        manager.OnRoomJoinFailed        -= HandleRoomJoinFailed;
+        manager.OnRoomLeft              -= HandleRoomLeft;
+        manager.OnRoomListUpdate        -= HandleRoomListUpdate;
     }
-    
     #endregion
     
     #region ButtonWiring
