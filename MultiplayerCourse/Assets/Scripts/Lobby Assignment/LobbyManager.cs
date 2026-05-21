@@ -4,7 +4,6 @@ using System.Threading.Tasks;
 using Fusion;
 using Fusion.Sockets;
 using UnityEngine;
-using UnityEngine.Events;
 
 public class LobbyManager : MonoBehaviour, INetworkRunnerCallbacks
 {
@@ -14,25 +13,25 @@ public class LobbyManager : MonoBehaviour, INetworkRunnerCallbacks
     [Header("Network")]
     [SerializeField] private NetworkRunner _networkRunner;
     
-    //events
-    [Header("Lobby Events")] 
-    public UnityEvent OnLobbyJoined;
-    public UnityEvent<string> OnLobbyJoinFailed; //string = reason
-    public UnityEvent OnLobbyLeave;
-    public UnityEvent<List<SessionInfo>> OnSessionListRefreshed;
+    //lobby events
+    public event Action OnLobbyJoined;
+    public event Action<string> OnLobbyJoinFailed; //string = reason
+    public event Action OnLobbyLeave;
+    public event Action<List<SessionInfo>> OnSessionListRefreshed;
     
-    [Header("Room Events")] 
-    public UnityEvent<SessionInfo> OnRoomCreated;
-    public UnityEvent<string> OnRoomCreateFailed;
-    public UnityEvent OnRoomJoined;
-    public UnityEvent<string> OnRoomJoinFailed;
-    public UnityEvent OnRoomLeft;
-    public UnityEvent<List<PlayerRef>> OnRoomListUpdate;
+    //room events
+    public event Action <SessionInfo> OnRoomCreated;
+    public event Action<string> OnRoomCreateFailed;
+    public event Action<string>  OnRoomJoined;
+    public event Action<string> OnRoomJoinFailed;
+    public event Action  OnRoomLeft;
+    public event Action<List<PlayerRef>> OnRoomListUpdate;
     
     //lobby state
     public NetworkRunner Runner { get; private set; }
     public bool IsInLobby { get; private set; }
     public bool IsInRoom { get; private set; }
+    private string _currentLobbyId = ""; 
     
     //player and session tracking
     private readonly Dictionary<PlayerRef, NetworkObject> _lobbyPlayers = new();
@@ -59,8 +58,20 @@ public class LobbyManager : MonoBehaviour, INetworkRunnerCallbacks
     //join lobby by name, leave empty for default lobby
     public async void JoinLobby(string lobbyID = "")
     {
-        if (Runner == null) Runner = await CreateRunner();
-        
+        if (Runner == null)
+        {
+            try
+            {
+                Runner = await CreateRunner();
+            }
+            catch (Exception e)
+            {
+                Debug.LogError($"[LobbyManager] Failed to create runner: {e.Message}");
+                OnLobbyJoinFailed?.Invoke("Failed to initialize network runner");
+                return;
+            }
+        }
+
         var result = await Runner.JoinSessionLobby(
             string.IsNullOrEmpty(lobbyID) ? SessionLobby.ClientServer : SessionLobby.Custom,
             string.IsNullOrEmpty(lobbyID) ? null : lobbyID);
@@ -68,8 +79,14 @@ public class LobbyManager : MonoBehaviour, INetworkRunnerCallbacks
         if (result.Ok)
         {
             IsInLobby = true;
+            _currentLobbyId = lobbyID;
             Debug.Log($"[LobbyManager] Joined lobby: '{lobbyID}'");
             OnLobbyJoined?.Invoke();
+
+            if (_sessionsList != null && _sessionsList.Count > 0)
+            {
+                OnSessionListRefreshed?.Invoke(new List<SessionInfo>(_sessionsList));
+            }
         }
         else
         {
@@ -78,6 +95,17 @@ public class LobbyManager : MonoBehaviour, INetworkRunnerCallbacks
             OnLobbyJoinFailed?.Invoke(result.ShutdownReason.ToString());
         }
     }
+
+    public async void LeaveLobby()
+    {
+        if (Runner == null || !IsInLobby) return;
+        
+        await Runner.Shutdown(false);
+        IsInLobby = false;
+        _currentLobbyId = "";
+        _lobbyPlayers.Clear();
+        OnLobbyLeave?.Invoke();
+    }
     
     //create new room with custom name and player cap
     public async void CreateRoom(string roomName, int maxPlayers)
@@ -85,6 +113,18 @@ public class LobbyManager : MonoBehaviour, INetworkRunnerCallbacks
         if (Runner == null)
         {
             OnRoomCreateFailed?.Invoke("No network runner available");
+            return;
+        }
+
+        if (string.IsNullOrEmpty(roomName))
+        {
+            OnRoomCreateFailed?.Invoke("Invalid room name. Must not be empty");
+            return;
+        }
+
+        if (maxPlayers > 10 || maxPlayers < 2)
+        {
+            OnRoomCreateFailed?.Invoke("Maximum players must be between 2 and 10");
             return;
         }
 
@@ -99,6 +139,14 @@ public class LobbyManager : MonoBehaviour, INetworkRunnerCallbacks
 
         if (result.Ok)
         {
+            if (!Runner.IsServer)
+            {
+                Debug.LogWarning($"[LobbyManager] Room '{roomName}'already exists.");
+                await Runner.Shutdown(false);
+                OnRoomCreateFailed?.Invoke($"Room '{roomName}'already exists.");
+                return;
+            }
+            
             IsInRoom = true;
             _roomPlayers.Clear();
             _roomPlayers.Add(Runner.LocalPlayer, null);
@@ -120,6 +168,19 @@ public class LobbyManager : MonoBehaviour, INetworkRunnerCallbacks
             OnRoomJoinFailed?.Invoke("Network runner is not initialized");
             return; 
         }
+        
+        var session = _sessionsList?.Find(s => s.Name == roomName);
+        if (session == null)
+        {
+            OnRoomJoinFailed?.Invoke($"Room '{roomName}' not found");
+            return;
+        }
+
+        if (session.PlayerCount >= session.MaxPlayers)
+        {
+            OnRoomJoinFailed?.Invoke($"Room '{roomName}' is full");
+            return;
+        }
 
         var args = new StartGameArgs()
         {
@@ -133,11 +194,11 @@ public class LobbyManager : MonoBehaviour, INetworkRunnerCallbacks
         {
             IsInRoom = true;
             Debug.Log($"[LobbyManager] Joined room: '{roomName}'");
-            OnRoomJoined?.Invoke();
+            OnRoomJoined?.Invoke(Runner.SessionInfo.Name);
         }
         else
         {
-            Debug.LogWarning($"[LobbyManager] Failed to join room: '{roomName}'");
+            Debug.LogWarning($"[Lobby Manager] Failed to join room: '{roomName}'");
             OnRoomJoinFailed?.Invoke(result.ShutdownReason.ToString());
         }
     }
@@ -151,7 +212,7 @@ public class LobbyManager : MonoBehaviour, INetworkRunnerCallbacks
         _roomPlayers.Clear();
         OnRoomLeft?.Invoke();
         
-        JoinLobby();
+        JoinLobby(_currentLobbyId);
     }
     
     #endregion
@@ -189,6 +250,7 @@ public class LobbyManager : MonoBehaviour, INetworkRunnerCallbacks
         IsInLobby = false;
         IsInRoom = false;
         _roomPlayers.Clear();
+        _sessionsList = null;
         Runner = null;
         Debug.Log($"[LobbyManager] LobbyManager shutdown. Reason: {shutdownReason}");
         OnLobbyLeave?.Invoke();

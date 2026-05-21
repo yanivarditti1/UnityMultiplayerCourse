@@ -26,6 +26,7 @@ public class LobbyUiManager : MonoBehaviour
     [SerializeField] private TMP_InputField _maxPlayersInputField;
     [SerializeField] private Button _createRoomButton;
     [SerializeField] private Button _joinRoomButton;
+    [SerializeField] private Button _leaveLobbyButton;
     [SerializeField] private TextMeshProUGUI _lobbyStatusText;
     
     //room panel
@@ -33,6 +34,7 @@ public class LobbyUiManager : MonoBehaviour
     [SerializeField] private Transform _playerListContainer;
     [SerializeField] private GameObject _playerEntryPrefab;
     [SerializeField] private Button _leaveRoomButton;
+    [SerializeField] private TextMeshProUGUI _roomNameText;
     [SerializeField] private TextMeshProUGUI _roomStatusText;
     
     //state
@@ -59,35 +61,34 @@ public class LobbyUiManager : MonoBehaviour
         var manager = LobbyManager.Instance;
         if (manager == null) return;
 
-        manager.OnLobbyJoined.AddListener(HandleLobbyJoined);
-        manager.OnLobbyJoinFailed.AddListener(HandleLobbyJoinFailed);
-        manager.OnLobbyLeave.AddListener(HandleLobbyLeave);
-        manager.OnSessionListRefreshed.AddListener(HandleSessionListRefreshed);
-        manager.OnRoomCreated.AddListener(HandleRoomCreated);
-        manager.OnRoomCreateFailed.AddListener(HandleRoomCreateFailed);
-        manager.OnRoomJoined.AddListener(HandleRoomJoined);
-        manager.OnRoomJoinFailed.AddListener(HandleRoomJoinFailed);
-        manager.OnRoomLeft.AddListener(HandleRoomLeft);
-        manager.OnRoomListUpdate.AddListener(HandleRoomListUpdate);
+        manager.OnLobbyJoined           += HandleLobbyJoined;
+        manager.OnLobbyJoinFailed       += HandleLobbyJoinFailed;
+        manager.OnLobbyLeave            += HandleLobbyLeave;
+        manager.OnSessionListRefreshed  += HandleSessionListRefreshed;
+        manager.OnRoomCreated           += HandleRoomCreated;
+        manager.OnRoomCreateFailed      += HandleRoomCreateFailed;
+        manager.OnRoomJoined            += HandleRoomJoined;
+        manager.OnRoomJoinFailed        += HandleRoomJoinFailed;
+        manager.OnRoomLeft              += HandleRoomLeft;
+        manager.OnRoomListUpdate        += HandleRoomListUpdate;
     }
 
     private void UnsubscribeFromManager()
     {
         var manager = LobbyManager.Instance;
         if (manager == null) return;
-        
-        manager.OnLobbyJoined.RemoveListener(HandleLobbyJoined);
-        manager.OnLobbyJoinFailed.RemoveListener(HandleLobbyJoinFailed);
-        manager.OnLobbyLeave.RemoveListener(HandleLobbyLeave);
-        manager.OnSessionListRefreshed.RemoveListener(HandleSessionListRefreshed);
-        manager.OnRoomCreated.RemoveListener(HandleRoomCreated);
-        manager.OnRoomCreateFailed.RemoveListener(HandleRoomCreateFailed);
-        manager.OnRoomJoined.RemoveListener(HandleRoomJoined);
-        manager.OnRoomJoinFailed.RemoveListener(HandleRoomJoinFailed);
-        manager.OnRoomLeft.RemoveListener(HandleRoomLeft);
-        manager.OnRoomListUpdate.RemoveListener(HandleRoomListUpdate);
+
+        manager.OnLobbyJoined           -= HandleLobbyJoined;
+        manager.OnLobbyJoinFailed       -= HandleLobbyJoinFailed;
+        manager.OnLobbyLeave            -= HandleLobbyLeave;
+        manager.OnSessionListRefreshed  -= HandleSessionListRefreshed;
+        manager.OnRoomCreated           -= HandleRoomCreated;
+        manager.OnRoomCreateFailed      -= HandleRoomCreateFailed;
+        manager.OnRoomJoined            -= HandleRoomJoined;
+        manager.OnRoomJoinFailed        -= HandleRoomJoinFailed;
+        manager.OnRoomLeft              -= HandleRoomLeft;
+        manager.OnRoomListUpdate        -= HandleRoomListUpdate;
     }
-    
     #endregion
     
     #region ButtonWiring
@@ -95,6 +96,7 @@ public class LobbyUiManager : MonoBehaviour
     private void SetupButtonListeners()
     {
         _joinLobbyButton.onClick.AddListener(OnJoinLobbyButtonClicked);
+        _leaveLobbyButton.onClick.AddListener(OnLeaveLobbyClicked);
         _createRoomButton.onClick.AddListener(OnCreateRoomButtonClicked);
         _joinRoomButton.onClick.AddListener(OnJoinRoomButtonClicked);
         _leaveRoomButton.onClick.AddListener(OnLeaveRoomButtonClicked);
@@ -105,6 +107,13 @@ public class LobbyUiManager : MonoBehaviour
         SetConnectButtons(false);
         SetStatus(_connectStatusText, "Joining lobby...");
         LobbyManager.Instance.JoinLobby(_lobbyIdInputField.text.Trim());
+    }
+
+    private void OnLeaveLobbyClicked()
+    {
+        SetLobbyButtons(false);
+        _leaveLobbyButton.interactable = false;
+        LobbyManager.Instance.LeaveLobby();
     }
 
     private void OnCreateRoomButtonClicked()
@@ -155,6 +164,7 @@ public class LobbyUiManager : MonoBehaviour
         SetStatus(_connectStatusText, "");
         ShowLobbyPanel();
         SetLobbyButtons(true);
+        _leaveLobbyButton.interactable = true;
         SetStatus(_lobbyStatusText, "In lobby. Waiting for sessions...");
     }
 
@@ -167,8 +177,11 @@ public class LobbyUiManager : MonoBehaviour
 
     private void HandleLobbyLeave()
     {
-        ShowConnectPanel();
-        SetConnectButtons(true);
+        if (!LobbyManager.Instance.IsInLobby && !LobbyManager.Instance.IsInRoom)
+        {
+            ShowConnectPanel();
+            SetConnectButtons(true);
+        }
     }
     
     private void HandleSessionListRefreshed(List<SessionInfo> sessions)
@@ -202,6 +215,7 @@ public class LobbyUiManager : MonoBehaviour
     private void HandleRoomCreated(SessionInfo info)
     {
         ShowRoomPanel();
+        _roomNameText.text = info.Name;
         SetStatus(_roomStatusText, $"Hosting room: {info.Name} - waiting for players...");
         _leaveRoomButton.interactable = true;
     }
@@ -209,12 +223,13 @@ public class LobbyUiManager : MonoBehaviour
     private void HandleRoomCreateFailed(string reason)
     {
         SetLobbyButtons(true);
-        SetStatus(_roomStatusText, $"Failed to create room: {reason}");
+        SetStatus(_lobbyStatusText, $"Failed to create room: {reason}");
     }
     
-    private void HandleRoomJoined()
+    private void HandleRoomJoined(string roomName)
     {
         ShowRoomPanel();
+        _roomNameText.text = roomName;
         SetStatus(_roomStatusText, "Joined room");
         _leaveRoomButton.interactable = true;
     }
@@ -222,12 +237,12 @@ public class LobbyUiManager : MonoBehaviour
     private void HandleRoomJoinFailed(string reason)
     {
         SetLobbyButtons(true);
-        SetStatus(_roomStatusText, $"Failed to join room: {reason}");
+        SetStatus(_lobbyStatusText, $"Failed to join room: {reason}");
     }
 
     private void HandleRoomLeft()
     {
-        ShowLobbyPanel();
+        //ShowLobbyPanel();
         SetLobbyButtons(true);
         SetStatus(_roomStatusText, "Left room");
         _leaveRoomButton.interactable = false;
@@ -244,7 +259,8 @@ public class LobbyUiManager : MonoBehaviour
             var label = entry.GetComponentInChildren<TextMeshProUGUI>();
             if (label != null)
             {
-                label.text = $"Player {player.PlayerId}";
+                bool isLocal = player == LobbyManager.Instance.Runner.LocalPlayer;
+                label.text = isLocal ? $"Player {player.PlayerId} (You)" : $"Player {player.PlayerId}";
             }
             _playerEntries.Add(entry);
         }
@@ -295,6 +311,7 @@ public class LobbyUiManager : MonoBehaviour
     private void SetLobbyButtons(bool newEnabled)
     {
         _createRoomButton.interactable = newEnabled;
+        _joinLobbyButton.interactable = newEnabled;
         if (!newEnabled) SetJoinRoomButtonActive(false);
     }
     
