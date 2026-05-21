@@ -57,8 +57,20 @@ public class LobbyManager : MonoBehaviour, INetworkRunnerCallbacks
     //join lobby by name, leave empty for default lobby
     public async void JoinLobby(string lobbyID = "")
     {
-        if (Runner == null) Runner = await CreateRunner();
-        
+        if (Runner == null)
+        {
+            try
+            {
+                Runner = await CreateRunner();
+            }
+            catch (Exception e)
+            {
+                Debug.LogError($"[LobbyManager] Failed to create runner: {e.Message}");
+                OnLobbyJoinFailed?.Invoke("Failed to initialize network runner");
+                return;
+            }
+        }
+
         var result = await Runner.JoinSessionLobby(
             string.IsNullOrEmpty(lobbyID) ? SessionLobby.ClientServer : SessionLobby.Custom,
             string.IsNullOrEmpty(lobbyID) ? null : lobbyID);
