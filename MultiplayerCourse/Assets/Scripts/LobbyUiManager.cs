@@ -243,7 +243,8 @@ public class LobbyUiManager : MonoBehaviour
             var label = entry.GetComponentInChildren<TextMeshProUGUI>();
             if (label != null)
             {
-                label.text = $"Player {player.PlayerId}";
+                bool isLocal = player == LobbyManager.Instance.Runner.LocalPlayer;
+                label.text = isLocal ? $"Player {player.PlayerId} (You)" : $"Player {player.PlayerId}";
             }
             _playerEntries.Add(entry);
         }
