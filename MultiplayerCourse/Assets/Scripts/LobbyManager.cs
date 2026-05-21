@@ -21,16 +21,17 @@ public class LobbyManager : MonoBehaviour, INetworkRunnerCallbacks
     
     //room events
     public event Action <SessionInfo> OnRoomCreated;
-    public event Action <string> OnRoomCreateFailed;
-    public event Action  OnRoomJoined;
-    public event Action <string> OnRoomJoinFailed;
+    public event Action<string> OnRoomCreateFailed;
+    public event Action<string>  OnRoomJoined;
+    public event Action<string> OnRoomJoinFailed;
     public event Action  OnRoomLeft;
-    public event Action <List<PlayerRef>> OnRoomListUpdate;
+    public event Action<List<PlayerRef>> OnRoomListUpdate;
     
     //lobby state
     public NetworkRunner Runner { get; private set; }
     public bool IsInLobby { get; private set; }
     public bool IsInRoom { get; private set; }
+    private string _currentLobbyId = ""; 
     
     //player and session tracking
     private readonly Dictionary<PlayerRef, NetworkObject> _lobbyPlayers = new();
@@ -78,8 +79,14 @@ public class LobbyManager : MonoBehaviour, INetworkRunnerCallbacks
         if (result.Ok)
         {
             IsInLobby = true;
+            _currentLobbyId = lobbyID;
             Debug.Log($"[LobbyManager] Joined lobby: '{lobbyID}'");
             OnLobbyJoined?.Invoke();
+
+            if (_sessionsList != null && _sessionsList.Count > 0)
+            {
+                OnSessionListRefreshed?.Invoke(new List<SessionInfo>(_sessionsList));
+            }
         }
         else
         {
@@ -87,6 +94,17 @@ public class LobbyManager : MonoBehaviour, INetworkRunnerCallbacks
                              $"\nReason: {result.ShutdownReason}");
             OnLobbyJoinFailed?.Invoke(result.ShutdownReason.ToString());
         }
+    }
+
+    public async void LeaveLobby()
+    {
+        if (Runner == null || !IsInLobby) return;
+        
+        await Runner.Shutdown(false);
+        IsInLobby = false;
+        _currentLobbyId = "";
+        _lobbyPlayers.Clear();
+        OnLobbyLeave?.Invoke();
     }
     
     //create new room with custom name and player cap
@@ -176,7 +194,7 @@ public class LobbyManager : MonoBehaviour, INetworkRunnerCallbacks
         {
             IsInRoom = true;
             Debug.Log($"[LobbyManager] Joined room: '{roomName}'");
-            OnRoomJoined?.Invoke();
+            OnRoomJoined?.Invoke(Runner.SessionInfo.Name);
         }
         else
         {
@@ -194,7 +212,7 @@ public class LobbyManager : MonoBehaviour, INetworkRunnerCallbacks
         _roomPlayers.Clear();
         OnRoomLeft?.Invoke();
         
-        JoinLobby();
+        JoinLobby(_currentLobbyId);
     }
     
     #endregion
@@ -232,6 +250,7 @@ public class LobbyManager : MonoBehaviour, INetworkRunnerCallbacks
         IsInLobby = false;
         IsInRoom = false;
         _roomPlayers.Clear();
+        _sessionsList = null;
         Runner = null;
         Debug.Log($"[LobbyManager] LobbyManager shutdown. Reason: {shutdownReason}");
         OnLobbyLeave?.Invoke();
