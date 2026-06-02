@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Fusion;
 using Fusion.Sockets;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class LobbyManager : MonoBehaviour, INetworkRunnerCallbacks
 {
@@ -12,6 +13,7 @@ public class LobbyManager : MonoBehaviour, INetworkRunnerCallbacks
     //inspector refs
     [Header("Network")]
     [SerializeField] private NetworkRunner _networkRunner;
+    [SerializeField] private SceneDataSO _sceneData;
     
     //lobby events
     public event Action OnLobbyJoined;
@@ -26,6 +28,7 @@ public class LobbyManager : MonoBehaviour, INetworkRunnerCallbacks
     public event Action<string> OnRoomJoinFailed;
     public event Action  OnRoomLeft;
     public event Action<List<PlayerRef>> OnRoomListUpdate;
+    public event Action OnMatchStarted;
     
     //lobby state
     public NetworkRunner Runner { get; private set; }
@@ -219,6 +222,23 @@ public class LobbyManager : MonoBehaviour, INetworkRunnerCallbacks
         OnRoomLeft?.Invoke();
         
         JoinLobby(_currentLobbyId);
+    }
+
+    public async void StartMatch()
+    {
+        if (Runner == null || !IsInRoom) return;
+        if (!Runner.IsSharedModeMasterClient) return;
+
+        if (_sceneData == null)
+        {
+            Debug.LogError("[LobbyManager] No scene data set");
+            return;
+        }
+        
+        Debug.Log("[LobbyManager] Starting match");
+        OnMatchStarted?.Invoke();
+        
+        await Runner.LoadScene(_sceneData.gameSceneName);
     }
     
     #endregion

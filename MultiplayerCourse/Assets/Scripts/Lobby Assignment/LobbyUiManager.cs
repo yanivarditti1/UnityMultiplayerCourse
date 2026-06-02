@@ -22,6 +22,7 @@ public class LobbyUiManager : MonoBehaviour
     [Header("Lobby Panel")] [SerializeField]
     private Transform _sessionListContainer;
     [SerializeField] private GameObject _sessionEntryPrefab;
+    [SerializeField] private TMP_InputField _nicknameInputField;
     [SerializeField] private TMP_InputField _roomNameInputField;
     [SerializeField] private TMP_InputField _maxPlayersInputField;
     [SerializeField] private Button _createRoomButton;
@@ -33,6 +34,7 @@ public class LobbyUiManager : MonoBehaviour
     [Header("Room Panel")] 
     [SerializeField] private Transform _playerListContainer;
     [SerializeField] private GameObject _playerEntryPrefab;
+    [SerializeField] private Button _startMatchButton;
     [SerializeField] private Button _leaveRoomButton;
     [SerializeField] private TextMeshProUGUI _roomNameText;
     [SerializeField] private TextMeshProUGUI _roomStatusText;
@@ -71,6 +73,7 @@ public class LobbyUiManager : MonoBehaviour
         manager.OnRoomJoinFailed        += HandleRoomJoinFailed;
         manager.OnRoomLeft              += HandleRoomLeft;
         manager.OnRoomListUpdate        += HandleRoomListUpdate;
+        manager.OnMatchStarted          += HandleMatchStarted;
     }
 
     private void UnsubscribeFromManager()
@@ -88,6 +91,7 @@ public class LobbyUiManager : MonoBehaviour
         manager.OnRoomJoinFailed        -= HandleRoomJoinFailed;
         manager.OnRoomLeft              -= HandleRoomLeft;
         manager.OnRoomListUpdate        -= HandleRoomListUpdate;
+        manager.OnMatchStarted          -= HandleMatchStarted;
     }
     #endregion
     
@@ -100,6 +104,7 @@ public class LobbyUiManager : MonoBehaviour
         _createRoomButton.onClick.AddListener(OnCreateRoomButtonClicked);
         _joinRoomButton.onClick.AddListener(OnJoinRoomButtonClicked);
         _leaveRoomButton.onClick.AddListener(OnLeaveRoomButtonClicked);
+        _startMatchButton.onClick.AddListener(OnStartMatchButtonClicked);
     }
 
     private void OnJoinLobbyButtonClicked()
@@ -124,6 +129,13 @@ public class LobbyUiManager : MonoBehaviour
             SetStatus(_lobbyStatusText, "Room name cannot be empty");
             return;
         }
+        
+        /*string playerNickname = _nicknameInputField.text.Trim();
+        if (string.IsNullOrEmpty(playerNickname))
+        {
+            SetStatus(_lobbyStatusText, "Enter a nickname first!");
+            return;
+        }*/
 
         if (!int.TryParse(_maxPlayersInputField.text, out int max) || max < 2)
         {
@@ -143,6 +155,13 @@ public class LobbyUiManager : MonoBehaviour
             SetStatus(_lobbyStatusText, "Select a session first");
             return;
         }
+        
+        /*string playerNickname = _nicknameInputField.text.Trim();
+        if (string.IsNullOrEmpty(playerNickname))
+        {
+            SetStatus(_lobbyStatusText, "Enter a nickname first!");
+            return;
+        }*/
 
         SetLobbyButtons(false);
         SetStatus(_lobbyStatusText, $"Joining room: {_selectedSession.Name}...");
@@ -153,6 +172,11 @@ public class LobbyUiManager : MonoBehaviour
     {
         _leaveRoomButton.interactable = false;
         LobbyManager.Instance.LeaveRoom();
+    }
+    
+    private void OnStartMatchButtonClicked()
+    {
+        LobbyManager.Instance.StartMatch();
     }
     
     #endregion
@@ -271,6 +295,12 @@ public class LobbyUiManager : MonoBehaviour
         }
         
         SetStatus(_roomStatusText, $"Players: {players.Count}");
+    }
+    
+    private void HandleMatchStarted()
+    {
+        _startMatchButton.interactable = false;
+        SetStatus(_roomStatusText, "Starting Match...");
     }
     
     #endregion
