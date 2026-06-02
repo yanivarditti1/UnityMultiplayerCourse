@@ -206,6 +206,11 @@ public class LobbyUiManager : MonoBehaviour
             {
                 var captured = session;
                 button.onClick.AddListener(() => SelectSession(captured));
+                
+                if (session.PlayerCount >= session.MaxPlayers)
+                {
+                    button.interactable = false;
+                }
             }
             
             _sessionEntries.Add(entry);

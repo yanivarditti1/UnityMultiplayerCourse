@@ -128,9 +128,15 @@ public class LobbyManager : MonoBehaviour, INetworkRunnerCallbacks
             return;
         }
 
+        if (_sessionsList?.Find(s => s.Name == roomName) != null)
+        {
+            OnRoomCreateFailed?.Invoke($"Room '{roomName}' already exists");
+            return;
+        }
+
         var args = new StartGameArgs()
         {
-            GameMode = GameMode.Host,
+            GameMode = GameMode.Shared,
             SessionName = roomName,
             PlayerCount = maxPlayers
         };
@@ -139,11 +145,11 @@ public class LobbyManager : MonoBehaviour, INetworkRunnerCallbacks
 
         if (result.Ok)
         {
-            if (!Runner.IsServer)
+            if (!Runner.IsSharedModeMasterClient)
             {
-                Debug.LogWarning($"[LobbyManager] Room '{roomName}'already exists.");
-                await Runner.Shutdown(false);
-                OnRoomCreateFailed?.Invoke($"Room '{roomName}'already exists.");
+                Debug.LogWarning($"[LobbyManager] Player is not master client. Shutting down.");
+                //await Runner.Shutdown(false);
+                OnRoomCreateFailed?.Invoke($" Player is not master client. Shutting down.");
                 return;
             }
             
@@ -184,7 +190,7 @@ public class LobbyManager : MonoBehaviour, INetworkRunnerCallbacks
 
         var args = new StartGameArgs()
         {
-            GameMode = GameMode.Client,
+            GameMode = GameMode.Shared,
             SessionName = roomName
         };
         
