@@ -33,6 +33,7 @@ public class LobbyUiManager : MonoBehaviour
     //room panel
     [Header("Room Panel")] 
     [SerializeField] private Transform _playerListContainer;
+    [SerializeField] private TextMeshProUGUI _playerListLabel;
     [SerializeField] private GameObject _playerEntryPrefab;
     [SerializeField] private Button _startMatchButton;
     [SerializeField] private Button _leaveRoomButton;
@@ -261,6 +262,13 @@ public class LobbyUiManager : MonoBehaviour
         _roomNameText.text = roomName;
         SetStatus(_roomStatusText, "Joined room");
         _leaveRoomButton.interactable = true;
+        
+        bool isMaster = LobbyManager.Instance.Runner.LocalPlayer.IsMasterClient;
+        if (!isMaster)
+        {
+            SetStatus(_roomStatusText, "Waiting for host to start match...");
+            _startMatchButton.interactable = false;
+        }
     }
 
     private void HandleRoomJoinFailed(string reason)
@@ -294,7 +302,7 @@ public class LobbyUiManager : MonoBehaviour
             _playerEntries.Add(entry);
         }
         
-        SetStatus(_roomStatusText, $"Players: {players.Count}");
+        SetStatus(_playerListLabel, $"Active Players: {players.Count} / {LobbyManager.Instance.Runner.SessionInfo.MaxPlayers}");
     }
     
     private void HandleMatchStarted()

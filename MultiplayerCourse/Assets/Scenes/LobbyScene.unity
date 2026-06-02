@@ -371,7 +371,7 @@ MonoBehaviour:
   _connectStatusText: {fileID: 2019903551}
   _sessionListContainer: {fileID: 210464621}
   _sessionEntryPrefab: {fileID: 2075909765219257058, guid: 19b65095979aca345b576f7a2ef835f0, type: 3}
-  _nicknameInputField: {fileID: 0}
+  _nicknameInputField: {fileID: 1925400165}
   _roomNameInputField: {fileID: 1639714338}
   _maxPlayersInputField: {fileID: 1533583321}
   _createRoomButton: {fileID: 237015770}
@@ -379,6 +379,7 @@ MonoBehaviour:
   _leaveLobbyButton: {fileID: 1337577499}
   _lobbyStatusText: {fileID: 1679522241}
   _playerListContainer: {fileID: 1022488537}
+  _playerListLabel: {fileID: 193485134}
   _playerEntryPrefab: {fileID: 7204533411134922538, guid: 0c627bc78609a754192f865067697a1e, type: 3}
   _startMatchButton: {fileID: 705603314}
   _leaveRoomButton: {fileID: 1598188196}
