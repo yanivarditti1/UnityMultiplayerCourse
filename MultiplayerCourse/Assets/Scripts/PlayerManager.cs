@@ -23,6 +23,7 @@ public class PlayerManager : NetworkBehaviour
         if (Object.HasStateAuthority)
         {
             Local = this;
+            DontDestroyOnLoad(Object);
             string nickname = LobbyManager.Instance.LocalPlayerNickname;
             if (string.IsNullOrEmpty(nickname))
             {

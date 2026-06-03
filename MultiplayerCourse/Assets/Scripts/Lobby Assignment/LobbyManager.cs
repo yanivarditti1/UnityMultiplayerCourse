@@ -4,7 +4,6 @@ using System.Threading.Tasks;
 using Fusion;
 using Fusion.Sockets;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 
 public class LobbyManager : MonoBehaviour, INetworkRunnerCallbacks
 {
@@ -391,7 +390,7 @@ public class LobbyManager : MonoBehaviour, INetworkRunnerCallbacks
         //get networkrunner or create one if none exists for whatever reason
         GameObject go;
         if (_networkRunner != null)
-            go = Instantiate(_networkRunner.gameObject);
+            go = _networkRunner.gameObject;
         else
         {
             go = new GameObject("NetworkRunner");
