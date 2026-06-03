@@ -14,6 +14,7 @@ public class LobbyManager : MonoBehaviour, INetworkRunnerCallbacks
     [Header("Network")]
     [SerializeField] private NetworkRunner _networkRunner;
     [SerializeField] private SceneDataSO _sceneData;
+    [SerializeField] private PlayerManager _playerManagerPrefab;
     
     //lobby events
     public event Action OnLobbyJoined;
@@ -29,11 +30,13 @@ public class LobbyManager : MonoBehaviour, INetworkRunnerCallbacks
     public event Action  OnRoomLeft;
     public event Action<List<PlayerRef>> OnRoomListUpdate;
     public event Action OnMatchStarted;
+    public event Action<PlayerRef, string> OnPlayerNicknameChanged;
     
     //lobby state
     public NetworkRunner Runner { get; private set; }
     public bool IsInLobby { get; private set; }
     public bool IsInRoom { get; private set; }
+    public string LocalPlayerNickname { get; private set; } = "";
     private string _currentLobbyId = ""; 
     
     //player and session tracking
@@ -54,6 +57,12 @@ public class LobbyManager : MonoBehaviour, INetworkRunnerCallbacks
 
         Instance = this;
         DontDestroyOnLoad(gameObject);
+        PlayerManager.OnAnyNicknameChanged += OnPlayerNicknameChangedHandler;
+    }
+
+    private void OnDestroy()
+    {
+        PlayerManager.OnAnyNicknameChanged -= OnPlayerNicknameChangedHandler;
     }
     #endregion
     
@@ -240,6 +249,17 @@ public class LobbyManager : MonoBehaviour, INetworkRunnerCallbacks
         
         await Runner.LoadScene(_sceneData.gameSceneName);
     }
+
+    public void SetNickname(string nickname)
+    {
+        LocalPlayerNickname = nickname;
+    }
+
+    public void NotifyPlayerManagerSpawned()
+    {
+        if (!IsInRoom) return;
+        OnRoomListUpdate?.Invoke(new List<PlayerRef>(_roomPlayers.Keys));
+    }
     
     #endregion
     
@@ -258,6 +278,9 @@ public class LobbyManager : MonoBehaviour, INetworkRunnerCallbacks
     {
         if (!_roomPlayers.ContainsKey(player))
             _roomPlayers.Add(player, null);
+        
+        if (player == Runner.LocalPlayer)
+            runner.Spawn(_playerManagerPrefab, inputAuthority: player);
         
         Debug.Log($"[LobbyManager] Player '{player}' joined the room");
         OnRoomListUpdate?.Invoke(new List<PlayerRef>(_roomPlayers.Keys));
@@ -353,6 +376,12 @@ public class LobbyManager : MonoBehaviour, INetworkRunnerCallbacks
     {
         
     }
+
+    private void OnPlayerNicknameChangedHandler(PlayerRef player, string nickname)
+    {
+        OnPlayerNicknameChanged?.Invoke(player, nickname);
+    }
+    
     #endregion
     
     #region Helpers

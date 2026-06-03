@@ -19,8 +19,8 @@ public class LobbyUiManager : MonoBehaviour
     [SerializeField] private TextMeshProUGUI _connectStatusText;
     
     //lobby panel
-    [Header("Lobby Panel")] [SerializeField]
-    private Transform _sessionListContainer;
+    [Header("Lobby Panel")] 
+    [SerializeField] private Transform _sessionListContainer;
     [SerializeField] private GameObject _sessionEntryPrefab;
     [SerializeField] private TMP_InputField _nicknameInputField;
     [SerializeField] private TMP_InputField _roomNameInputField;
@@ -43,7 +43,7 @@ public class LobbyUiManager : MonoBehaviour
     //state
     private SessionInfo _selectedSession;
     private readonly List<GameObject> _sessionEntries = new();
-    private readonly List<GameObject> _playerEntries = new();
+    private readonly Dictionary<PlayerRef, GameObject> _playerEntries = new();
 
     private void Start()
     {
@@ -75,6 +75,7 @@ public class LobbyUiManager : MonoBehaviour
         manager.OnRoomLeft              += HandleRoomLeft;
         manager.OnRoomListUpdate        += HandleRoomListUpdate;
         manager.OnMatchStarted          += HandleMatchStarted;
+        manager.OnPlayerNicknameChanged += HandlePlayerNicknameChanged;
     }
 
     private void UnsubscribeFromManager()
@@ -93,6 +94,7 @@ public class LobbyUiManager : MonoBehaviour
         manager.OnRoomLeft              -= HandleRoomLeft;
         manager.OnRoomListUpdate        -= HandleRoomListUpdate;
         manager.OnMatchStarted          -= HandleMatchStarted;
+        manager.OnPlayerNicknameChanged -= HandlePlayerNicknameChanged;
     }
     #endregion
     
@@ -131,19 +133,20 @@ public class LobbyUiManager : MonoBehaviour
             return;
         }
         
-        /*string playerNickname = _nicknameInputField.text.Trim();
+        string playerNickname = _nicknameInputField.text.Trim();
         if (string.IsNullOrEmpty(playerNickname))
         {
             SetStatus(_lobbyStatusText, "Enter a nickname first!");
             return;
-        }*/
+        }
 
         if (!int.TryParse(_maxPlayersInputField.text, out int max) || max < 2)
         {
             SetStatus(_lobbyStatusText, "Invalid max players, enter a number equal to or greater than 2");
             return;
         }
-        
+
+        LobbyManager.Instance.SetNickname(playerNickname);
         SetLobbyButtons(false);
         SetStatus(_lobbyStatusText, $"Creating room: {roomName} - max players: {max}...");
         LobbyManager.Instance.CreateRoom(roomName, max);
@@ -157,13 +160,15 @@ public class LobbyUiManager : MonoBehaviour
             return;
         }
         
-        /*string playerNickname = _nicknameInputField.text.Trim();
+        string playerNickname = _nicknameInputField.text.Trim();
         if (string.IsNullOrEmpty(playerNickname))
         {
             SetStatus(_lobbyStatusText, "Enter a nickname first!");
             return;
-        }*/
-
+        }
+        
+        string nickName = _nicknameInputField.text.Trim();
+        LobbyManager.Instance.SetNickname(nickName);
         SetLobbyButtons(false);
         SetStatus(_lobbyStatusText, $"Joining room: {_selectedSession.Name}...");
         LobbyManager.Instance.JoinRoom(_selectedSession.Name);
@@ -287,7 +292,7 @@ public class LobbyUiManager : MonoBehaviour
 
     private void HandleRoomListUpdate(List<PlayerRef> players)
     {
-        foreach (var entry in _playerEntries) Destroy(entry);
+        foreach (var entry in _playerEntries.Values) Destroy(entry);
         _playerEntries.Clear();
         
         foreach (var player in players)
@@ -297,9 +302,13 @@ public class LobbyUiManager : MonoBehaviour
             if (label != null)
             {
                 bool isLocal = player == LobbyManager.Instance.Runner.LocalPlayer;
-                label.text = isLocal ? $"Player {player.PlayerId} (You)" : $"Player {player.PlayerId}";
+                string nickname = PlayerManager.Registry.TryGetValue(player, out var pm)?
+                    pm.Nickname.ToString()
+                    : $"Player {player.PlayerId}";
+                label.text = isLocal ? $"{nickname} (You)" : nickname;
             }
-            _playerEntries.Add(entry);
+            _playerEntries[player] = entry;
+            //_playerEntries.Add(entry);
         }
         
         SetStatus(_playerListLabel, $"Active Players: {players.Count} / {LobbyManager.Instance.Runner.SessionInfo.MaxPlayers}");
@@ -309,6 +318,24 @@ public class LobbyUiManager : MonoBehaviour
     {
         _startMatchButton.interactable = false;
         SetStatus(_roomStatusText, "Starting Match...");
+    }
+
+    private void HandlePlayerNicknameChanged(PlayerRef player, string nickname)
+    {
+        /*var playersList = LobbyManager.Instance.Runner.ActivePlayers;
+        var players = new List<PlayerRef>(playersList);
+        var index = players.IndexOf(player);
+        if (index < 0 || index >= _playerEntries.Count) return;
+        
+        var label = _playerEntries[index].GetComponentInChildren<TextMeshProUGUI>();*/
+        
+        if (!_playerEntries.TryGetValue(player, out var entry)) return;
+        
+        var label = entry.GetComponentInChildren<TextMeshProUGUI>();
+        if (label == null) return;
+        
+        bool isLocal = player == LobbyManager.Instance.Runner.LocalPlayer;
+        label.text = isLocal ? $"{nickname} (You)" : $"{nickname}";
     }
     
     #endregion

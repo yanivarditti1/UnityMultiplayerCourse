@@ -5522,6 +5522,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::LobbyManager
   _networkRunner: {fileID: 2112644897}
   _sceneData: {fileID: 11400000, guid: df857f0814dea1746883c0ed87a458eb, type: 2}
+  _playerManagerPrefab: {fileID: 6728201968981551853, guid: d0eb536ee5cd83e4aa013258952e7a76, type: 3}
 --- !u!4 &1903433773
 Transform:
   m_ObjectHideFlags: 0
