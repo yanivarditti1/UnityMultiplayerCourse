@@ -1,91 +1,153 @@
 using Fusion;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 [RequireComponent(typeof(CharacterController))]
 public sealed class FirstPersonNetworkMovement : NetworkBehaviour
 {
+    [Header("References")]
+    [SerializeField] private CharacterController characterController;
+    [SerializeField] private Transform cameraRoot;
+    [SerializeField] private Camera playerCamera;
+
+    [Header("Input")]
+    [SerializeField] private InputActionReference moveAction;
+    [SerializeField] private InputActionReference lookAction;
+    [SerializeField] private InputActionReference jumpAction;
+
     [Header("Movement")]
     [SerializeField] private float moveSpeed = 5f;
     [SerializeField] private float jumpForce = 5f;
     [SerializeField] private float gravity = -20f;
 
     [Header("Look")]
-    [SerializeField] private Transform cameraRoot;
-    [SerializeField] private float mouseSensitivity = 2f;
+    [SerializeField] private float mouseSensitivity = 0.12f;
+    [SerializeField] private float minPitch = -80f;
+    [SerializeField] private float maxPitch = 80f;
 
-    private CharacterController _characterController;
-    private Camera _camera;
     private float _verticalVelocity;
     private float _pitch;
+    private bool _isLocalPlayer;
 
     private void Awake()
     {
-        _characterController = GetComponent<CharacterController>();
+        if (!characterController)
+            characterController = GetComponent<CharacterController>();
+
+        SetCameraActive(false);
     }
 
     public override void Spawned()
     {
-        if (!Object.HasInputAuthority)
-            return;
+        _isLocalPlayer = Object.HasInputAuthority;
 
-        _camera = Camera.main;
-
-        if (_camera != null && cameraRoot != null)
+        if (!_isLocalPlayer)
         {
-            _camera.transform.SetParent(cameraRoot);
-            _camera.transform.localPosition = Vector3.zero;
-            _camera.transform.localRotation = Quaternion.identity;
+            SetCameraActive(false);
+            return;
         }
+
+        if (!Object.HasStateAuthority)
+            Object.RequestStateAuthority();
+
+        EnableInput();
+        SetCameraActive(true);
 
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
     }
 
+    public override void Despawned(NetworkRunner runner, bool hasState)
+    {
+        if (!_isLocalPlayer)
+            return;
+
+        DisableInput();
+
+        Cursor.lockState = CursorLockMode.None;
+        Cursor.visible = true;
+    }
+
     private void Update()
     {
-        if (!Object.HasInputAuthority)
+        if (!_isLocalPlayer)
             return;
 
         Move();
         Look();
+        
+      
+        
+       
     }
 
     private void Move()
     {
-        float horizontal = Input.GetAxisRaw("Horizontal");
-        float vertical = Input.GetAxisRaw("Vertical");
+        Vector2 moveInput = Keyboard.current != null
+            ? new Vector2(
+                (Keyboard.current.dKey.isPressed ? 1 : 0) - (Keyboard.current.aKey.isPressed ? 1 : 0),
+                (Keyboard.current.wKey.isPressed ? 1 : 0) - (Keyboard.current.sKey.isPressed ? 1 : 0))
+            : Vector2.zero;
 
-        Vector3 move =
-            transform.right * horizontal +
-            transform.forward * vertical;
+        Debug.Log($"MOVE INPUT = {moveInput}");
+        
 
-        move.Normalize();
+        Vector3 moveDirection =
+            transform.right * moveInput.x +
+            transform.forward * moveInput.y;
 
-        if (_characterController.isGrounded && _verticalVelocity < 0)
+        if (moveDirection.sqrMagnitude > 1f)
+            moveDirection.Normalize();
+
+        if (characterController.isGrounded && _verticalVelocity < 0f)
             _verticalVelocity = -2f;
 
-        if (_characterController.isGrounded && Input.GetKeyDown(KeyCode.Space))
+        if (characterController.isGrounded && jumpAction.action.WasPressedThisFrame())
             _verticalVelocity = jumpForce;
 
         _verticalVelocity += gravity * Time.deltaTime;
 
-        Vector3 finalMove = move * moveSpeed;
-        finalMove.y = _verticalVelocity;
+        Vector3 finalMovement = moveDirection * moveSpeed;
+        finalMovement.y = _verticalVelocity;
+        
 
-        _characterController.Move(finalMove * Time.deltaTime);
+        characterController.Move(finalMovement * Time.deltaTime);
+        
     }
 
     private void Look()
     {
-        float mouseX = Input.GetAxis("Mouse X") * mouseSensitivity;
-        float mouseY = Input.GetAxis("Mouse Y") * mouseSensitivity;
+        Vector2 lookInput = lookAction.action.ReadValue<Vector2>();
+
+        float mouseX = lookInput.x * mouseSensitivity;
+        float mouseY = lookInput.y * mouseSensitivity;
 
         transform.Rotate(Vector3.up * mouseX);
 
         _pitch -= mouseY;
-        _pitch = Mathf.Clamp(_pitch, -80f, 80f);
+        _pitch = Mathf.Clamp(_pitch, minPitch, maxPitch);
 
-        if (cameraRoot != null)
-            cameraRoot.localRotation = Quaternion.Euler(_pitch, 0f, 0f);
+        cameraRoot.localRotation = Quaternion.Euler(_pitch, 0f, 0f);
+    }
+
+    private void EnableInput()
+    {
+        moveAction.action.Enable();
+        lookAction.action.Enable();
+        jumpAction.action.Enable();
+    }
+
+    private void DisableInput()
+    {
+        moveAction.action.Disable();
+        lookAction.action.Disable();
+        jumpAction.action.Disable();
+    }
+
+    private void SetCameraActive(bool active)
+    {
+        if (playerCamera)
+            playerCamera.enabled = active;
+        
     }
 }
