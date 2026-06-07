@@ -25,7 +25,7 @@ Transform:
   m_GameObject: {fileID: 603044903517278881}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0.19, y: 0.613, z: 0}
+  m_LocalPosition: {x: -0.041, y: 0.694, z: 0.2}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -146,7 +146,7 @@ MonoBehaviour:
   m_VolumeLayerMask:
     serializedVersion: 2
     m_Bits: 1
-  m_VolumeTrigger: {fileID: 1434063363301762774}
+  m_VolumeTrigger: {fileID: 0}
   m_VolumeFrameworkUpdateModeOption: 2
   m_RenderPostProcessing: 0
   m_Antialiasing: 0
@@ -183,7 +183,6 @@ GameObject:
   - component: {fileID: 4978740586288315717}
   - component: {fileID: 5245602710253449126}
   - component: {fileID: 7221408565579752386}
-  - component: {fileID: 4702597840255871680}
   - component: {fileID: 2725166591451844056}
   m_Layer: 0
   m_Name: MeleePlayerPrefab
@@ -325,31 +324,6 @@ MonoBehaviour:
   SyncParent: 0
   _autoAOIOverride: 1
   DisableSharedModeInterpolation: 0
---- !u!143 &4702597840255871680
-CharacterController:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4252853858376035391}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_ProvidesContacts: 0
-  m_Enabled: 1
-  serializedVersion: 3
-  m_Height: 2
-  m_Radius: 0.5
-  m_SlopeLimit: 45
-  m_StepOffset: 0.3
-  m_SkinWidth: 0.08
-  m_MinMoveDistance: 0.001
-  m_Center: {x: 0, y: 0, z: 0}
 --- !u!114 &2725166591451844056
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -362,7 +336,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b043cb724fce96941930fb115d44e5a1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::FirstPersonNetworkMovement
-  characterController: {fileID: 4702597840255871680}
   cameraRoot: {fileID: 1434063363301762774}
   playerCamera: {fileID: 6284159618578709540}
   moveAction: {fileID: 5215139886404521708, guid: 8c9f75bd977566849ba70dc32bf527a3, type: 3}
@@ -371,6 +344,7 @@ MonoBehaviour:
   moveSpeed: 5
   jumpForce: 5
   gravity: -20
+  groundY: 0
   mouseSensitivity: 2
   minPitch: -80
   maxPitch: 80

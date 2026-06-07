@@ -2,11 +2,9 @@ using Fusion;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-[RequireComponent(typeof(CharacterController))]
 public sealed class FirstPersonNetworkMovement : NetworkBehaviour
 {
     [Header("References")]
-    [SerializeField] private CharacterController characterController;
     [SerializeField] private Transform cameraRoot;
     [SerializeField] private Camera playerCamera;
 
@@ -16,26 +14,21 @@ public sealed class FirstPersonNetworkMovement : NetworkBehaviour
     [SerializeField] private InputActionReference jumpAction;
 
     [Header("Movement")]
-    [SerializeField] private float moveSpeed = 5f;
-    [SerializeField] private float jumpForce = 5f;
+    [SerializeField] private float moveSpeed = 6f;
+    [SerializeField] private float jumpForce = 7f;
     [SerializeField] private float gravity = -20f;
+    [SerializeField] private float groundY = 0f;
 
     [Header("Look")]
-    [SerializeField] private float mouseSensitivity = 0.12f;
-    [SerializeField] private float minPitch = -80f;
-    [SerializeField] private float maxPitch = 80f;
+    [SerializeField] private float mouseSensitivity = 0.2f;
+    [SerializeField] private float minPitch = -85f;
+    [SerializeField] private float maxPitch = 85f;
 
+    private bool _isLocalPlayer;
+    private Vector2 _moveInput;
+    private bool _jumpRequested;
     private float _verticalVelocity;
     private float _pitch;
-    private bool _isLocalPlayer;
-
-    private void Awake()
-    {
-        if (!characterController)
-            characterController = GetComponent<CharacterController>();
-
-        SetCameraActive(false);
-    }
 
     public override void Spawned()
     {
@@ -47,10 +40,8 @@ public sealed class FirstPersonNetworkMovement : NetworkBehaviour
             return;
         }
 
-        if (!Object.HasStateAuthority)
-            Object.RequestStateAuthority();
+        moveAction.action.actionMap.Enable();
 
-        EnableInput();
         SetCameraActive(true);
 
         Cursor.lockState = CursorLockMode.Locked;
@@ -62,7 +53,7 @@ public sealed class FirstPersonNetworkMovement : NetworkBehaviour
         if (!_isLocalPlayer)
             return;
 
-        DisableInput();
+        moveAction.action.actionMap.Disable();
 
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
@@ -73,46 +64,61 @@ public sealed class FirstPersonNetworkMovement : NetworkBehaviour
         if (!_isLocalPlayer)
             return;
 
-        Move();
+        ReadInput();
         Look();
-        
-      
-        
-       
+    }
+
+    public override void FixedUpdateNetwork()
+    {
+        if (!Object.HasStateAuthority)
+            return;
+
+        Move();
+    }
+
+    private void ReadInput()
+    {
+        _moveInput = moveAction.action.ReadValue<Vector2>();
+
+        if (jumpAction.action.WasPressedThisFrame())
+            _jumpRequested = true;
     }
 
     private void Move()
     {
-        Vector2 moveInput = Keyboard.current != null
-            ? new Vector2(
-                (Keyboard.current.dKey.isPressed ? 1 : 0) - (Keyboard.current.aKey.isPressed ? 1 : 0),
-                (Keyboard.current.wKey.isPressed ? 1 : 0) - (Keyboard.current.sKey.isPressed ? 1 : 0))
-            : Vector2.zero;
-
-        Debug.Log($"MOVE INPUT = {moveInput}");
-        
-
         Vector3 moveDirection =
-            transform.right * moveInput.x +
-            transform.forward * moveInput.y;
+            transform.right * _moveInput.x +
+            transform.forward * _moveInput.y;
 
         if (moveDirection.sqrMagnitude > 1f)
             moveDirection.Normalize();
 
-        if (characterController.isGrounded && _verticalVelocity < 0f)
-            _verticalVelocity = -2f;
+        bool isGrounded = transform.position.y <= groundY + 0.05f;
 
-        if (characterController.isGrounded && jumpAction.action.WasPressedThisFrame())
+        if (isGrounded && _verticalVelocity < 0f)
+            _verticalVelocity = 0f;
+
+        if (isGrounded && _jumpRequested)
             _verticalVelocity = jumpForce;
 
-        _verticalVelocity += gravity * Time.deltaTime;
+        _jumpRequested = false;
 
-        Vector3 finalMovement = moveDirection * moveSpeed;
-        finalMovement.y = _verticalVelocity;
-        
+        _verticalVelocity += gravity * Runner.DeltaTime;
 
-        characterController.Move(finalMovement * Time.deltaTime);
-        
+        Vector3 velocity = moveDirection * moveSpeed;
+        velocity.y = _verticalVelocity;
+
+        transform.position += velocity * Runner.DeltaTime;
+
+        if (transform.position.y < groundY)
+        {
+            transform.position = new Vector3(
+                transform.position.x,
+                groundY,
+                transform.position.z);
+
+            _verticalVelocity = 0f;
+        }
     }
 
     private void Look()
@@ -130,24 +136,9 @@ public sealed class FirstPersonNetworkMovement : NetworkBehaviour
         cameraRoot.localRotation = Quaternion.Euler(_pitch, 0f, 0f);
     }
 
-    private void EnableInput()
-    {
-        moveAction.action.Enable();
-        lookAction.action.Enable();
-        jumpAction.action.Enable();
-    }
-
-    private void DisableInput()
-    {
-        moveAction.action.Disable();
-        lookAction.action.Disable();
-        jumpAction.action.Disable();
-    }
-
     private void SetCameraActive(bool active)
     {
-        if (playerCamera)
+        if (playerCamera != null)
             playerCamera.enabled = active;
-        
     }
 }
