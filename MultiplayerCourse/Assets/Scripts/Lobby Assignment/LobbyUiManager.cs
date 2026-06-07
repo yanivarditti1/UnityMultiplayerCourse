@@ -304,7 +304,9 @@ public class LobbyUiManager : MonoBehaviour
                 bool isLocal = player == LobbyManager.Instance.Runner.LocalPlayer;
                 string nickname = PlayerManager.Registry.TryGetValue(player, out var pm)?
                     pm.Nickname.ToString()
-                    : $"Player {player.PlayerId}";
+                    : isLocal
+                        ? PlayerDataPersistanceManager.Instance.Nickname
+                        : $"Player {player.PlayerId}";
                 label.text = isLocal ? $"{nickname} (You)" : nickname;
             }
             _playerEntries[player] = entry;

@@ -35,7 +35,7 @@ public class LobbyManager : MonoBehaviour, INetworkRunnerCallbacks
     public NetworkRunner Runner { get; private set; }
     public bool IsInLobby { get; private set; }
     public bool IsInRoom { get; private set; }
-    public string LocalPlayerNickname { get; private set; } = "";
+    //public string LocalPlayerNickname { get; private set; } = "";
     private string _currentLobbyId = ""; 
     
     //player and session tracking
@@ -251,7 +251,7 @@ public class LobbyManager : MonoBehaviour, INetworkRunnerCallbacks
 
     public void SetNickname(string nickname)
     {
-        LocalPlayerNickname = nickname;
+        PlayerDataPersistanceManager.Instance.SetNickname(nickname);
     }
 
     public void NotifyPlayerManagerSpawned()

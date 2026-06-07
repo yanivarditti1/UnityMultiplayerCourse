@@ -12,6 +12,9 @@ public class PlayerManager : NetworkBehaviour
     
     [Networked, OnChangedRender (nameof(OnNicknameChanged))]
     public NetworkString<_32> Nickname { get; private set; }
+
+    [Networked] public int MaxHealth { get; private set; }
+    [Networked] public string PlayerCharacter { get; private set; }
     
     public static event Action<PlayerRef, string> OnAnyNicknameChanged;
 
@@ -23,13 +26,17 @@ public class PlayerManager : NetworkBehaviour
         if (Object.HasStateAuthority)
         {
             Local = this;
-            DontDestroyOnLoad(Object);
-            string nickname = LobbyManager.Instance.LocalPlayerNickname;
-            if (string.IsNullOrEmpty(nickname))
-            {
-                nickname = Object.InputAuthority.PlayerId.ToString();
-            }
-            SetNickname(nickname);
+            //DontDestroyOnLoad(Object);
+            var data = PlayerDataPersistanceManager.Instance;
+            var nickname = string.IsNullOrEmpty(data.Nickname)
+                ? $"Player { Object.InputAuthority.PlayerId }"
+                : data.Nickname;
+            
+            Nickname = nickname;
+            MaxHealth = data.MaxHealth;
+            PlayerCharacter = data.PlayerCharacter;
+            
+            //SetNickname(nickname);
         }
         
         LobbyManager.Instance.NotifyPlayerManagerSpawned();
@@ -42,11 +49,11 @@ public class PlayerManager : NetworkBehaviour
             Local = null;
     }
 
-    private void SetNickname(string nickname)
+    /*private void SetNickname(string nickname)
     {
         if (!Object.HasStateAuthority) return;
         Nickname = nickname;
-    }
+    }*/
 
     private void OnNicknameChanged()
     {
