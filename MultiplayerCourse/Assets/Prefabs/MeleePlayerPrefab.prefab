@@ -25,7 +25,7 @@ Transform:
   m_GameObject: {fileID: 603044903517278881}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -0.041, y: 0.694, z: 0.2}
+  m_LocalPosition: {x: 0, y: 0.73, z: 0.17}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -169,6 +169,38 @@ MonoBehaviour:
     m_VarianceClampScale: 0.9
     m_ContrastAdaptiveSharpening: 0
   m_Version: 2
+--- !u!1 &4156574915902088881
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 4539718576532956061}
+  m_Layer: 0
+  m_Name: ChairHoldPoint
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &4539718576532956061
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4156574915902088881}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 3.742, y: 0.93, z: 0.53}
+  m_LocalScale: {x: 1.6, y: 1.6, z: 1.6}
+  m_ConstrainProportionsScale: 1
+  m_Children:
+  - {fileID: 7747896371891602957}
+  m_Father: {fileID: 6731088471842130389}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &4252853858376035391
 GameObject:
   m_ObjectHideFlags: 0
@@ -184,6 +216,9 @@ GameObject:
   - component: {fileID: 5245602710253449126}
   - component: {fileID: 7221408565579752386}
   - component: {fileID: 2725166591451844056}
+  - component: {fileID: 2035574928608198020}
+  - component: {fileID: 3661795405098710526}
+  - component: {fileID: 1752456945702998558}
   m_Layer: 0
   m_Name: MeleePlayerPrefab
   m_TagString: Untagged
@@ -205,6 +240,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1434063363301762774}
+  - {fileID: 4539718576532956061}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!33 &8185192131877287993
@@ -306,6 +342,8 @@ MonoBehaviour:
   NetworkedBehaviours:
   - {fileID: 7221408565579752386}
   - {fileID: 2725166591451844056}
+  - {fileID: 3661795405098710526}
+  - {fileID: 1752456945702998558}
   ForceRemoteRenderTimeframe: 0
 --- !u!114 &7221408565579752386
 MonoBehaviour:
@@ -338,13 +376,145 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::FirstPersonNetworkMovement
   cameraRoot: {fileID: 1434063363301762774}
   playerCamera: {fileID: 6284159618578709540}
+  characterController: {fileID: 2035574928608198020}
   moveAction: {fileID: 5215139886404521708, guid: 8c9f75bd977566849ba70dc32bf527a3, type: 3}
   lookAction: {fileID: 6355962443478175723, guid: 8c9f75bd977566849ba70dc32bf527a3, type: 3}
   jumpAction: {fileID: 6054355210627559411, guid: 8c9f75bd977566849ba70dc32bf527a3, type: 3}
+  sprintAction: {fileID: 5465499147726420419, guid: 8c9f75bd977566849ba70dc32bf527a3, type: 3}
   moveSpeed: 5
-  jumpForce: 5
+  sprintMultiplier: 1.5
+  jumpForce: 8
   gravity: -20
-  groundY: 0
-  mouseSensitivity: 2
-  minPitch: -80
-  maxPitch: 80
+  mouseSensitivity: 0.15
+  upDownPitchLimit: 80
+--- !u!143 &2035574928608198020
+CharacterController:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4252853858376035391}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Height: 2
+  m_Radius: 0.5
+  m_SlopeLimit: 45
+  m_StepOffset: 0.3
+  m_SkinWidth: 0.08
+  m_MinMoveDistance: 0.001
+  m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &3661795405098710526
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4252853858376035391}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 00b418d9fc8dff344b555e8e7d8ad288, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerHealth
+  maxHealth: 100
+  _CurrentHealth: 100
+  HealthChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  Died:
+    m_PersistentCalls:
+      m_Calls: []
+--- !u!114 &1752456945702998558
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4252853858376035391}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 41e8939e09ac4bc4b8f5dc670ccdb9cb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerChairInventory
+  chairHoldPoint: {fileID: 4539718576532956061}
+  heldChairVisual: {fileID: 6975475625302908087}
+  _HasChair: 0
+--- !u!1001 &7785799952375898598
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 4539718576532956061}
+    m_Modifications:
+    - target: {fileID: -8679921383154817045, guid: 46dce804e0368924394a96136a110479, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: -1.85672
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 46dce804e0368924394a96136a110479, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: -1.06
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 46dce804e0368924394a96136a110479, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0.41
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 46dce804e0368924394a96136a110479, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 0.7071067
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 46dce804e0368924394a96136a110479, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: -0.7071068
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 46dce804e0368924394a96136a110479, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 46dce804e0368924394a96136a110479, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 46dce804e0368924394a96136a110479, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 46dce804e0368924394a96136a110479, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 46dce804e0368924394a96136a110479, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 46dce804e0368924394a96136a110479, type: 3}
+      propertyPath: m_Name
+      value: ChairModel
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 46dce804e0368924394a96136a110479, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 46dce804e0368924394a96136a110479, type: 3}
+--- !u!1 &6975475625302908087 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: 46dce804e0368924394a96136a110479, type: 3}
+  m_PrefabInstance: {fileID: 7785799952375898598}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &7747896371891602957 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 46dce804e0368924394a96136a110479, type: 3}
+  m_PrefabInstance: {fileID: 7785799952375898598}
+  m_PrefabAsset: {fileID: 0}
