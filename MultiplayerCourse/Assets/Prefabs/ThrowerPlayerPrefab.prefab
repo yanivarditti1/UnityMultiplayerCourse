@@ -220,10 +220,10 @@ GameObject:
   - component: {fileID: 3661795405098710526}
   - component: {fileID: 1752456945702998558}
   - component: {fileID: 2703630289115125951}
-  - component: {fileID: 4059940285979615771}
-  - component: {fileID: 8274721006065484834}
+  - component: {fileID: 8494592422233138640}
+  - component: {fileID: 6052565765667388605}
   m_Layer: 0
-  m_Name: MeleePlayerPrefab
+  m_Name: ThrowerPlayerPrefab
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -338,7 +338,7 @@ MonoBehaviour:
   m_Script: {fileID: -1552182283, guid: e725a070cec140c4caffb81624c8c787, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Fusion.Runtime.dll::Fusion.NetworkObject
-  SortKey: 2899456478
+  SortKey: 1568004679
   ObjectInterest: 1
   Flags: 786433
   NestedObjects: []
@@ -348,7 +348,7 @@ MonoBehaviour:
   - {fileID: 3661795405098710526}
   - {fileID: 1752456945702998558}
   - {fileID: 2703630289115125951}
-  - {fileID: 4059940285979615771}
+  - {fileID: 8494592422233138640}
   ForceRemoteRenderTimeframe: 0
 --- !u!114 &7221408565579752386
 MonoBehaviour:
@@ -462,11 +462,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerChairCombat
   chairInventory: {fileID: 1752456945702998558}
-  attackOrigin: {fileID: 4539718576532956061}
+  attackOrigin: {fileID: 1434063363301762774}
   thrownChairPrefab: {fileID: 379778833432809535, guid: d462b5a226423a049b5c4863c01d745f, type: 3}
-  _swingAnimation: {fileID: 5226047406885308156}
+  _swingAnimation: {fileID: 0}
   primaryAction: {fileID: -1970087260131177940, guid: 8c9f75bd977566849ba70dc32bf527a3, type: 3}
-  combatMode: 0
+  combatMode: 1
   meleeRange: 2
   meleeRadius: 0.8
   meleeDamage: 15
@@ -475,7 +475,7 @@ MonoBehaviour:
   throwDamage: 35
   throwForce: 16
   throwCooldown: 0.7
---- !u!114 &4059940285979615771
+--- !u!114 &8494592422233138640
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -488,7 +488,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerDamageReceiver
   playerHealth: {fileID: 3661795405098710526}
---- !u!114 &8274721006065484834
+--- !u!114 &6052565765667388605
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -500,7 +500,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c7d972878af4d7142b8a45f921eff2ae, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerHitbox
-  damageReceiver: {fileID: 4059940285979615771}
+  damageReceiver: {fileID: 8494592422233138640}
 --- !u!1001 &7785799952375898598
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -560,34 +560,13 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents:
-    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 46dce804e0368924394a96136a110479, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 5226047406885308156}
+    m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 46dce804e0368924394a96136a110479, type: 3}
 --- !u!1 &6975475625302908087 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: 46dce804e0368924394a96136a110479, type: 3}
   m_PrefabInstance: {fileID: 7785799952375898598}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &5226047406885308156
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6975475625302908087}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 33f0f60d4de7d7e4f9047a9a4ed72fa9, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::ChairSwingAnimation
-  chairVisual: {fileID: 7747896371891602957}
-  pullbackDuration: 0.08
-  swingDuration: 0.12
-  recoveryDuration: 0.15
-  pullbackRotation: {x: -40, y: 15, z: 10}
-  swingRotation: {x: 70, y: -25, z: -15}
 --- !u!4 &7747896371891602957 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 46dce804e0368924394a96136a110479, type: 3}
