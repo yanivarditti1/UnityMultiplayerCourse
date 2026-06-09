@@ -6614,6 +6614,7 @@ GameObject:
   m_Component:
   - component: {fileID: 2112644898}
   - component: {fileID: 2112644897}
+  - component: {fileID: 2112644899}
   m_Layer: 0
   m_Name: NetworkRunner
   m_TagString: Untagged
@@ -6648,6 +6649,22 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &2112644899
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2112644896}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c728b1461ca9a064aa9c3d3bdf1883e7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::FusionInputProvider
+  moveAction: {fileID: 5215139886404521708, guid: 8c9f75bd977566849ba70dc32bf527a3, type: 3}
+  lookAction: {fileID: 6355962443478175723, guid: 8c9f75bd977566849ba70dc32bf527a3, type: 3}
+  jumpAction: {fileID: 6054355210627559411, guid: 8c9f75bd977566849ba70dc32bf527a3, type: 3}
+  sprintAction: {fileID: 5465499147726420419, guid: 8c9f75bd977566849ba70dc32bf527a3, type: 3}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
