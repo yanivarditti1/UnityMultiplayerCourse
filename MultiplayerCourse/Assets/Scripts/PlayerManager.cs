@@ -39,7 +39,8 @@ public class PlayerManager : NetworkBehaviour
             //SetNickname(nickname);
         }
         
-        LobbyManager.Instance.NotifyPlayerManagerSpawned();
+        if (LobbyManager.Instance != null)
+            LobbyManager.Instance.NotifyPlayerManagerSpawned();
     }
 
     public override void Despawned(NetworkRunner runner, bool hasState)

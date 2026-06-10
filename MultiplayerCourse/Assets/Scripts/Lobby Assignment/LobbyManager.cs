@@ -279,7 +279,10 @@ public class LobbyManager : MonoBehaviour, INetworkRunnerCallbacks
             _roomPlayers.Add(player, null);
         
         if (player == Runner.LocalPlayer)
-            runner.Spawn(_playerManagerPrefab, inputAuthority: player);
+            runner.Spawn(
+                _playerManagerPrefab, 
+                inputAuthority: player,
+                onBeforeSpawned: (_, obj) => runner.MakeDontDestroyOnLoad(obj.gameObject));
         
         Debug.Log($"[LobbyManager] Player '{player}' joined the room");
         OnRoomListUpdate?.Invoke(new List<PlayerRef>(_roomPlayers.Keys));
