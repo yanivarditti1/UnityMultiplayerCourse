@@ -16,8 +16,16 @@ public sealed class ThrownChairProjectile : NetworkBehaviour
 
     public override void Spawned()
     {
+        if (rb)
+        {
+            rb.linearVelocity = Vector3.zero;
+            rb.angularVelocity = Vector3.zero;
+        }
+
         if (Object.HasStateAuthority)
-            _lifeTimer = TickTimer.CreateFromSeconds(Runner, lifetime);
+            _lifeTimer = TickTimer.CreateFromSeconds(
+                Runner,
+                lifetime);
     }
 
     public override void FixedUpdateNetwork()
@@ -56,11 +64,7 @@ public sealed class ThrownChairProjectile : NetworkBehaviour
                 _damage,
                 _owner);
         }
-        else
-        {
-            return;
-        }
-
+        
         Runner.Despawn(Object);
     }
 }
