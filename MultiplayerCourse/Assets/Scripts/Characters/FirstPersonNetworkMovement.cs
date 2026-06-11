@@ -19,19 +19,60 @@ public sealed class FirstPersonNetworkMovement : NetworkBehaviour
     [SerializeField] private float mouseSensitivity = 0.1f;
     [SerializeField] private float upDownPitchLimit = 85f;
 
-    [Networked] private float VerticalVelocity { get; set; }
+    [Networked]
+    private float VerticalVelocity { get; set; }
 
     private float _pitch;
+    private bool _isLocalPlayer;
+    private bool _cursorLocked;
 
     public override void Spawned()
     {
-        bool isLocalPlayer = Object.HasInputAuthority;
-        SetCameraActive(isLocalPlayer);
-        
-        Debug.Log(
-            $"Player={Object.InputAuthority.PlayerId} " +
-            $"InputAuthority={Object.HasInputAuthority} " +
-            $"StateAuthority={Object.HasStateAuthority}");
+        _isLocalPlayer = Object.HasInputAuthority;
+
+        SetCameraActive(_isLocalPlayer);
+
+        if (!_isLocalPlayer)
+            return;
+
+        LockCursor();
+    }
+
+    public override void Despawned(NetworkRunner runner, bool hasState)
+    {
+        if (!_isLocalPlayer)
+            return;
+
+        Cursor.lockState = CursorLockMode.None;
+        Cursor.visible = true;
+    }
+
+    private void Update()
+    {
+        if (!_isLocalPlayer)
+            return;
+
+        if (Input.GetKeyDown(KeyCode.Escape))
+        {
+            UnlockCursor();
+        }
+
+        if (!_cursorLocked && Input.GetMouseButtonDown(0))
+        {
+            LockCursor();
+        }
+    }
+
+    private void OnApplicationFocus(bool hasFocus)
+    {
+        if (!_isLocalPlayer)
+            return;
+
+        if (hasFocus && _cursorLocked)
+        {
+            Cursor.lockState = CursorLockMode.Locked;
+            Cursor.visible = false;
+        }
     }
 
     public override void FixedUpdateNetwork()
@@ -57,7 +98,9 @@ public sealed class FirstPersonNetworkMovement : NetworkBehaviour
         _pitch = Mathf.Clamp(_pitch, -upDownPitchLimit, upDownPitchLimit);
 
         if (cameraRoot != null && Object.HasInputAuthority)
+        {
             cameraRoot.localRotation = Quaternion.Euler(_pitch, 0f, 0f);
+        }
     }
 
     private void Move(NetworkInputData inputData)
@@ -69,7 +112,10 @@ public sealed class FirstPersonNetworkMovement : NetworkBehaviour
         if (moveDirection.sqrMagnitude > 1f)
             moveDirection.Normalize();
 
-        bool isGrounded = characterController != null ? characterController.isGrounded : true;
+        bool isGrounded =
+            characterController != null
+                ? characterController.isGrounded
+                : true;
 
         if (isGrounded && VerticalVelocity < 0f)
             VerticalVelocity = -2f;
@@ -79,15 +125,23 @@ public sealed class FirstPersonNetworkMovement : NetworkBehaviour
 
         VerticalVelocity += gravity * Runner.DeltaTime;
 
-        float currentSpeed = moveSpeed * (inputData.sprintRequested ? sprintMultiplier : 1f);
+        float currentSpeed =
+            moveSpeed *
+            (inputData.sprintRequested ? sprintMultiplier : 1f);
 
         Vector3 velocity = moveDirection * currentSpeed;
         velocity.y = VerticalVelocity;
 
         if (characterController != null)
-            characterController.Move(velocity * Runner.DeltaTime);
+        {
+            characterController.Move(
+                velocity * Runner.DeltaTime);
+        }
         else
-            transform.position += velocity * Runner.DeltaTime;
+        {
+            transform.position +=
+                velocity * Runner.DeltaTime;
+        }
     }
 
     private void SetCameraActive(bool active)
@@ -97,5 +151,21 @@ public sealed class FirstPersonNetworkMovement : NetworkBehaviour
 
         if (audioListener != null)
             audioListener.enabled = active;
+    }
+
+    private void LockCursor()
+    {
+        _cursorLocked = true;
+
+        Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
+    }
+
+    private void UnlockCursor()
+    {
+        _cursorLocked = false;
+
+        Cursor.lockState = CursorLockMode.None;
+        Cursor.visible = true;
     }
 }

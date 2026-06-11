@@ -322,10 +322,10 @@ CapsuleCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 2
-  m_Radius: 0.5
-  m_Height: 2
+  m_Radius: 0.94144326
+  m_Height: 2.1525052
   m_Direction: 1
-  m_Center: {x: 0, y: 0, z: 0}
+  m_Center: {x: 0, y: 0.07625258, z: -0.02810663}
 --- !u!114 &5245602710253449126
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -431,9 +431,6 @@ MonoBehaviour:
   HealthChanged:
     m_PersistentCalls:
       m_Calls: []
-  Died:
-    m_PersistentCalls:
-      m_Calls: []
 --- !u!114 &1752456945702998558
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -462,19 +459,15 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerChairCombat
   chairInventory: {fileID: 1752456945702998558}
+  meleeChair: {fileID: 0}
   attackOrigin: {fileID: 1434063363301762774}
   thrownChairPrefab: {fileID: 379778833432809535, guid: d462b5a226423a049b5c4863c01d745f, type: 3}
-  _swingAnimation: {fileID: 0}
   primaryAction: {fileID: -1970087260131177940, guid: 8c9f75bd977566849ba70dc32bf527a3, type: 3}
   combatMode: 1
-  meleeRange: 2
-  meleeRadius: 0.8
-  meleeDamage: 15
-  maxMeleeUses: 4
   meleeCooldown: 0.45
+  throwCooldown: 0.7
   throwDamage: 35
   throwForce: 16
-  throwCooldown: 0.7
 --- !u!114 &8494592422233138640
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -560,13 +553,53 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 46dce804e0368924394a96136a110479, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 3389306411467133595}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 46dce804e0368924394a96136a110479, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 6386356791131988394}
   m_SourcePrefab: {fileID: 100100000, guid: 46dce804e0368924394a96136a110479, type: 3}
 --- !u!1 &6975475625302908087 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: 46dce804e0368924394a96136a110479, type: 3}
   m_PrefabInstance: {fileID: 7785799952375898598}
   m_PrefabAsset: {fileID: 0}
+--- !u!65 &3389306411467133595
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6975475625302908087}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 0
+  serializedVersion: 3
+  m_Size: {x: 0.006008074, y: 0.006511103, z: 0.009102891}
+  m_Center: {x: -0.0000000018626451, y: 0.0003136952, z: 0.004552331}
+--- !u!114 &6386356791131988394
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6975475625302908087}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5f9093b2868dc944aa95037d093ebddc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerMeleeHitbox
+  hitboxCollider: {fileID: 3389306411467133595}
 --- !u!4 &7747896371891602957 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 46dce804e0368924394a96136a110479, type: 3}

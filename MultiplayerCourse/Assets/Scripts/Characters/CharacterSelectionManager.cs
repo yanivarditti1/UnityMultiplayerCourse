@@ -1,4 +1,5 @@
 using Fusion;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.Events;
 
@@ -18,6 +19,9 @@ public sealed class CharacterSelectionManager : NetworkBehaviour
     public override void Spawned()
     {
         RefreshAllSlots();
+        
+       
+        
     }
 
     public void RequestCharacter(int slotIndex)
@@ -46,10 +50,7 @@ public sealed class CharacterSelectionManager : NetworkBehaviour
         TakenByPlayers.Set(slotIndex, requestingPlayer);
 
         RPC_SlotTakenChanged(slotIndex, true);
-
-        // IMPORTANT:
-        // Master does NOT spawn the player anymore.
-        // It only approves the player to spawn themselves.
+        
         RPC_CharacterApproved(requestingPlayer, slotIndex);
     }
 

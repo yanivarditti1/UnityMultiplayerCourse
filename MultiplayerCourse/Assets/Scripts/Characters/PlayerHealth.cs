@@ -10,8 +10,9 @@ public sealed class PlayerHealth : NetworkBehaviour
     [Networked, OnChangedRender(nameof(OnHealthChanged))]
     public int CurrentHealth { get; private set; }
 
-    public UnityEvent<int> HealthChanged;
-    public UnityEvent Died;
+    public int MaxHealth => maxHealth;
+
+    public UnityEvent<int, int> HealthChanged;
 
     public override void Spawned()
     {
@@ -34,12 +35,15 @@ public sealed class PlayerHealth : NetworkBehaviour
 
         CurrentHealth = Mathf.Max(CurrentHealth - damage, 0);
 
-        if (CurrentHealth <= 0)
-            Died?.Invoke();
+        Debug.Log(
+            $"[Health] Player {Object.InputAuthority.PlayerId} took {damage} damage. " +
+            $"Health: {CurrentHealth}/{maxHealth}");
+
+        OnHealthChanged();
     }
 
     private void OnHealthChanged()
     {
-        HealthChanged?.Invoke(CurrentHealth);
+        HealthChanged?.Invoke(CurrentHealth, maxHealth);
     }
 }

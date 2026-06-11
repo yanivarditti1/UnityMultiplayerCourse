@@ -6,7 +6,7 @@ public sealed class ThrownChairProjectile : NetworkBehaviour
     [Header("References")]
     [SerializeField] private Rigidbody rb;
 
-    [Header("Lifetime")]
+    [Header("Settings")]
     [SerializeField] private float lifetime = 5f;
 
     private int _damage;
@@ -48,9 +48,17 @@ public sealed class ThrownChairProjectile : NetworkBehaviour
 
         _hasHit = true;
 
-        if (collision.collider.TryGetComponent(out PlayerHitbox hitbox))
+        PlayerHitbox hitbox = collision.collider.GetComponentInParent<PlayerHitbox>();
+
+        if (hitbox != null)
         {
-            hitbox.DamageReceiver.ReceiveDamage(_damage, _owner);
+            hitbox.DamageReceiver.ReceiveDamage(
+                _damage,
+                _owner);
+        }
+        else
+        {
+            return;
         }
 
         Runner.Despawn(Object);
