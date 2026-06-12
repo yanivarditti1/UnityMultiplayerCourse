@@ -64,9 +64,6 @@ PrefabInstance:
       addedObject: {fileID: 1956595751943640700}
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 46dce804e0368924394a96136a110479, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 7438999151417999072}
-    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 46dce804e0368924394a96136a110479, type: 3}
-      insertIndex: -1
       addedObject: {fileID: 3638267998583310642}
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 46dce804e0368924394a96136a110479, type: 3}
       insertIndex: -1
@@ -114,33 +111,6 @@ MonoBehaviour:
   SyncParent: 0
   _autoAOIOverride: 1
   DisableSharedModeInterpolation: 0
---- !u!54 &7438999151417999072
-Rigidbody:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4177085046118384890}
-  serializedVersion: 5
-  m_Mass: 1
-  m_LinearDamping: 0
-  m_AngularDamping: 0.05
-  m_CenterOfMass: {x: 0, y: 0, z: 0}
-  m_InertiaTensor: {x: 1, y: 1, z: 1}
-  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ImplicitCom: 1
-  m_ImplicitTensor: 1
-  m_UseGravity: 1
-  m_IsKinematic: 0
-  m_Interpolate: 0
-  m_Constraints: 0
-  m_CollisionDetection: 0
 --- !u!65 &3638267998583310642
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -174,5 +144,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d2ff70c38b6445d4f97c5dc2f4d0a51e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ThrownChairProjectile
-  rb: {fileID: 7438999151417999072}
-  lifetime: 5
+  lifetime: 3
+  hitRadius: 0.5
+  gravity: -25
+  spinSpeed: {x: 240, y: 0, z: 0}

@@ -3,29 +3,24 @@ using UnityEngine;
 
 public sealed class ThrownChairProjectile : NetworkBehaviour
 {
-    [Header("References")]
-    [SerializeField] private Rigidbody rb;
+    [SerializeField] private float lifetime = 2.5f;
+    [SerializeField] private float hitRadius = 0.45f;
+    [SerializeField] private float gravity = -25f;
+    [SerializeField] private Vector3 spinSpeed = new(240f, 0f, 0f);
 
-    [Header("Settings")]
-    [SerializeField] private float lifetime = 5f;
-
+    private Vector3 _velocity;
     private int _damage;
     private PlayerRef _owner;
-    private bool _hasHit;
     private TickTimer _lifeTimer;
 
     public override void Spawned()
     {
-        if (rb)
-        {
-            rb.linearVelocity = Vector3.zero;
-            rb.angularVelocity = Vector3.zero;
-        }
+        if (!Object.HasStateAuthority)
+            return;
 
-        if (Object.HasStateAuthority)
-            _lifeTimer = TickTimer.CreateFromSeconds(
-                Runner,
-                lifetime);
+        _lifeTimer = TickTimer.CreateFromSeconds(
+            Runner,
+            lifetime);
     }
 
     public override void FixedUpdateNetwork()
@@ -34,37 +29,62 @@ public sealed class ThrownChairProjectile : NetworkBehaviour
             return;
 
         if (_lifeTimer.Expired(Runner))
+        {
             Runner.Despawn(Object);
+            return;
+        }
+
+        _velocity.y += gravity * Runner.DeltaTime;
+
+        Vector3 startPosition = transform.position;
+
+        transform.position +=
+            _velocity * Runner.DeltaTime;
+
+        transform.Rotate(
+            spinSpeed * Runner.DeltaTime,
+            Space.Self);
+
+        Vector3 movementDirection =
+            transform.position - startPosition;
+
+        float movementDistance =
+            movementDirection.magnitude;
+
+        if (movementDistance <= 0f)
+            return;
+
+        if (Physics.SphereCast(
+                startPosition,
+                hitRadius,
+                movementDirection.normalized,
+                out RaycastHit hit,
+                movementDistance))
+        {
+            PlayerHitbox hitbox =
+                hit.collider.GetComponentInParent<PlayerHitbox>();
+
+            if (hitbox != null)
+            {
+                hitbox.DamageReceiver.ReceiveDamage(
+                    _damage,
+                    _owner);
+            }
+
+            Runner.Despawn(Object);
+        }
     }
 
-    public void Launch(Vector3 direction, float force, int damage, PlayerRef owner)
+    public void Launch(
+        Vector3 direction,
+        float force,
+        int damage,
+        PlayerRef owner)
     {
+        _velocity =
+            direction.normalized * force;
+
         _damage = damage;
         _owner = owner;
-
-        if (rb)
-            rb.linearVelocity = direction.normalized * force;
-    }
-
-    private void OnCollisionEnter(Collision collision)
-    {
-        if (!Object.HasStateAuthority)
-            return;
-
-        if (_hasHit)
-            return;
-
-        _hasHit = true;
-
-        PlayerHitbox hitbox = collision.collider.GetComponentInParent<PlayerHitbox>();
-
-        if (hitbox != null)
-        {
-            hitbox.DamageReceiver.ReceiveDamage(
-                _damage,
-                _owner);
-        }
-        
-        Runner.Despawn(Object);
     }
 }

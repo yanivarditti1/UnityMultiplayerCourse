@@ -459,6 +459,100 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 146924442}
   m_CullTransparentMesh: 1
+--- !u!1 &163175201
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 163175203}
+  - component: {fileID: 163175202}
+  m_Layer: 0
+  m_Name: ChairSpawn_6
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &163175202
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 163175201}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e84a8588d7f089c4886821a313b4dec5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ChairSpawner
+  chairPrefab: {fileID: 5527367144920919449, guid: 5568c38ca3a300d4588d91894d6d7e2d, type: 3}
+  spawnPoint: {fileID: 163175203}
+  respawnDelay: 8
+--- !u!4 &163175203
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 163175201}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -57.2, y: 0.6, z: -71.4}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 486655894}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &300568293
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 300568295}
+  - component: {fileID: 300568294}
+  m_Layer: 0
+  m_Name: ChairSpawn_3
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &300568294
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 300568293}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e84a8588d7f089c4886821a313b4dec5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ChairSpawner
+  chairPrefab: {fileID: 5527367144920919449, guid: 5568c38ca3a300d4588d91894d6d7e2d, type: 3}
+  spawnPoint: {fileID: 300568295}
+  respawnDelay: 8
+--- !u!4 &300568295
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 300568293}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0.6, z: -55.93}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 486655894}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &381422868
 GameObject:
   m_ObjectHideFlags: 0
@@ -1047,6 +1141,11 @@ Transform:
   - {fileID: 848014615}
   - {fileID: 654279014}
   - {fileID: 871041594}
+  - {fileID: 300568295}
+  - {fileID: 1703286682}
+  - {fileID: 1707667863}
+  - {fileID: 163175203}
+  - {fileID: 1548231865}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &486655895
@@ -1069,6 +1168,11 @@ MonoBehaviour:
   - {fileID: 848014616}
   - {fileID: 654279015}
   - {fileID: 871041595}
+  - {fileID: 300568294}
+  - {fileID: 1703286681}
+  - {fileID: 1707667862}
+  - {fileID: 163175202}
+  - {fileID: 1548231864}
   ForceRemoteRenderTimeframe: 0
 --- !u!1 &495280260
 GameObject:
@@ -1199,7 +1303,7 @@ Transform:
   m_GameObject: {fileID: 654279013}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -27.29, y: 1, z: 0}
+  m_LocalPosition: {x: -27.29, y: 0.6, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1217,9 +1321,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e84a8588d7f089c4886821a313b4dec5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ChairSpawner
-  chairPrefab: {fileID: 5007345362894998951, guid: 7fa22504a82908647b0514982528e121, type: 3}
+  chairPrefab: {fileID: 5527367144920919449, guid: 5568c38ca3a300d4588d91894d6d7e2d, type: 3}
   spawnPoint: {fileID: 654279014}
-  respawnDelay: 5
+  respawnDelay: 8
 --- !u!1 &695538326
 GameObject:
   m_ObjectHideFlags: 0
@@ -1752,7 +1856,7 @@ Transform:
   m_GameObject: {fileID: 848014614}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -14.9, y: 1, z: 0}
+  m_LocalPosition: {x: -66.4, y: 0.6, z: -38.3}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1770,9 +1874,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e84a8588d7f089c4886821a313b4dec5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ChairSpawner
-  chairPrefab: {fileID: 5007345362894998951, guid: 7fa22504a82908647b0514982528e121, type: 3}
+  chairPrefab: {fileID: 5527367144920919449, guid: 5568c38ca3a300d4588d91894d6d7e2d, type: 3}
   spawnPoint: {fileID: 848014615}
-  respawnDelay: 5
+  respawnDelay: 8
 --- !u!1 &860328439
 GameObject:
   m_ObjectHideFlags: 0
@@ -1861,7 +1965,7 @@ Transform:
   m_GameObject: {fileID: 871041593}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 1, z: -23.48}
+  m_LocalPosition: {x: 0, y: 0.6, z: -23.48}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1879,9 +1983,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e84a8588d7f089c4886821a313b4dec5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ChairSpawner
-  chairPrefab: {fileID: 5007345362894998951, guid: 7fa22504a82908647b0514982528e121, type: 3}
+  chairPrefab: {fileID: 5527367144920919449, guid: 5568c38ca3a300d4588d91894d6d7e2d, type: 3}
   spawnPoint: {fileID: 871041594}
-  respawnDelay: 5
+  respawnDelay: 8
 --- !u!1 &910276695
 GameObject:
   m_ObjectHideFlags: 0
@@ -2957,6 +3061,53 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1548231863
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1548231865}
+  - component: {fileID: 1548231864}
+  m_Layer: 0
+  m_Name: ChairSpawn_7
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1548231864
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1548231863}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e84a8588d7f089c4886821a313b4dec5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ChairSpawner
+  chairPrefab: {fileID: 5527367144920919449, guid: 5568c38ca3a300d4588d91894d6d7e2d, type: 3}
+  spawnPoint: {fileID: 1548231865}
+  respawnDelay: 8
+--- !u!4 &1548231865
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1548231863}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -71.9, y: 0.6, z: 22.2}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 486655894}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1620443256
 GameObject:
   m_ObjectHideFlags: 0
@@ -3479,6 +3630,100 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1703286680
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1703286682}
+  - component: {fileID: 1703286681}
+  m_Layer: 0
+  m_Name: ChairSpawn_4
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1703286681
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1703286680}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e84a8588d7f089c4886821a313b4dec5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ChairSpawner
+  chairPrefab: {fileID: 5527367144920919449, guid: 5568c38ca3a300d4588d91894d6d7e2d, type: 3}
+  spawnPoint: {fileID: 1703286682}
+  respawnDelay: 8
+--- !u!4 &1703286682
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1703286680}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 46, y: 0.6, z: -55.93}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 486655894}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1707667861
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1707667863}
+  - component: {fileID: 1707667862}
+  m_Layer: 0
+  m_Name: ChairSpawn_5
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1707667862
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1707667861}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e84a8588d7f089c4886821a313b4dec5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ChairSpawner
+  chairPrefab: {fileID: 5527367144920919449, guid: 5568c38ca3a300d4588d91894d6d7e2d, type: 3}
+  spawnPoint: {fileID: 1707667863}
+  respawnDelay: 8
+--- !u!4 &1707667863
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1707667861}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 46, y: 0.6, z: -3.4}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 486655894}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1759648859
 GameObject:

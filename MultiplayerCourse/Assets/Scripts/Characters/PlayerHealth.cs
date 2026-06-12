@@ -11,8 +11,10 @@ public sealed class PlayerHealth : NetworkBehaviour
     public int CurrentHealth { get; private set; }
 
     public int MaxHealth => maxHealth;
+    public bool IsDead => CurrentHealth <= 0;
 
-    public UnityEvent<int, int> HealthChanged;
+    public UnityEvent<int, int> HealthChanged = new();
+    public UnityEvent Died = new();
 
     public override void Spawned()
     {
@@ -27,6 +29,15 @@ public sealed class PlayerHealth : NetworkBehaviour
         RPC_RequestDamage(damage);
     }
 
+    public void RestoreFullHealth()
+    {
+        if (!Object.HasStateAuthority)
+            return;
+
+        CurrentHealth = maxHealth;
+        OnHealthChanged();
+    }
+
     [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
     private void RPC_RequestDamage(int damage)
     {
@@ -35,11 +46,12 @@ public sealed class PlayerHealth : NetworkBehaviour
 
         CurrentHealth = Mathf.Max(CurrentHealth - damage, 0);
 
-        Debug.Log(
-            $"[Health] Player {Object.InputAuthority.PlayerId} took {damage} damage. " +
-            $"Health: {CurrentHealth}/{maxHealth}");
+        Debug.Log($"[Health] Player {Object.InputAuthority.PlayerId}: {CurrentHealth}/{maxHealth}");
 
         OnHealthChanged();
+
+        if (CurrentHealth <= 0)
+            Died?.Invoke();
     }
 
     private void OnHealthChanged()

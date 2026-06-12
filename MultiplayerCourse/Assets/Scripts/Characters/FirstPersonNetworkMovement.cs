@@ -11,7 +11,7 @@ public sealed class FirstPersonNetworkMovement : NetworkBehaviour
 
     [Header("Movement Settings")]
     [SerializeField] private float moveSpeed = 6f;
-    [SerializeField] private float sprintMultiplier = 1.5f;
+    [SerializeField] private float sprintMultiplier = 6f;
     [SerializeField] private float jumpForce = 7f;
     [SerializeField] private float gravity = -9.81f;
 
