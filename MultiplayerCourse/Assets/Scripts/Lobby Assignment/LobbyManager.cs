@@ -14,7 +14,8 @@ public class LobbyManager : MonoBehaviour, INetworkRunnerCallbacks
     [SerializeField] private NetworkRunner _networkRunner;
     [SerializeField] private SceneDataSO _sceneData;
     [SerializeField] private PlayerManager _playerManagerPrefab;
-    
+    [SerializeField] private ChatManager _chatManagerPrefab;
+
     //lobby events
     public event Action OnLobbyJoined;
     public event Action<string> OnLobbyJoinFailed; //string = reason
@@ -30,7 +31,14 @@ public class LobbyManager : MonoBehaviour, INetworkRunnerCallbacks
     public event Action<List<PlayerRef>> OnRoomListUpdate;
     public event Action OnMatchStarted;
     public event Action<PlayerRef, string> OnPlayerNicknameChanged;
+    //chat events
+    public event Action<ChatMessage, string> OnChatMessageReceived;
+    public event Action<string> OnChatSystemMessage;
+    public event Action<string> OnChatErrorReceived;
     
+    private Action<ChatMessage, string> _chatMessageHandler;
+    
+    private Action<string> _chatErrorHandler;
     //lobby state
     public NetworkRunner Runner { get; private set; }
     public bool IsInLobby { get; private set; }
@@ -283,7 +291,8 @@ public class LobbyManager : MonoBehaviour, INetworkRunnerCallbacks
                 _playerManagerPrefab, 
                 inputAuthority: player,
                 onBeforeSpawned: (_, obj) => runner.MakeDontDestroyOnLoad(obj.gameObject));
-        
+        SpawnChatManagerIfNeeded();
+
         Debug.Log($"[LobbyManager] Player '{player}' joined the room");
         OnRoomListUpdate?.Invoke(new List<PlayerRef>(_roomPlayers.Keys));
     }
@@ -305,6 +314,13 @@ public class LobbyManager : MonoBehaviour, INetworkRunnerCallbacks
         Runner = null;
         Debug.Log($"[LobbyManager] LobbyManager shutdown. Reason: {shutdownReason}");
         OnLobbyLeave?.Invoke();
+        if (ChatManager.Instance != null)
+        {
+            ChatManager.OnMessageReceived -= (msg, sender) => OnChatMessageReceived?.Invoke(msg, sender);
+            ChatManager.OnChatError -= err => OnChatErrorReceived?.Invoke(err);
+            ChatManager.OnMessageReceived -= _chatMessageHandler;
+            ChatManager.OnChatError -= _chatErrorHandler;
+        }
     }
 
     public void OnDisconnectedFromServer(NetworkRunner runner, NetDisconnectReason reason)
@@ -383,7 +399,16 @@ public class LobbyManager : MonoBehaviour, INetworkRunnerCallbacks
     {
         OnPlayerNicknameChanged?.Invoke(player, nickname);
     }
-    
+
+    public void NotifyChatManagerSpawned()
+    {
+        _chatMessageHandler = (msg, sender) => OnChatMessageReceived?.Invoke(msg, sender);
+        _chatErrorHandler = err => OnChatErrorReceived?.Invoke(err);
+
+        ChatManager.OnMessageReceived += _chatMessageHandler;
+        ChatManager.OnChatError += _chatErrorHandler;
+    }
+
     #endregion
     
     #region Helpers
@@ -406,6 +431,15 @@ public class LobbyManager : MonoBehaviour, INetworkRunnerCallbacks
         runner.AddCallbacks(this);
 
         return runner;
+    }
+    private void SpawnChatManagerIfNeeded()
+    {
+        if (!Runner.IsSharedModeMasterClient) return;
+        if (ChatManager.Instance != null) return;
+
+        Runner.Spawn(
+            _chatManagerPrefab,
+            onBeforeSpawned: (_, obj) => Runner.MakeDontDestroyOnLoad(obj.gameObject));
     }
     
     #endregion
