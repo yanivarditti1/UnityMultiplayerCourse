@@ -434,6 +434,7 @@ public class LobbyManager : MonoBehaviour, INetworkRunnerCallbacks
     }
     private void SpawnChatManagerIfNeeded()
     {
+        Debug.Log($"[LobbyManager] SpawnChatManagerIfNeeded called. IsMaster: {Runner.IsSharedModeMasterClient}, Existing instance: {ChatManager.Instance != null}");
         if (!Runner.IsSharedModeMasterClient) return;
         if (ChatManager.Instance != null) return;
 

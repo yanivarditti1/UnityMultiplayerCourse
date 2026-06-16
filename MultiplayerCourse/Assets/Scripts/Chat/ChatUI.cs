@@ -35,21 +35,25 @@ public class ChatUI : MonoBehaviour
         _parentCanvas = GetComponentInParent<Canvas>();
         
         // Initialize UI
-        if (chatPanel != null)
+        if (chatPanel)
             chatPanel.SetActive(_isChatOpen);
             
         UpdatePlaceholderText();
+        DontDestroyOnLoad(transform.root.gameObject);
+    
     }
 
     // ChatUI.cs OnEnable
     void OnEnable()
     {
+        if (LobbyManager.Instance == null) return;
         LobbyManager.Instance.OnChatMessageReceived += OnMessageReceived;
         LobbyManager.Instance.OnChatErrorReceived   += OnChatError;
     }
 
     void OnDisable()
     {
+        if (LobbyManager.Instance == null) return;
         LobbyManager.Instance.OnChatMessageReceived -= OnMessageReceived;
         LobbyManager.Instance.OnChatErrorReceived   -= OnChatError;
     }
@@ -219,7 +223,7 @@ public class ChatUI : MonoBehaviour
             messageInputField.DeactivateInputField();
     }
 
-    private void SendMessage()
+    public void SendMessage()
     {
         if (messageInputField == null || ChatManager.Instance == null)
             return;
@@ -257,9 +261,6 @@ public class ChatUI : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// Loads and displays the message history
-    /// </summary>
     public void LoadMessageHistory()
     {
         if (ChatManager.Instance == null)

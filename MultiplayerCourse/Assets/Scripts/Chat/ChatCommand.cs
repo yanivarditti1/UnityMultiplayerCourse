@@ -91,7 +91,7 @@ public static class ChatCommand
                 playerList += $"- {nickname}\n";
             }
         }
-        
+
         ChatManager.RaiseSystemMessage(playerList.TrimEnd());
     }
 
