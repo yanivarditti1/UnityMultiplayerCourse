@@ -11,9 +11,11 @@ public sealed class CharacterSelectionButton : MonoBehaviour
     [SerializeField] private CharacterSelectionManager selectionManager;
 
     private string _originalText;
+    private Image _image;
 
     private void Awake()
     {
+        _image = GetComponent<Image>();
         _originalText = label.text;
         button.onClick.AddListener(HandleClicked);
     }
@@ -34,6 +36,7 @@ public sealed class CharacterSelectionButton : MonoBehaviour
 
     private void HandleClicked()
     {
-        selectionManager.RequestCharacter(slotIndex);
+        Color playerColor = _image != null ? _image.color : Color.white;
+        selectionManager.RequestCharacter(slotIndex, playerColor);
     }
 }

@@ -24,16 +24,16 @@ public sealed class CharacterSelectionManager : NetworkBehaviour
         
     }
 
-    public void RequestCharacter(int slotIndex)
+    public void RequestCharacter(int slotIndex, Color nameColor)
     {
         if (slotIndex < 0 || slotIndex >= characterSlots.Length)
             return;
 
-        RPC_RequestCharacter(Runner.LocalPlayer, slotIndex);
+        RPC_RequestCharacter(Runner.LocalPlayer, slotIndex, nameColor);
     }
 
     [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
-    private void RPC_RequestCharacter(PlayerRef requestingPlayer, int slotIndex)
+    private void RPC_RequestCharacter(PlayerRef requestingPlayer, int slotIndex, Color nameColor = default)
     {
         if (!Runner.IsSharedModeMasterClient)
             return;
@@ -51,11 +51,11 @@ public sealed class CharacterSelectionManager : NetworkBehaviour
 
         RPC_SlotTakenChanged(slotIndex, true);
         
-        RPC_CharacterApproved(requestingPlayer, slotIndex);
+        RPC_CharacterApproved(requestingPlayer, slotIndex, nameColor);
     }
 
     [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
-    private void RPC_CharacterApproved([RpcTarget] PlayerRef targetPlayer, int slotIndex)
+    private void RPC_CharacterApproved([RpcTarget] PlayerRef targetPlayer, int slotIndex, Color nameColor)
     {
         if (Runner.LocalPlayer != targetPlayer)
             return;
@@ -68,6 +68,9 @@ public sealed class CharacterSelectionManager : NetworkBehaviour
             slot.SpawnPoint.rotation,
             Runner.LocalPlayer
         );
+        
+        if (PlayerManager.Local != null)
+            PlayerManager.Local.SetNameColor(nameColor);
 
         onSelectionMessage?.Invoke("Character selected!");
         onLocalPlayerSpawned?.Invoke();

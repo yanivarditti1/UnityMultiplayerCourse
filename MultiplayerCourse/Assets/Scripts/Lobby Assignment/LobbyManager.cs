@@ -17,7 +17,7 @@ public class LobbyManager : MonoBehaviour, INetworkRunnerCallbacks
     [SerializeField] private ChatManager _chatManagerPrefab;
 
     //lobby events
-    public event Action OnLobbyJoined;
+    public event Action<List<SessionInfo>> OnLobbyJoined;
     public event Action<string> OnLobbyJoinFailed; //string = reason
     public event Action OnLobbyLeave;
     public event Action<List<SessionInfo>> OnSessionListRefreshed;
@@ -100,12 +100,12 @@ public class LobbyManager : MonoBehaviour, INetworkRunnerCallbacks
             IsInLobby = true;
             _currentLobbyId = lobbyID;
             Debug.Log($"[LobbyManager] Joined lobby: '{lobbyID}'");
-            OnLobbyJoined?.Invoke();
 
             if (_sessionsList != null && _sessionsList.Count > 0)
             {
                 OnSessionListRefreshed?.Invoke(new List<SessionInfo>(_sessionsList));
             }
+            OnLobbyJoined?.Invoke(_sessionsList);
         }
         else
         {
@@ -294,6 +294,7 @@ public class LobbyManager : MonoBehaviour, INetworkRunnerCallbacks
         SpawnChatManagerIfNeeded();
 
         Debug.Log($"[LobbyManager] Player '{player}' joined the room");
+        
         OnRoomListUpdate?.Invoke(new List<PlayerRef>(_roomPlayers.Keys));
     }
 

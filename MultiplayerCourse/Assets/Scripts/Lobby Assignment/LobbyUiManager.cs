@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using Fusion;
 using TMPro;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 public class LobbyUiManager : MonoBehaviour
@@ -50,11 +51,13 @@ public class LobbyUiManager : MonoBehaviour
         SubscribeToManager();
         ShowConnectPanel();
         SetupButtonListeners();
+        SceneManager.sceneLoaded += OnSceneLoaded;
     }
 
     private void OnDestroy()
     {
         UnsubscribeFromManager();
+        SceneManager.sceneLoaded -= OnSceneLoaded;
     }
     
     #region Subscriptions
@@ -189,7 +192,7 @@ public class LobbyUiManager : MonoBehaviour
     
     #region EventHandlers
 
-    private void HandleLobbyJoined()
+    private void HandleLobbyJoined(List<SessionInfo> sessions)
     {
         SetStatus(_connectStatusText, "");
         ShowLobbyPanel();
@@ -340,6 +343,11 @@ public class LobbyUiManager : MonoBehaviour
         label.text = isLocal ? $"{nickname} (You)" : $"{nickname}";
     }
     
+    private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+    {
+        HidePanelsOnLoadScene();
+    }
+    
     #endregion
     
     #region Helpers
@@ -363,6 +371,13 @@ public class LobbyUiManager : MonoBehaviour
         _connectPanel.SetActive(false);
         _lobbyPanel.SetActive(false);
         _roomPanel.SetActive(true);   
+    }
+
+    private void HidePanelsOnLoadScene()
+    {
+        if (_connectPanel.activeSelf) _connectPanel.SetActive(false);
+        if (_lobbyPanel.activeSelf) _lobbyPanel.SetActive(false);
+        if (_roomPanel.activeSelf) _roomPanel.SetActive(false);
     }
 
     private void SelectSession(SessionInfo session)

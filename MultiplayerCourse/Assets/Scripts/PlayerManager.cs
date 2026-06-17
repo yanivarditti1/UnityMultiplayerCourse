@@ -12,11 +12,15 @@ public class PlayerManager : NetworkBehaviour
     
     [Networked, OnChangedRender (nameof(OnNicknameChanged))]
     public NetworkString<_32> Nickname { get; private set; }
+    
+    [Networked, OnChangedRender(nameof(OnPlayerColorChanged))]
+    public Color PlayerColor { get; private set; } = Color.white;
 
     [Networked] public int MaxHealth { get; private set; }
     [Networked] public string PlayerCharacter { get; private set; }
     
     public static event Action<PlayerRef, string> OnAnyNicknameChanged;
+    public static event Action<PlayerRef, Color> OnAnyPlayerColorChanged;
 
 
     public override void Spawned()
@@ -26,7 +30,6 @@ public class PlayerManager : NetworkBehaviour
         if (Object.HasStateAuthority)
         {
             Local = this;
-            //DontDestroyOnLoad(Object);
             var data = PlayerDataPersistanceManager.Instance;
             var nickname = string.IsNullOrEmpty(data.Nickname)
                 ? $"Player { Object.InputAuthority.PlayerId }"
@@ -35,12 +38,16 @@ public class PlayerManager : NetworkBehaviour
             Nickname = nickname;
             MaxHealth = data.MaxHealth;
             PlayerCharacter = data.PlayerCharacter;
-            
-            //SetNickname(nickname);
         }
         
         if (LobbyManager.Instance != null)
             LobbyManager.Instance.NotifyPlayerManagerSpawned();
+    }
+
+    public void SetNameColor(Color color)
+    {
+        if (Object.HasStateAuthority)
+            PlayerColor = color;
     }
 
     public override void Despawned(NetworkRunner runner, bool hasState)
@@ -50,14 +57,13 @@ public class PlayerManager : NetworkBehaviour
             Local = null;
     }
 
-    /*private void SetNickname(string nickname)
-    {
-        if (!Object.HasStateAuthority) return;
-        Nickname = nickname;
-    }*/
-
     private void OnNicknameChanged()
     {
         OnAnyNicknameChanged?.Invoke(Object.InputAuthority, Nickname.ToString());
+    }
+
+    private void OnPlayerColorChanged()
+    {
+        OnAnyPlayerColorChanged?.Invoke(Object.InputAuthority, PlayerColor);
     }
 }
