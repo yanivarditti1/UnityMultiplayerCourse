@@ -51,13 +51,11 @@ public class LobbyUiManager : MonoBehaviour
         SubscribeToManager();
         ShowConnectPanel();
         SetupButtonListeners();
-        SceneManager.sceneLoaded += OnSceneLoaded;
     }
 
     private void OnDestroy()
     {
         UnsubscribeFromManager();
-        SceneManager.sceneLoaded -= OnSceneLoaded;
     }
     
     #region Subscriptions
@@ -79,6 +77,7 @@ public class LobbyUiManager : MonoBehaviour
         manager.OnRoomListUpdate        += HandleRoomListUpdate;
         manager.OnMatchStarted          += HandleMatchStarted;
         manager.OnPlayerNicknameChanged += HandlePlayerNicknameChanged;
+        manager.OnGameSceneLoaded       += HandleGameSceneLoaded;
     }
 
     private void UnsubscribeFromManager()
@@ -98,6 +97,7 @@ public class LobbyUiManager : MonoBehaviour
         manager.OnRoomListUpdate        -= HandleRoomListUpdate;
         manager.OnMatchStarted          -= HandleMatchStarted;
         manager.OnPlayerNicknameChanged -= HandlePlayerNicknameChanged;
+        manager.OnGameSceneLoaded       -= HandleGameSceneLoaded;
     }
     #endregion
     
@@ -323,6 +323,7 @@ public class LobbyUiManager : MonoBehaviour
     {
         _startMatchButton.interactable = false;
         SetStatus(_roomStatusText, "Starting Match...");
+        HidePanelsOnLoadScene();
     }
 
     private void HandlePlayerNicknameChanged(PlayerRef player, string nickname)
@@ -343,8 +344,9 @@ public class LobbyUiManager : MonoBehaviour
         label.text = isLocal ? $"{nickname} (You)" : $"{nickname}";
     }
     
-    private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+    private void HandleGameSceneLoaded()
     {
+        Debug.Log("[LobbyUiManager] Game scene loaded, hiding relevant panels");
         HidePanelsOnLoadScene();
     }
     
@@ -375,9 +377,9 @@ public class LobbyUiManager : MonoBehaviour
 
     private void HidePanelsOnLoadScene()
     {
-        if (_connectPanel.activeSelf) _connectPanel.SetActive(false);
-        if (_lobbyPanel.activeSelf) _lobbyPanel.SetActive(false);
-        if (_roomPanel.activeSelf) _roomPanel.SetActive(false);
+        _connectPanel.SetActive(false);
+        _lobbyPanel.SetActive(false);
+        _roomPanel.SetActive(false);
     }
 
     private void SelectSession(SessionInfo session)

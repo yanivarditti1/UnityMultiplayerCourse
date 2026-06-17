@@ -30,6 +30,7 @@ public class LobbyManager : MonoBehaviour, INetworkRunnerCallbacks
     public event Action  OnRoomLeft;
     public event Action<List<PlayerRef>> OnRoomListUpdate;
     public event Action OnMatchStarted;
+    public event Action OnGameSceneLoaded;
     public event Action<PlayerRef, string> OnPlayerNicknameChanged;
     //chat events
     public event Action<ChatMessage, string> OnChatMessageReceived;
@@ -388,7 +389,8 @@ public class LobbyManager : MonoBehaviour, INetworkRunnerCallbacks
 
     public void OnSceneLoadDone(NetworkRunner runner)
     {
-        
+        Debug.Log("[LobbyManager] OnSceneLoadDone");
+        OnGameSceneLoaded?.Invoke();
     }
 
     public void OnSceneLoadStart(NetworkRunner runner)
@@ -427,10 +429,16 @@ public class LobbyManager : MonoBehaviour, INetworkRunnerCallbacks
         }
         
         DontDestroyOnLoad(go);
+        
         var runner = go.GetComponent<NetworkRunner>();
         runner.ProvideInput = true;
         runner.AddCallbacks(this);
 
+        //_networkRunner = runner;
+
+        //allow unity to res
+        await Task.Yield();
+        
         return runner;
     }
     private void SpawnChatManagerIfNeeded()
