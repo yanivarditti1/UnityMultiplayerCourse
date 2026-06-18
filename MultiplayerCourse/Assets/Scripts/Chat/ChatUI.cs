@@ -21,7 +21,7 @@ public class ChatUI : MonoBehaviour
     [SerializeField] private GameObject systemMessagePrefab;
     
     [Header("Settings")]
-    [SerializeField] private int maxDisplayedMessages = 50;
+    [SerializeField] private int maxDisplayedMessages = 100;
     [SerializeField] private bool autoOpenOnMessage = true;
     [SerializeField] private float autoCloseDelay = 10f;
     
@@ -29,6 +29,8 @@ public class ChatUI : MonoBehaviour
     private readonly Queue<GameObject> _messageObjects = new Queue<GameObject>();
     private float _lastMessageTime;
     private Canvas _parentCanvas;
+    private bool _subscribedToChat = false;
+
 
     private void Awake()
     {
@@ -37,7 +39,7 @@ public class ChatUI : MonoBehaviour
         // Initialize UI
         if (chatPanel)
             chatPanel.SetActive(_isChatOpen);
-            
+            chatPanel.SetActive(_isChatOpen);
         UpdatePlaceholderText();
         DontDestroyOnLoad(transform.root.gameObject);
     
@@ -46,21 +48,58 @@ public class ChatUI : MonoBehaviour
     // ChatUI.cs OnEnable
     void OnEnable()
     {
-        if (LobbyManager.Instance == null) return;
-        LobbyManager.Instance.OnChatMessageReceived += OnMessageReceived;
-        LobbyManager.Instance.OnChatErrorReceived   += OnChatError;
+       if (sendButton != null)
+              sendButton.onClick.AddListener(SendMessage);
+      
+          if (toggleChatButton != null)
+              toggleChatButton.onClick.AddListener(ToggleChat);
+      
+          if (messageInputField != null)
+          {
+              messageInputField.onEndEdit.AddListener(OnInputEndEdit);
+              messageInputField.onValueChanged.AddListener(OnInputValueChanged);
+          }
+      
+          if (LobbyManager.Instance == null) return;
+          LobbyManager.Instance.OnChatMessageReceived += OnMessageReceived;
+          LobbyManager.Instance.OnChatErrorReceived   += OnChatError;
+          TrySubscribeToChat();
+
+
     }
 
     void OnDisable()
     {
+        if (sendButton != null)
+            sendButton.onClick.RemoveListener(SendMessage);
+
+        if (toggleChatButton != null)
+            toggleChatButton.onClick.RemoveListener(ToggleChat);
+
+        if (messageInputField != null)
+        {
+            messageInputField.onEndEdit.RemoveListener(OnInputEndEdit);
+            messageInputField.onValueChanged.RemoveListener(OnInputValueChanged);
+        }
+
         if (LobbyManager.Instance == null) return;
         LobbyManager.Instance.OnChatMessageReceived -= OnMessageReceived;
         LobbyManager.Instance.OnChatErrorReceived   -= OnChatError;
     }
+    private void TrySubscribeToChat()
+    {
+        if (_subscribedToChat) return;
+        if (LobbyManager.Instance == null) return;
+
+        LobbyManager.Instance.OnChatMessageReceived += OnMessageReceived;
+        LobbyManager.Instance.OnChatErrorReceived   += OnChatError;
+        _subscribedToChat = true;
+    }
 
     private void Update()
     {
-        // Handle hotkey to toggle chat
+        if (!_subscribedToChat)
+            TrySubscribeToChat();
         if (Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter))
         {
             if (!_isChatOpen)
@@ -91,7 +130,7 @@ public class ChatUI : MonoBehaviour
     private void OnMessageReceived(ChatMessage message, string senderNickname)
     {
         DisplayMessage(message, senderNickname);
-        
+
         _lastMessageTime = Time.time;
         
         // Auto-open chat on new message
@@ -114,9 +153,9 @@ public class ChatUI : MonoBehaviour
         if (messagePrefab == null || messageContainer == null)
             return;
 
-        // Instantiate message UI object
+        // Instantiate message UI object`
         GameObject messageObj = Instantiate(messagePrefab, messageContainer);
-        
+
         // Configure message content based on type
         ConfigureMessageObject(messageObj, message, senderNickname);
         

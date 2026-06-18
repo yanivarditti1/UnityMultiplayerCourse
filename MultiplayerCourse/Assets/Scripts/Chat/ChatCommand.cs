@@ -2,9 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-/// <summary>
-/// Handles parsing and execution of chat commands
-/// </summary>
+//parsing and execution of chat commands
 public static class ChatCommand
 {
     private static readonly Dictionary<string, Action<string[]>> Commands = new Dictionary<string, Action<string[]>>
@@ -15,12 +13,8 @@ public static class ChatCommand
         { "msg", HandlePrivateMessage }
     };
 
-    /// <summary>
-    /// Processes a chat input to determine if it's a command
-    /// </summary>
-    /// <param name="input">The chat input string</param>
-    /// <returns>True if it was a command and was handled</returns>
-    /// 
+    // Processes a chat input to determine if it's a command
+    
     public static bool ProcessCommand(string input)
     {
         if (string.IsNullOrWhiteSpace(input) || !input.StartsWith("/"))

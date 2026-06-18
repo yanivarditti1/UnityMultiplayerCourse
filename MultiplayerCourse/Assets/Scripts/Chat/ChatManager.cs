@@ -4,26 +4,19 @@ using System.Linq;
 using Fusion;
 using UnityEngine;
 
-/// <summary>
-/// Manages chat functionality using Photon Fusion RPCs
-/// Handles both global room chat and private direct messages
-/// </summary>
+// Manages chat functionality using RPCs
+// Handles both global room chat and private direct messages
+
 public class ChatManager : NetworkBehaviour
 {
     [Header("Settings")]
     [SerializeField] private int maxMessageHistory = 100;
     [SerializeField] private float messageTimeoutSeconds = 300f; // 5 minutes
     
-    /// <summary>
-    /// Event fired when a new chat message is received
-    /// Parameters: message, senderNickname
-    /// </summary>
+    // Event fired when a new chat message is received
     public static event Action<ChatMessage, string> OnMessageReceived;
     
-    /// <summary>
-    /// Event fired when a chat error occurs
-    /// Parameters: errorMessage
-    /// </summary>
+    // Event fired when a chat error occurs
     public static event Action<string> OnChatError;
     
     private static ChatManager _instance;
@@ -40,6 +33,7 @@ public class ChatManager : NetworkBehaviour
         {
             _instance = this;
             PlayerManager.OnAnyNicknameChanged += OnPlayerNicknameChanged;
+            Debug.Log($"[ChatManager] Spawned. LobbyManager.Instance null: {LobbyManager.Instance == null}");
 
             // Tell LobbyManager chat is ready
             if (LobbyManager.Instance != null)
@@ -67,10 +61,7 @@ public class ChatManager : NetworkBehaviour
         _playerNicknames[player] = nickname;
     }
 
-    /// <summary>
-    /// Sends a chat message. Supports both global messages and private messages with /msg command
-    /// </summary>
-    /// <param name="messageText">The message text to send</param>
+    // Sends a chat message. Supports both global messages and private messages with /msg command
     public void SendMessage(string messageText)
     {
         if (string.IsNullOrWhiteSpace(messageText))
@@ -83,49 +74,22 @@ public class ChatManager : NetworkBehaviour
         }
 
         // Parse for private message command
-        if (messageText.StartsWith("/msg ", StringComparison.OrdinalIgnoreCase))
-        {
-            ParseAndSendPrivateMessage(messageText);
-        }
-        else
-        {
-            // Send global message
-            SendGlobalMessage(messageText);
-        }
+        if (ChatCommand.ProcessCommand(messageText))
+            return;
+        // Send global message
+        SendGlobalMessage(messageText);
     }
 
-    /// <summary>
-    /// Sends a global message to all players in the room
-    /// </summary>
-    /// <param name="messageText">Message content</param>
+    // Sends a global message to all players in the room
     public void SendGlobalMessage(string messageText)
     {
-        if (!Object.HasInputAuthority)
-        {
-            OnChatError?.Invoke("Cannot send messages without input authority");
-            return;
-        }
-
         RPC_SendGlobalMessage(Runner.LocalPlayer, messageText);
     }
-
-    // ReSharper disable Unity.PerformanceAnalysis
-    /// <summary>
-    /// Sends a private message to a specific player
-    /// </summary>
-    /// <param name="targetNickname">Target player's nickname</param>
-    /// <param name="messageText">Message content</param>
+    
     public void SendPrivateMessage(string targetNickname, string messageText)
     {
-        if (!Object.HasInputAuthority)
-        {
-            OnChatError?.Invoke("Cannot send messages without input authority");
-            return;
-        }
-
-        // Find a target player by nickname
         PlayerRef targetPlayer = FindPlayerByNickname(targetNickname);
-        
+    
         if (targetPlayer == PlayerRef.None)
         {
             OnChatError?.Invoke($"Player '{targetNickname}' not found");
@@ -135,7 +99,7 @@ public class ChatManager : NetworkBehaviour
         RPC_SendPrivateMessage(Runner.LocalPlayer, targetPlayer, messageText);
     }
 
-    private void ParseAndSendPrivateMessage(string fullMessage)
+    /*private void ParseAndSendPrivateMessage(string fullMessage)
     {
         // Format: /msg PlayerName Message content here
         string[] parts = fullMessage.Split(' ', 3);
@@ -151,6 +115,7 @@ public class ChatManager : NetworkBehaviour
         
         SendPrivateMessage(targetNickname, messageContent);
     }
+    */
 
     private PlayerRef FindPlayerByNickname(string nickname)
     {
@@ -201,9 +166,7 @@ public class ChatManager : NetworkBehaviour
 
     #region RPCs
 
-    /// <summary>
-    /// RPC for sending global chat messages to all players
-    /// </summary>
+    // RPC for sending global chat messages to all players
     [Rpc(RpcSources.All, RpcTargets.All)]
     private void RPC_SendGlobalMessage(PlayerRef sender, string messageText)
     {
@@ -211,9 +174,7 @@ public class ChatManager : NetworkBehaviour
         ProcessReceivedMessage(message);
     }
 
-    /// <summary>
-    /// RPC for sending private messages between specific players
-    /// </summary>
+
     [Rpc(RpcSources.All, RpcTargets.All)]
     private void RPC_SendPrivateMessage(PlayerRef sender, PlayerRef target, string messageText)
     {
@@ -247,17 +208,13 @@ public class ChatManager : NetworkBehaviour
         Debug.Log($"[ChatManager] {message.Type} message from {senderNickname}: {message.Content}");
     }
 
-    /// <summary>
-    /// Gets the current message history for UI display
-    /// </summary>
+    // Gets the current message history for UI display
     public List<ChatMessage> GetMessageHistory()
     {
         return new List<ChatMessage>(_messageHistory);
     }
 
-    /// <summary>
-    /// Clears the local message history
-    /// </summary>
+    // Clears the local message history
     public void ClearMessageHistory()
     {
         _messageHistory.Clear();
