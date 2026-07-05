@@ -18,6 +18,8 @@ public sealed class FirstPersonNetworkMovement : NetworkBehaviour
     [Header("Look Settings")]
     [SerializeField] private float mouseSensitivity = 0.1f;
     [SerializeField] private float upDownPitchLimit = 85f;
+    
+    [SerializeField] private PlayerAnimationController animationController;
 
     [Networked]
     private float VerticalVelocity { get; set; }
@@ -142,6 +144,9 @@ public sealed class FirstPersonNetworkMovement : NetworkBehaviour
             transform.position +=
                 velocity * Runner.DeltaTime;
         }
+        
+        float animationSpeed = inputData.moveInput.magnitude;
+        animationController.SetMovementSpeed(animationSpeed);
     }
 
     private void SetCameraActive(bool active)

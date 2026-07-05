@@ -8,6 +8,7 @@ public sealed class PlayerDeathRespawn : NetworkBehaviour
     [SerializeField] private FirstPersonNetworkMovement movement;
     [SerializeField] private GameObject visualRoot;
     [SerializeField] private GameObject redScreenOverlay;
+    [SerializeField] private PlayerAnimationController animationController;
 
     [Header("Respawn")]
     [SerializeField] private float respawnDelay = 5f;
@@ -52,6 +53,9 @@ public sealed class PlayerDeathRespawn : NetworkBehaviour
 
         _isDead = true;
 
+        animationController.SetMovementSpeed(0f);
+        animationController.SetDead(true);
+
         _respawnTimer =
             TickTimer.CreateFromSeconds(
                 Runner,
@@ -67,6 +71,9 @@ public sealed class PlayerDeathRespawn : NetworkBehaviour
         transform.position = _spawnPosition;
 
         playerHealth.RestoreFullHealth();
+
+        animationController.SetDead(false);
+        animationController.SetMovementSpeed(0f);
 
         RPC_SetDeadState(false);
     }

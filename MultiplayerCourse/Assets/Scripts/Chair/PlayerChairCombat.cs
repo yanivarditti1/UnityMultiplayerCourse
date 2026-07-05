@@ -7,6 +7,7 @@ public sealed class PlayerChairCombat : NetworkBehaviour
     [Header("References")]
     [SerializeField] private PlayerChairInventory chairInventory;
     [SerializeField] private PlayerMeleeChair meleeChair;
+    [SerializeField] private PlayerAnimationController animationController;
 
     [SerializeField] private Transform attackOrigin;
     [SerializeField] private NetworkObject thrownChairPrefab;
@@ -83,6 +84,8 @@ public sealed class PlayerChairCombat : NetworkBehaviour
     [Rpc(RpcSources.InputAuthority, RpcTargets.StateAuthority)]
     private void RPC_ThrowChair()
     {
+        animationController.PlayThrow();
+
         Vector3 spawnPosition =
             attackOrigin.position +
             attackOrigin.forward * 0.8f;

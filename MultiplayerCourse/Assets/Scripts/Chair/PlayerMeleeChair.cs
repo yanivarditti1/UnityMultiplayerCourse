@@ -7,6 +7,7 @@ public sealed class PlayerMeleeChair : NetworkBehaviour
     [SerializeField] private PlayerChairInventory chairInventory;
     [SerializeField] private ChairSwingAnimation swingAnimation;
     [SerializeField] private PlayerMeleeHitbox meleeHitbox;
+    [SerializeField] private PlayerAnimationController animationController;
 
     [Header("Settings")]
     [SerializeField] private int damage = 15;
@@ -40,6 +41,8 @@ public sealed class PlayerMeleeChair : NetworkBehaviour
     [Rpc(RpcSources.InputAuthority, RpcTargets.StateAuthority)]
     private void RPC_Attack()
     {
+        animationController.PlaySwing();
+
         meleeHitbox.EnableHitbox();
 
         _hitboxTimer =

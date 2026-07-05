@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 3a500169ee125754d949373cad2f6dfd
+timeCreated: 1494316970
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 50693
+  packageName: Max - iClone Character
+  packageVersion: 1.03
+  assetPath: Assets/Max/Materials/Skin_Body_Diffuse.mat
+  uploadId: 184234
