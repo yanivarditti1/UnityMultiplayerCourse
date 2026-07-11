@@ -38,16 +38,21 @@ public class LobbyManager : MonoBehaviour, INetworkRunnerCallbacks
     public event Action<ChatMessage, string> OnChatMessageReceived;
     public event Action<string> OnChatSystemMessage;
     public event Action<string> OnChatErrorReceived;
-    
     private Action<ChatMessage, string> _chatMessageHandler;
-    
     private Action<string> _chatErrorHandler;
+    
     //lobby state
     public NetworkRunner Runner { get; private set; }
     public bool IsInLobby { get; private set; }
     public bool IsInRoom { get; private set; }
     //public string LocalPlayerNickname { get; private set; } = "";
-    private string _currentLobbyId = ""; 
+    private string _currentLobbyId = "";
+    private bool _isPrivateSession;
+    public bool IsPrivateSession
+    {
+        get => _isPrivateSession;
+        set => _isPrivateSession = value;
+    }
     
     //player and session tracking
     private readonly Dictionary<PlayerRef, NetworkObject> _lobbyPlayers = new();
@@ -160,7 +165,8 @@ public class LobbyManager : MonoBehaviour, INetworkRunnerCallbacks
         {
             GameMode = GameMode.Shared,
             SessionName = roomName,
-            PlayerCount = maxPlayers
+            PlayerCount = maxPlayers,
+            IsVisible = IsPrivateSession
         };
         
         var result = await Runner.StartGame(args);
@@ -452,6 +458,11 @@ public class LobbyManager : MonoBehaviour, INetworkRunnerCallbacks
         Runner.Spawn(
             _chatManagerPrefab,
             onBeforeSpawned: (_, obj) => Runner.MakeDontDestroyOnLoad(obj.gameObject));
+    }
+
+    public void MakePrivateSession(bool isPrivate)
+    {
+        IsPrivateSession = isPrivate;
     }
     
     #endregion

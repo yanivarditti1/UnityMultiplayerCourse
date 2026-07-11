@@ -29,6 +29,7 @@ public class LobbyUiManager : MonoBehaviour
     [SerializeField] private Button _createRoomButton;
     [SerializeField] private Button _joinRoomButton;
     [SerializeField] private Button _leaveLobbyButton;
+    [SerializeField] private Toggle _isPrivateToggle;
     [SerializeField] private TextMeshProUGUI _lobbyStatusText;
     
     //room panel
@@ -151,6 +152,7 @@ public class LobbyUiManager : MonoBehaviour
             return;
         }
 
+        LobbyManager.Instance.MakePrivateSession(!_isPrivateToggle.isOn);
         LobbyManager.Instance.SetNickname(playerNickname);
         SetLobbyButtons(false);
         SetStatus(_lobbyStatusText, $"Creating room: {roomName} - max players: {max}...");
@@ -228,27 +230,33 @@ public class LobbyUiManager : MonoBehaviour
         
         foreach (var session in sessions)
         {
-            var entry = Instantiate(_sessionEntryPrefab, _sessionListContainer);
-            var label = entry.GetComponentInChildren<TextMeshProUGUI>();
-            if (label != null)
+            //hide private sessions
+            if (session.IsVisible)
             {
-                label.text = $"{session.Name} [{session.PlayerCount}/{session.MaxPlayers}]";
-            }
-            
-            //click a session to select it
-            var button = entry.GetComponent<Button>() ?? entry.GetComponentInChildren<Button>();
-            if (button != null)
-            {
-                var captured = session;
-                button.onClick.AddListener(() => SelectSession(captured));
-                
-                if (session.PlayerCount >= session.MaxPlayers)
+                var entry = Instantiate(_sessionEntryPrefab, _sessionListContainer);
+                var label = entry.GetComponentInChildren<TextMeshProUGUI>();
+                if (label != null)
                 {
-                    button.interactable = false;
+                    label.text = $"{session.Name} [{session.PlayerCount}/{session.MaxPlayers}]";
                 }
+            
+                //click a session to select it
+                var button = entry.GetComponent<Button>() ?? entry.GetComponentInChildren<Button>();
+                if (button != null)
+                {
+                    var captured = session;
+                    button.onClick.AddListener(() => SelectSession(captured));
+                
+                
+                    if (session.PlayerCount >= session.MaxPlayers)
+                    {
+                        button.interactable = false;
+                    }
+                }
+            
+                _sessionEntries.Add(entry);
             }
             
-            _sessionEntries.Add(entry);
         }
     }
     
