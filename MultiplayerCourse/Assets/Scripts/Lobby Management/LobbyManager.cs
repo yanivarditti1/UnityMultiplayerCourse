@@ -261,6 +261,15 @@ public class LobbyManager : MonoBehaviour, INetworkRunnerCallbacks
         }
         
         Debug.Log("[LobbyManager] Starting match");
+
+        //hide started sessions
+        if (Runner.SessionInfo != null)
+        {
+            Runner.SessionInfo.IsVisible = false;
+            Runner.SessionInfo.IsOpen = false;
+        }
+        
+        OnSessionListRefreshed?.Invoke(new List<SessionInfo>(_sessionsList));
         OnMatchStarted?.Invoke();
         
         await Runner.LoadScene(_sceneData.gameSceneName);
@@ -464,6 +473,7 @@ public class LobbyManager : MonoBehaviour, INetworkRunnerCallbacks
     {
         IsPrivateSession = isPrivate;
     }
+
     
     #endregion
 }
