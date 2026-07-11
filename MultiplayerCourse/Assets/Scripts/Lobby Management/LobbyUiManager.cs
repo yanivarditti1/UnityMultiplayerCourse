@@ -78,6 +78,7 @@ public class LobbyUiManager : MonoBehaviour
         manager.OnMatchStarted          += HandleMatchStarted;
         manager.OnPlayerNicknameChanged += HandlePlayerNicknameChanged;
         manager.OnGameSceneLoaded       += HandleGameSceneLoaded;
+        manager.OnSceneLoadStarted      += HandleSceneLoadStart;
     }
 
     private void UnsubscribeFromManager()
@@ -98,6 +99,7 @@ public class LobbyUiManager : MonoBehaviour
         manager.OnMatchStarted          -= HandleMatchStarted;
         manager.OnPlayerNicknameChanged -= HandlePlayerNicknameChanged;
         manager.OnGameSceneLoaded       -= HandleGameSceneLoaded;
+        manager.OnSceneLoadStarted      -= HandleSceneLoadStart;
     }
     #endregion
     
@@ -349,6 +351,11 @@ public class LobbyUiManager : MonoBehaviour
         Debug.Log("[LobbyUiManager] Game scene loaded, hiding relevant panels");
         HidePanelsOnLoadScene();
     }
+
+    private void HandleSceneLoadStart()
+    {
+        HidePanelsOnLoadScene();
+    }
     
     #endregion
     
@@ -373,6 +380,8 @@ public class LobbyUiManager : MonoBehaviour
         _connectPanel.SetActive(false);
         _lobbyPanel.SetActive(false);
         _roomPanel.SetActive(true);   
+        
+        Debug.Log("show room panel");
     }
 
     private void HidePanelsOnLoadScene()
@@ -380,6 +389,8 @@ public class LobbyUiManager : MonoBehaviour
         _connectPanel.SetActive(false);
         _lobbyPanel.SetActive(false);
         _roomPanel.SetActive(false);
+        
+        Debug.Log("Deactivating all panels");
     }
 
     private void SelectSession(SessionInfo session)

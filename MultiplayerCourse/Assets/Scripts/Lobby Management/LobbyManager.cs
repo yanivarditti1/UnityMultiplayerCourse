@@ -31,7 +31,9 @@ public class LobbyManager : MonoBehaviour, INetworkRunnerCallbacks
     public event Action<List<PlayerRef>> OnRoomListUpdate;
     public event Action OnMatchStarted;
     public event Action OnGameSceneLoaded;
+    public event Action OnSceneLoadStarted;
     public event Action<PlayerRef, string> OnPlayerNicknameChanged;
+    
     //chat events
     public event Action<ChatMessage, string> OnChatMessageReceived;
     public event Action<string> OnChatSystemMessage;
@@ -395,7 +397,7 @@ public class LobbyManager : MonoBehaviour, INetworkRunnerCallbacks
 
     public void OnSceneLoadStart(NetworkRunner runner)
     {
-        
+        OnSceneLoadStarted?.Invoke();
     }
 
     private void OnPlayerNicknameChangedHandler(PlayerRef player, string nickname)
