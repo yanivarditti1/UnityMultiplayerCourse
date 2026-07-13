@@ -1,3 +1,4 @@
+using System;
 using Fusion;
 using UnityEngine;
 using UnityEngine.Events;
@@ -15,6 +16,7 @@ public sealed class PlayerHealth : NetworkBehaviour
 
     public UnityEvent<int, int> HealthChanged = new();
     public UnityEvent Died = new();
+    public event Action<PlayerRef> DiedWithAttacker;
 
     public override void Spawned()
     {
@@ -26,7 +28,12 @@ public sealed class PlayerHealth : NetworkBehaviour
 
     public void RequestDamage(int damage)
     {
-        RPC_RequestDamage(damage);
+        RequestDamage(damage, PlayerRef.None);
+    }
+
+    public void RequestDamage(int damage, PlayerRef attacker)
+    {
+        RPC_RequestDamage(damage, attacker);
     }
 
     public void RestoreFullHealth()
@@ -39,9 +46,9 @@ public sealed class PlayerHealth : NetworkBehaviour
     }
 
     [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
-    private void RPC_RequestDamage(int damage)
+    private void RPC_RequestDamage(int damage, PlayerRef attacker)
     {
-        if (CurrentHealth <= 0)
+        if (CurrentHealth <= 0 || damage <= 0)
             return;
 
         CurrentHealth = Mathf.Max(CurrentHealth - damage, 0);
@@ -50,8 +57,11 @@ public sealed class PlayerHealth : NetworkBehaviour
 
         OnHealthChanged();
 
-        if (CurrentHealth <= 0)
-            Died?.Invoke();
+        if (CurrentHealth > 0)
+            return;
+
+        Died?.Invoke();
+        DiedWithAttacker?.Invoke(attacker);
     }
 
     private void OnHealthChanged()

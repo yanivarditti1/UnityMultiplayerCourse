@@ -5,8 +5,11 @@ using Fusion.Sockets;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
+[DefaultExecutionOrder(-1000)]
 public sealed class FusionInputProvider : MonoBehaviour, INetworkRunnerCallbacks
 {
+    public static FusionInputProvider Instance { get; private set; }
+
     [Header("Input Actions")]
     [SerializeField] private InputActionReference moveAction;
     [SerializeField] private InputActionReference lookAction;
@@ -16,38 +19,87 @@ public sealed class FusionInputProvider : MonoBehaviour, INetworkRunnerCallbacks
     private NetworkRunner _runner;
     private Vector2 _accumulatedLookInput;
     private bool _jumpRequested;
+    private bool _callbacksRegistered;
 
     private void Awake()
     {
+        Instance = this;
         _runner = GetComponent<NetworkRunner>();
     }
 
     private void OnEnable()
     {
-        EnableInput();
+        EnsureReady(_runner);
+    }
 
-        if (_runner != null)
-            _runner.AddCallbacks(this);
+    private void Start()
+    {
+        EnsureReady(_runner);
     }
 
     private void OnDisable()
     {
         DisableInput();
 
-        if (_runner != null)
+        if (_runner != null && _callbacksRegistered)
+        {
             _runner.RemoveCallbacks(this);
+            _callbacksRegistered = false;
+        }
+    }
+
+    private void OnDestroy()
+    {
+        if (Instance == this)
+            Instance = null;
     }
 
     private void Update()
     {
+        if (lookAction == null || jumpAction == null)
+            return;
+
         _accumulatedLookInput += lookAction.action.ReadValue<Vector2>();
 
         if (jumpAction.action.WasPressedThisFrame())
             _jumpRequested = true;
     }
 
+    public void EnsureReady(NetworkRunner runner)
+    {
+        if (runner != null && _runner != runner)
+        {
+            if (_runner != null && _callbacksRegistered)
+                _runner.RemoveCallbacks(this);
+
+            _runner = runner;
+            _callbacksRegistered = false;
+        }
+
+        if (_runner == null)
+            _runner = GetComponent<NetworkRunner>();
+
+        if (_runner == null)
+            return;
+
+        _runner.ProvideInput = true;
+        EnableInput();
+
+        if (_callbacksRegistered)
+            return;
+
+        _runner.AddCallbacks(this);
+        _callbacksRegistered = true;
+    }
+
     public void OnInput(NetworkRunner runner, NetworkInput input)
     {
+        if (moveAction == null ||
+            lookAction == null ||
+            jumpAction == null ||
+            sprintAction == null)
+            return;
+
         NetworkInputData inputData = new NetworkInputData
         {
             moveInput = moveAction.action.ReadValue<Vector2>(),
@@ -64,12 +116,19 @@ public sealed class FusionInputProvider : MonoBehaviour, INetworkRunnerCallbacks
 
     private void EnableInput()
     {
-        moveAction.action.actionMap.Enable();
+        if (moveAction != null)
+            moveAction.action.actionMap.Enable();
     }
 
     private void DisableInput()
     {
-        moveAction.action.actionMap.Disable();
+        if (moveAction != null)
+            moveAction.action.actionMap.Disable();
+    }
+
+    public void OnSceneLoadDone(NetworkRunner runner)
+    {
+        EnsureReady(runner);
     }
 
     public void OnPlayerJoined(NetworkRunner runner, PlayerRef player) { }
@@ -84,7 +143,6 @@ public sealed class FusionInputProvider : MonoBehaviour, INetworkRunnerCallbacks
     public void OnSessionListUpdated(NetworkRunner runner, List<SessionInfo> sessionList) { }
     public void OnCustomAuthenticationResponse(NetworkRunner runner, Dictionary<string, object> data) { }
     public void OnHostMigration(NetworkRunner runner, HostMigrationToken hostMigrationToken) { }
-    public void OnSceneLoadDone(NetworkRunner runner) { }
     public void OnSceneLoadStart(NetworkRunner runner) { }
     public void OnObjectEnterAOI(NetworkRunner runner, NetworkObject obj, PlayerRef player) { }
     public void OnObjectExitAOI(NetworkRunner runner, NetworkObject obj, PlayerRef player) { }

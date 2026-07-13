@@ -1,5 +1,4 @@
 using Fusion;
-using UnityEditor;
 using UnityEngine;
 using UnityEngine.Events;
 
@@ -19,9 +18,6 @@ public sealed class CharacterSelectionManager : NetworkBehaviour
     public override void Spawned()
     {
         RefreshAllSlots();
-        
-       
-        
     }
 
     public void RequestCharacter(int slotIndex, Color nameColor)
@@ -33,7 +29,10 @@ public sealed class CharacterSelectionManager : NetworkBehaviour
     }
 
     [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
-    private void RPC_RequestCharacter(PlayerRef requestingPlayer, int slotIndex, Color nameColor = default)
+    private void RPC_RequestCharacter(
+        PlayerRef requestingPlayer,
+        int slotIndex,
+        Color nameColor = default)
     {
         if (!Runner.IsSharedModeMasterClient)
             return;
@@ -43,41 +42,94 @@ public sealed class CharacterSelectionManager : NetworkBehaviour
 
         if (TakenByPlayers[slotIndex] != PlayerRef.None)
         {
-            RPC_CharacterDenied(requestingPlayer, "This character is already taken. Pick another one.");
+            RPC_CharacterDenied(
+                requestingPlayer,
+                "This character is already taken. Pick another one.");
+
             return;
         }
 
         TakenByPlayers.Set(slotIndex, requestingPlayer);
-
         RPC_SlotTakenChanged(slotIndex, true);
-        
         RPC_CharacterApproved(requestingPlayer, slotIndex, nameColor);
     }
 
     [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
-    private void RPC_CharacterApproved([RpcTarget] PlayerRef targetPlayer, int slotIndex, Color nameColor)
+    private void RPC_CharacterApproved(
+        [RpcTarget] PlayerRef targetPlayer,
+        int slotIndex,
+        Color nameColor)
     {
         if (Runner.LocalPlayer != targetPlayer)
             return;
 
         CharacterSlotData slot = characterSlots[slotIndex];
 
+        if (slot.PlayerPrefab == null || slot.SpawnPoint == null)
+        {
+            Debug.LogError(
+                $"[CharacterSelection] Slot {slotIndex} is missing its prefab or spawn point.");
+
+            onSelectionMessage?.Invoke(
+                "The selected character is not configured correctly.");
+
+            return;
+        }
+
+        Vector3 spawnPosition = slot.SpawnPoint.position;
+        Quaternion spawnRotation = slot.SpawnPoint.rotation;
+
+        ConquestManager manager = ConquestManager.Instance;
+
+        if (manager != null &&
+            manager.IsReady &&
+            manager.TryGetSpawnPoint(targetPlayer, out Transform teamSpawn))
+        {
+            spawnPosition = teamSpawn.position;
+            spawnRotation = teamSpawn.rotation;
+        }
+
         NetworkObject spawnedPlayer = Runner.Spawn(
-            slot.PlayerPrefab,
-            slot.SpawnPoint.position,
-            slot.SpawnPoint.rotation,
-            Runner.LocalPlayer
-        );
-        
-        if (PlayerManager.Local != null)
+            prefab: slot.PlayerPrefab,
+            position: spawnPosition,
+            rotation: spawnRotation,
+            inputAuthority: targetPlayer,
+            onBeforeSpawned: null,
+            flags: NetworkSpawnFlags.SharedModeStateAuthLocalPlayer);
+
+        if (spawnedPlayer == null)
+        {
+            Debug.LogError(
+                $"[CharacterSelection] Failed to spawn slot {slotIndex} for {targetPlayer}.");
+
+            TakenByPlayers.Set(slotIndex, PlayerRef.None);
+            RPC_SlotTakenChanged(slotIndex, false);
+
+            onSelectionMessage?.Invoke("Failed to spawn the selected character.");
+            return;
+        }
+
+        Runner.SetPlayerObject(targetPlayer, spawnedPlayer);
+
+        Debug.Log(
+            $"[CharacterSelection] Spawned {spawnedPlayer.name} for {targetPlayer}. " +
+            $"InputAuthority={spawnedPlayer.HasInputAuthority}, " +
+            $"StateAuthority={spawnedPlayer.HasStateAuthority}");
+
+        if (PlayerManager.Local != null &&
+            (manager == null || !manager.IsReady))
+        {
             PlayerManager.Local.SetNameColor(nameColor);
+        }
 
         onSelectionMessage?.Invoke("Character selected!");
         onLocalPlayerSpawned?.Invoke();
     }
 
     [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
-    private void RPC_CharacterDenied([RpcTarget] PlayerRef targetPlayer, string reason)
+    private void RPC_CharacterDenied(
+        [RpcTarget] PlayerRef targetPlayer,
+        string reason)
     {
         if (Runner.LocalPlayer != targetPlayer)
             return;

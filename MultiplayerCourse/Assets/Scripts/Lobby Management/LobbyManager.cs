@@ -8,10 +8,9 @@ using UnityEngine;
 public class LobbyManager : MonoBehaviour, INetworkRunnerCallbacks
 {
     public static LobbyManager Instance { get; private set; }
-    
+
     //inspector refs
-    [Header("Network")]
-    [SerializeField] private NetworkRunner _networkRunner;
+    [Header("Network")] [SerializeField] private NetworkRunner _networkRunner;
     [SerializeField] private SceneDataSO _sceneData;
     [SerializeField] private PlayerManager _playerManagerPrefab;
     [SerializeField] private ChatManager _chatManagerPrefab;
@@ -21,39 +20,47 @@ public class LobbyManager : MonoBehaviour, INetworkRunnerCallbacks
     public event Action<string> OnLobbyJoinFailed; //string = reason
     public event Action OnLobbyLeave;
     public event Action<List<SessionInfo>> OnSessionListRefreshed;
-    
+
     //room events
-    public event Action <SessionInfo> OnRoomCreated;
+    public event Action<SessionInfo> OnRoomCreated;
     public event Action<string> OnRoomCreateFailed;
-    public event Action<string>  OnRoomJoined;
+    public event Action<string> OnRoomJoined;
     public event Action<string> OnRoomJoinFailed;
-    public event Action  OnRoomLeft;
+    public event Action OnRoomLeft;
     public event Action<List<PlayerRef>> OnRoomListUpdate;
     public event Action OnMatchStarted;
     public event Action OnGameSceneLoaded;
     public event Action OnSceneLoadStarted;
     public event Action<PlayerRef, string> OnPlayerNicknameChanged;
-    
+
+    private const string GameModePropertyKey = "GameMode";
+
+    [Header("Game Modes")] [SerializeField]
+    private string _conquestSceneName = "ConquestScene";
+
     //chat events
     public event Action<ChatMessage, string> OnChatMessageReceived;
     public event Action<string> OnChatSystemMessage;
     public event Action<string> OnChatErrorReceived;
     private Action<ChatMessage, string> _chatMessageHandler;
     private Action<string> _chatErrorHandler;
-    
+
     //lobby state
     public NetworkRunner Runner { get; private set; }
     public bool IsInLobby { get; private set; }
+
     public bool IsInRoom { get; private set; }
+
     //public string LocalPlayerNickname { get; private set; } = "";
     private string _currentLobbyId = "";
     private bool _isPrivateSession;
+
     public bool IsPrivateSession
     {
         get => _isPrivateSession;
         set => _isPrivateSession = value;
     }
-    
+
     //player and session tracking
     private readonly Dictionary<PlayerRef, NetworkObject> _lobbyPlayers = new();
     private readonly Dictionary<PlayerRef, NetworkObject> _roomPlayers = new();
@@ -61,6 +68,7 @@ public class LobbyManager : MonoBehaviour, INetworkRunnerCallbacks
 
 
     #region Lifecycle
+
     //singleton
     private void Awake()
     {
@@ -79,9 +87,11 @@ public class LobbyManager : MonoBehaviour, INetworkRunnerCallbacks
     {
         PlayerManager.OnAnyNicknameChanged -= OnPlayerNicknameChangedHandler;
     }
+
     #endregion
-    
+
     #region PublicAPI
+
     //join lobby by name, leave empty for default lobby
     public async void JoinLobby(string lobbyID = "")
     {
@@ -113,6 +123,7 @@ public class LobbyManager : MonoBehaviour, INetworkRunnerCallbacks
             {
                 OnSessionListRefreshed?.Invoke(new List<SessionInfo>(_sessionsList));
             }
+
             OnLobbyJoined?.Invoke(_sessionsList);
         }
         else
@@ -126,14 +137,14 @@ public class LobbyManager : MonoBehaviour, INetworkRunnerCallbacks
     public async void LeaveLobby()
     {
         if (Runner == null || !IsInLobby) return;
-        
+
         await Runner.Shutdown(false);
         IsInLobby = false;
         _currentLobbyId = "";
         _lobbyPlayers.Clear();
         OnLobbyLeave?.Invoke();
     }
-    
+
     //create new room with custom name and player cap
     public async void CreateRoom(string roomName, int maxPlayers)
     {
@@ -166,9 +177,16 @@ public class LobbyManager : MonoBehaviour, INetworkRunnerCallbacks
             GameMode = GameMode.Shared,
             SessionName = roomName,
             PlayerCount = maxPlayers,
-            IsVisible = IsPrivateSession
+            IsVisible = IsPrivateSession,
+            SessionProperties = new Dictionary<string, SessionProperty>
+            {
+                {
+                    GameModePropertyKey,
+                    LobbyGameModeSelection.SelectedMode.ToString()
+                }
+            }
         };
-        
+
         var result = await Runner.StartGame(args);
 
         if (result.Ok)
@@ -180,7 +198,7 @@ public class LobbyManager : MonoBehaviour, INetworkRunnerCallbacks
                 OnRoomCreateFailed?.Invoke($" Player is not master client. Shutting down.");
                 return;
             }
-            
+
             IsInRoom = true;
             _roomPlayers.Clear();
             _roomPlayers.Add(Runner.LocalPlayer, null);
@@ -200,9 +218,9 @@ public class LobbyManager : MonoBehaviour, INetworkRunnerCallbacks
         if (Runner == null)
         {
             OnRoomJoinFailed?.Invoke("Network runner is not initialized");
-            return; 
+            return;
         }
-        
+
         var session = _sessionsList?.Find(s => s.Name == roomName);
         if (session == null)
         {
@@ -221,9 +239,9 @@ public class LobbyManager : MonoBehaviour, INetworkRunnerCallbacks
             GameMode = GameMode.Shared,
             SessionName = roomName
         };
-        
+
         var result = await Runner.StartGame(args);
-        
+
         if (result.Ok)
         {
             IsInRoom = true;
@@ -245,7 +263,7 @@ public class LobbyManager : MonoBehaviour, INetworkRunnerCallbacks
         IsInRoom = false;
         _roomPlayers.Clear();
         OnRoomLeft?.Invoke();
-        
+
         JoinLobby(_currentLobbyId);
     }
 
@@ -259,7 +277,7 @@ public class LobbyManager : MonoBehaviour, INetworkRunnerCallbacks
             Debug.LogError("[LobbyManager] No scene data set");
             return;
         }
-        
+
         Debug.Log("[LobbyManager] Starting match");
 
         //hide started sessions
@@ -268,11 +286,32 @@ public class LobbyManager : MonoBehaviour, INetworkRunnerCallbacks
             Runner.SessionInfo.IsVisible = false;
             Runner.SessionInfo.IsOpen = false;
         }
-        
+
         OnSessionListRefreshed?.Invoke(new List<SessionInfo>(_sessionsList));
         OnMatchStarted?.Invoke();
-        
-        await Runner.LoadScene(_sceneData.gameSceneName);
+
+        string sceneName = GetCurrentGameMode() == GameModeType.Conquest
+            ? _conquestSceneName
+            : _sceneData.gameSceneName;
+
+        await Runner.LoadScene(sceneName);
+    }
+
+    public GameModeType GetCurrentGameMode()
+    {
+        if (Runner == null || Runner.SessionInfo == null)
+            return GameModeType.FreeForAll;
+
+        if (!Runner.SessionInfo.Properties.TryGetValue(
+                GameModePropertyKey,
+                out SessionProperty modeProperty))
+            return GameModeType.FreeForAll;
+
+        string value = modeProperty.PropertyValue.ToString();
+
+        return Enum.TryParse(value, out GameModeType mode)
+            ? mode
+            : GameModeType.FreeForAll;
     }
 
     public void SetNickname(string nickname)
@@ -285,41 +324,40 @@ public class LobbyManager : MonoBehaviour, INetworkRunnerCallbacks
         if (!IsInRoom) return;
         OnRoomListUpdate?.Invoke(new List<PlayerRef>(_roomPlayers.Keys));
     }
-    
+
     #endregion
-    
+
     #region INetworkRunnerCallbacks
+
     public void OnObjectExitAOI(NetworkRunner runner, NetworkObject obj, PlayerRef player)
     {
-        
     }
 
     public void OnObjectEnterAOI(NetworkRunner runner, NetworkObject obj, PlayerRef player)
     {
-        
     }
 
     public void OnPlayerJoined(NetworkRunner runner, PlayerRef player)
     {
         if (!_roomPlayers.ContainsKey(player))
             _roomPlayers.Add(player, null);
-        
+
         if (player == Runner.LocalPlayer)
             runner.Spawn(
-                _playerManagerPrefab, 
+                _playerManagerPrefab,
                 inputAuthority: player,
                 onBeforeSpawned: (_, obj) => runner.MakeDontDestroyOnLoad(obj.gameObject));
         SpawnChatManagerIfNeeded();
 
         Debug.Log($"[LobbyManager] Player '{player}' joined the room");
-        
+
         OnRoomListUpdate?.Invoke(new List<PlayerRef>(_roomPlayers.Keys));
     }
 
     public void OnPlayerLeft(NetworkRunner runner, PlayerRef player)
     {
         _roomPlayers.Remove(player);
-        
+
         Debug.Log($"[LobbyManager] Player '{player}' left the room");
         OnRoomListUpdate?.Invoke(new List<PlayerRef>(_roomPlayers.Keys));
     }
@@ -344,47 +382,38 @@ public class LobbyManager : MonoBehaviour, INetworkRunnerCallbacks
 
     public void OnDisconnectedFromServer(NetworkRunner runner, NetDisconnectReason reason)
     {
-        
     }
 
     public void OnConnectRequest(NetworkRunner runner, NetworkRunnerCallbackArgs.ConnectRequest request, byte[] token)
     {
-        
     }
 
     public void OnConnectFailed(NetworkRunner runner, NetAddress remoteAddress, NetConnectFailedReason reason)
     {
-        
     }
 
     public void OnUserSimulationMessage(NetworkRunner runner, SimulationMessagePtr message)
     {
-        
     }
 
     public void OnReliableDataReceived(NetworkRunner runner, PlayerRef player, ReliableKey key, ArraySegment<byte> data)
     {
-        
     }
 
     public void OnReliableDataProgress(NetworkRunner runner, PlayerRef player, ReliableKey key, float progress)
     {
-        
     }
 
     public void OnInput(NetworkRunner runner, NetworkInput input)
     {
-        
     }
 
     public void OnInputMissing(NetworkRunner runner, PlayerRef player, NetworkInput input)
     {
-        
     }
 
     public void OnConnectedToServer(NetworkRunner runner)
     {
-        
     }
 
     public void OnSessionListUpdated(NetworkRunner runner, List<SessionInfo> sessionList)
@@ -396,12 +425,10 @@ public class LobbyManager : MonoBehaviour, INetworkRunnerCallbacks
 
     public void OnCustomAuthenticationResponse(NetworkRunner runner, Dictionary<string, object> data)
     {
-        
     }
 
     public void OnHostMigration(NetworkRunner runner, HostMigrationToken hostMigrationToken)
     {
-        
     }
 
     public void OnSceneLoadDone(NetworkRunner runner)
@@ -430,7 +457,7 @@ public class LobbyManager : MonoBehaviour, INetworkRunnerCallbacks
     }
 
     #endregion
-    
+
     #region Helpers
 
     private async Task<NetworkRunner> CreateRunner()
@@ -444,9 +471,9 @@ public class LobbyManager : MonoBehaviour, INetworkRunnerCallbacks
             go = new GameObject("NetworkRunner");
             go.AddComponent<NetworkRunner>();
         }
-        
+
         DontDestroyOnLoad(go);
-        
+
         var runner = go.GetComponent<NetworkRunner>();
         runner.ProvideInput = true;
         runner.AddCallbacks(this);
@@ -455,12 +482,14 @@ public class LobbyManager : MonoBehaviour, INetworkRunnerCallbacks
 
         //allow unity to res
         await Task.Yield();
-        
+
         return runner;
     }
+
     private void SpawnChatManagerIfNeeded()
     {
-        Debug.Log($"[LobbyManager] SpawnChatManagerIfNeeded called. IsMaster: {Runner.IsSharedModeMasterClient}, Existing instance: {ChatManager.Instance != null}");
+        Debug.Log(
+            $"[LobbyManager] SpawnChatManagerIfNeeded called. IsMaster: {Runner.IsSharedModeMasterClient}, Existing instance: {ChatManager.Instance != null}");
         if (!Runner.IsSharedModeMasterClient) return;
         if (ChatManager.Instance != null) return;
 
@@ -474,6 +503,5 @@ public class LobbyManager : MonoBehaviour, INetworkRunnerCallbacks
         IsPrivateSession = isPrivate;
     }
 
-    
     #endregion
 }

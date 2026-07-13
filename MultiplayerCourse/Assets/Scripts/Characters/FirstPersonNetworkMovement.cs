@@ -1,5 +1,6 @@
 using Fusion;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 public sealed class FirstPersonNetworkMovement : NetworkBehaviour
 {
@@ -18,7 +19,7 @@ public sealed class FirstPersonNetworkMovement : NetworkBehaviour
     [Header("Look Settings")]
     [SerializeField] private float mouseSensitivity = 0.1f;
     [SerializeField] private float upDownPitchLimit = 85f;
-    
+
     [SerializeField] private PlayerAnimationController animationController;
 
     [Networked]
@@ -27,15 +28,38 @@ public sealed class FirstPersonNetworkMovement : NetworkBehaviour
     private float _pitch;
     private bool _isLocalPlayer;
     private bool _cursorLocked;
+    private bool _loggedMissingInput;
+    private Vector2 _fallbackMoveInput;
+    private Vector2 _fallbackLookInput;
+    private bool _fallbackJumpRequested;
+    private bool _fallbackSprintRequested;
 
     public override void Spawned()
     {
-        _isLocalPlayer = Object.HasInputAuthority;
+        _isLocalPlayer =
+            Object.HasInputAuthority ||
+            (Runner.GameMode == GameMode.Shared &&
+             Object.HasStateAuthority);
+
+        Debug.Log(
+            $"[Movement] Spawned player {Object.InputAuthority.PlayerId}. " +
+            $"InputAuthority={Object.HasInputAuthority}, " +
+            $"StateAuthority={Object.HasStateAuthority}, " +
+            $"LocalControl={_isLocalPlayer}, " +
+            $"ProvideInput={Runner.ProvideInput}");
 
         SetCameraActive(_isLocalPlayer);
 
         if (!_isLocalPlayer)
             return;
+
+        enabled = true;
+
+        if (characterController != null)
+            characterController.enabled = true;
+
+        if (FusionInputProvider.Instance != null)
+            FusionInputProvider.Instance.EnsureReady(Runner);
 
         LockCursor();
     }
@@ -54,12 +78,17 @@ public sealed class FirstPersonNetworkMovement : NetworkBehaviour
         if (!_isLocalPlayer)
             return;
 
-        if (Input.GetKeyDown(KeyCode.Escape))
+        ReadFallbackInput();
+
+        if (Keyboard.current != null &&
+            Keyboard.current.escapeKey.wasPressedThisFrame)
         {
             UnlockCursor();
         }
 
-        if (!_cursorLocked && Input.GetMouseButtonDown(0))
+        if (!_cursorLocked &&
+            Mouse.current != null &&
+            Mouse.current.leftButton.wasPressedThisFrame)
         {
             LockCursor();
         }
@@ -82,11 +111,93 @@ public sealed class FirstPersonNetworkMovement : NetworkBehaviour
         if (!Object.HasStateAuthority)
             return;
 
-        if (!GetInput(out NetworkInputData inputData))
-            return;
+        NetworkInputData inputData;
+
+        if (!GetInput(out inputData))
+        {
+            if (!_isLocalPlayer)
+                return;
+
+            inputData = ConsumeFallbackInput();
+
+            if (!_loggedMissingInput)
+            {
+                _loggedMissingInput = true;
+
+                Debug.LogWarning(
+                    $"[Movement] No Fusion input for player " +
+                    $"{Object.InputAuthority.PlayerId}. " +
+                    "Using local Shared Mode input fallback.");
+            }
+        }
+        else
+        {
+            _loggedMissingInput = false;
+            ClearOneShotFallbackInput();
+        }
 
         RotatePlayer(inputData);
         Move(inputData);
+    }
+
+    private void ReadFallbackInput()
+    {
+        Keyboard keyboard = Keyboard.current;
+
+        if (keyboard != null)
+        {
+            float horizontal = 0f;
+            float vertical = 0f;
+
+            if (keyboard.aKey.isPressed)
+                horizontal -= 1f;
+
+            if (keyboard.dKey.isPressed)
+                horizontal += 1f;
+
+            if (keyboard.sKey.isPressed)
+                vertical -= 1f;
+
+            if (keyboard.wKey.isPressed)
+                vertical += 1f;
+
+            _fallbackMoveInput = new Vector2(horizontal, vertical);
+
+            if (_fallbackMoveInput.sqrMagnitude > 1f)
+                _fallbackMoveInput.Normalize();
+
+            if (keyboard.spaceKey.wasPressedThisFrame)
+                _fallbackJumpRequested = true;
+
+            _fallbackSprintRequested =
+                keyboard.leftShiftKey.isPressed ||
+                keyboard.rightShiftKey.isPressed;
+        }
+
+        if (_cursorLocked && Mouse.current != null)
+            _fallbackLookInput += Mouse.current.delta.ReadValue();
+    }
+
+    private NetworkInputData ConsumeFallbackInput()
+    {
+        NetworkInputData inputData = new NetworkInputData
+        {
+            moveInput = _fallbackMoveInput,
+            lookInput = _fallbackLookInput,
+            jumpRequested = _fallbackJumpRequested,
+            sprintRequested = _fallbackSprintRequested
+        };
+
+        _fallbackLookInput = Vector2.zero;
+        _fallbackJumpRequested = false;
+
+        return inputData;
+    }
+
+    private void ClearOneShotFallbackInput()
+    {
+        _fallbackLookInput = Vector2.zero;
+        _fallbackJumpRequested = false;
     }
 
     private void RotatePlayer(NetworkInputData inputData)
@@ -97,12 +208,13 @@ public sealed class FirstPersonNetworkMovement : NetworkBehaviour
         transform.Rotate(Vector3.up * mouseX);
 
         _pitch -= mouseY;
-        _pitch = Mathf.Clamp(_pitch, -upDownPitchLimit, upDownPitchLimit);
+        _pitch = Mathf.Clamp(
+            _pitch,
+            -upDownPitchLimit,
+            upDownPitchLimit);
 
-        if (cameraRoot != null && Object.HasInputAuthority)
-        {
+        if (cameraRoot != null && _isLocalPlayer)
             cameraRoot.localRotation = Quaternion.Euler(_pitch, 0f, 0f);
-        }
     }
 
     private void Move(NetworkInputData inputData)
@@ -135,18 +247,12 @@ public sealed class FirstPersonNetworkMovement : NetworkBehaviour
         velocity.y = VerticalVelocity;
 
         if (characterController != null)
-        {
-            characterController.Move(
-                velocity * Runner.DeltaTime);
-        }
+            characterController.Move(velocity * Runner.DeltaTime);
         else
-        {
-            transform.position +=
-                velocity * Runner.DeltaTime;
-        }
-        
-        float animationSpeed = inputData.moveInput.magnitude;
-        animationController.SetMovementSpeed(animationSpeed);
+            transform.position += velocity * Runner.DeltaTime;
+
+        if (animationController != null)
+            animationController.SetMovementSpeed(inputData.moveInput.magnitude);
     }
 
     private void SetCameraActive(bool active)
@@ -161,7 +267,6 @@ public sealed class FirstPersonNetworkMovement : NetworkBehaviour
     private void LockCursor()
     {
         _cursorLocked = true;
-
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
     }
@@ -169,7 +274,6 @@ public sealed class FirstPersonNetworkMovement : NetworkBehaviour
     private void UnlockCursor()
     {
         _cursorLocked = false;
-
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
     }

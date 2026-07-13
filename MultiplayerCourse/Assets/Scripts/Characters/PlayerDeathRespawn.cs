@@ -16,12 +16,23 @@ public sealed class PlayerDeathRespawn : NetworkBehaviour
     private TickTimer _respawnTimer;
     private bool _isDead;
     private Vector3 _spawnPosition;
+    private Quaternion _spawnRotation;
+    private CharacterController _characterController;
 
     public override void Spawned()
     {
         _spawnPosition = transform.position;
+        _spawnRotation = transform.rotation;
+        _characterController = GetComponent<CharacterController>();
 
-        playerHealth.Died.AddListener(HandleDeath);
+        if (movement != null)
+            movement.enabled = true;
+
+        if (_characterController != null)
+            _characterController.enabled = true;
+
+        if (playerHealth != null)
+            playerHealth.DiedWithAttacker += HandleDeath;
 
         if (redScreenOverlay != null)
             redScreenOverlay.SetActive(false);
@@ -29,37 +40,41 @@ public sealed class PlayerDeathRespawn : NetworkBehaviour
 
     public override void Despawned(NetworkRunner runner, bool hasState)
     {
-        playerHealth.Died.RemoveListener(HandleDeath);
+        if (playerHealth != null)
+            playerHealth.DiedWithAttacker -= HandleDeath;
     }
 
     public override void FixedUpdateNetwork()
     {
-        if (!Object.HasStateAuthority)
+        if (!Object.HasStateAuthority || !_isDead)
             return;
 
-        if (!_isDead)
-            return;
-
-        if (!_respawnTimer.Expired(Runner))
-            return;
-
-        Respawn();
+        if (_respawnTimer.Expired(Runner))
+            Respawn();
     }
 
-    private void HandleDeath()
+    private void HandleDeath(PlayerRef attacker)
     {
-        if (!Object.HasStateAuthority)
+        if (!Object.HasStateAuthority || _isDead)
             return;
 
         _isDead = true;
 
-        animationController.SetMovementSpeed(0f);
-        animationController.SetDead(true);
+        if (animationController != null)
+        {
+            animationController.SetMovementSpeed(0f);
+            animationController.SetDead(true);
+        }
 
         _respawnTimer =
             TickTimer.CreateFromSeconds(
                 Runner,
                 respawnDelay);
+
+        ConquestManager manager = ConquestManager.Instance;
+
+        if (manager != null && manager.IsReady)
+            manager.ReportDeath(Object.InputAuthority, attacker);
 
         RPC_SetDeadState(true);
     }
@@ -68,12 +83,43 @@ public sealed class PlayerDeathRespawn : NetworkBehaviour
     {
         _isDead = false;
 
-        transform.position = _spawnPosition;
+        Vector3 respawnPosition = _spawnPosition;
+        Quaternion respawnRotation = _spawnRotation;
 
-        playerHealth.RestoreFullHealth();
+        ConquestManager manager = ConquestManager.Instance;
 
-        animationController.SetDead(false);
-        animationController.SetMovementSpeed(0f);
+        if (manager != null &&
+            manager.IsReady &&
+            manager.TryGetSpawnPoint(
+                Object.InputAuthority,
+                out Transform teamSpawn))
+        {
+            respawnPosition = teamSpawn.position;
+            respawnRotation = teamSpawn.rotation;
+        }
+
+        bool controllerEnabled =
+            _characterController != null &&
+            _characterController.enabled;
+
+        if (_characterController != null)
+            _characterController.enabled = false;
+
+        transform.SetPositionAndRotation(
+            respawnPosition,
+            respawnRotation);
+
+        if (_characterController != null)
+            _characterController.enabled = controllerEnabled;
+
+        if (playerHealth != null)
+            playerHealth.RestoreFullHealth();
+
+        if (animationController != null)
+        {
+            animationController.SetDead(false);
+            animationController.SetMovementSpeed(0f);
+        }
 
         RPC_SetDeadState(false);
     }
@@ -92,5 +138,8 @@ public sealed class PlayerDeathRespawn : NetworkBehaviour
 
         if (movement != null)
             movement.enabled = !dead;
+
+        if (!dead && _characterController != null)
+            _characterController.enabled = true;
     }
 }

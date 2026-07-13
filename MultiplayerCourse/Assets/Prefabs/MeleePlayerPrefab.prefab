@@ -476,6 +476,7 @@ GameObject:
   - component: {fileID: 1752456945702998558}
   - component: {fileID: 2703630289115125951}
   - component: {fileID: 4059940285979615771}
+  - component: {fileID: 665286542753624373}
   - component: {fileID: 5789016547777044630}
   - component: {fileID: 8274721006065484834}
   - component: {fileID: 2551247925203341577}
@@ -1573,5 +1574,10 @@ BoxCollider:
 --- !u!4 &7747896371891602957 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 46dce804e0368924394a96136a110479, type: 3}
+  m_PrefabInstance: {fileID: 7785799952375898598}
+  m_PrefabAsset: {fileID: 0}
+--- !u!23 &8920824299564891490 stripped
+MeshRenderer:
+  m_CorrespondingSourceObject: {fileID: -7511558181221131132, guid: 46dce804e0368924394a96136a110479, type: 3}
   m_PrefabInstance: {fileID: 7785799952375898598}
   m_PrefabAsset: {fileID: 0}
