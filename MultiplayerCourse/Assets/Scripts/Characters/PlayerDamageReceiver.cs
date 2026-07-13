@@ -12,12 +12,27 @@ public sealed class PlayerDamageReceiver : NetworkBehaviour
         if (attacker == Owner)
             return;
 
-        ConquestManager manager = ConquestManager.Instance;
+        ConquestManager conquestManager =
+            ConquestManager.Instance;
 
-        if (manager != null &&
-            manager.IsReady &&
-            manager.AreTeammates(attacker, Owner))
+        if (conquestManager != null &&
+            conquestManager.IsReady &&
+            conquestManager.AreTeammates(attacker, Owner))
+        {
             return;
+        }
+
+        CaptureTheFlagManager captureTheFlagManager =
+            CaptureTheFlagManager.Instance;
+
+        if (captureTheFlagManager != null &&
+            captureTheFlagManager.IsReady &&
+            captureTheFlagManager.AreTeammates(
+                attacker,
+                Owner))
+        {
+            return;
+        }
 
         playerHealth.RequestDamage(damage, attacker);
     }

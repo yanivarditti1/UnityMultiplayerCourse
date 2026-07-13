@@ -7,21 +7,23 @@ public sealed class LobbyGameModeSelection : MonoBehaviour
 {
     [SerializeField] private TMP_Dropdown dropdown;
 
-    public static GameModeType SelectedMode { get; private set; } = GameModeType.FreeForAll;
+    public static GameModeType SelectedMode { get; private set; } =
+        GameModeType.FreeForAll;
 
     private void Awake()
     {
-        if (dropdown == null)
+        if (!dropdown)
             dropdown = GetComponent<TMP_Dropdown>();
 
-        if (dropdown == null)
+        if (!dropdown )
             return;
 
         dropdown.ClearOptions();
         dropdown.AddOptions(new List<string>
         {
             "Free For All",
-            "Conquest"
+            "Conquest",
+            "Capture The Flag"
         });
 
         dropdown.SetValueWithoutNotify((int)SelectedMode);
@@ -30,7 +32,7 @@ public sealed class LobbyGameModeSelection : MonoBehaviour
 
     private void OnDestroy()
     {
-        if (dropdown != null)
+        if (dropdown )
             dropdown.onValueChanged.RemoveListener(HandleValueChanged);
     }
 

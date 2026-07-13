@@ -365,63 +365,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1001 &61641997
-PrefabInstance:
-  m_ObjectHideFlags: 0
-  serializedVersion: 2
-  m_Modification:
-    serializedVersion: 3
-    m_TransformParent: {fileID: 0}
-    m_Modifications:
-    - target: {fileID: 1307570009211484, guid: 61aa86e0f3bf6c34ebed0302feff017f, type: 3}
-      propertyPath: m_Name
-      value: hookah
-      objectReference: {fileID: 0}
-    - target: {fileID: 4072647913452744, guid: 61aa86e0f3bf6c34ebed0302feff017f, type: 3}
-      propertyPath: m_LocalPosition.x
-      value: 8.280375
-      objectReference: {fileID: 0}
-    - target: {fileID: 4072647913452744, guid: 61aa86e0f3bf6c34ebed0302feff017f, type: 3}
-      propertyPath: m_LocalPosition.y
-      value: 0.0004952648
-      objectReference: {fileID: 0}
-    - target: {fileID: 4072647913452744, guid: 61aa86e0f3bf6c34ebed0302feff017f, type: 3}
-      propertyPath: m_LocalPosition.z
-      value: -9.673284
-      objectReference: {fileID: 0}
-    - target: {fileID: 4072647913452744, guid: 61aa86e0f3bf6c34ebed0302feff017f, type: 3}
-      propertyPath: m_LocalRotation.w
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 4072647913452744, guid: 61aa86e0f3bf6c34ebed0302feff017f, type: 3}
-      propertyPath: m_LocalRotation.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4072647913452744, guid: 61aa86e0f3bf6c34ebed0302feff017f, type: 3}
-      propertyPath: m_LocalRotation.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4072647913452744, guid: 61aa86e0f3bf6c34ebed0302feff017f, type: 3}
-      propertyPath: m_LocalRotation.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4072647913452744, guid: 61aa86e0f3bf6c34ebed0302feff017f, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4072647913452744, guid: 61aa86e0f3bf6c34ebed0302feff017f, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4072647913452744, guid: 61aa86e0f3bf6c34ebed0302feff017f, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.z
-      value: 0
-      objectReference: {fileID: 0}
-    m_RemovedComponents: []
-    m_RemovedGameObjects: []
-    m_AddedGameObjects: []
-    m_AddedComponents: []
-  m_SourcePrefab: {fileID: 100100000, guid: 61aa86e0f3bf6c34ebed0302feff017f, type: 3}
 --- !u!1 &87271969
 GameObject:
   m_ObjectHideFlags: 0
@@ -2402,96 +2345,6 @@ MonoBehaviour:
   m_ShadowLayerMask: 1
   m_RenderingLayers: 1
   m_ShadowRenderingLayers: 1
---- !u!1 &808590146
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 808590149}
-  - component: {fileID: 808590148}
-  - component: {fileID: 808590147}
-  m_Layer: 0
-  m_Name: hookah
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!23 &808590147
-MeshRenderer:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 808590146}
-  m_Enabled: 1
-  m_CastShadows: 1
-  m_ReceiveShadows: 1
-  m_DynamicOccludee: 1
-  m_StaticShadowCaster: 0
-  m_MotionVectors: 1
-  m_LightProbeUsage: 1
-  m_ReflectionProbeUsage: 1
-  m_RayTracingMode: 2
-  m_RayTraceProcedural: 0
-  m_RayTracingAccelStructBuildFlagsOverride: 0
-  m_RayTracingAccelStructBuildFlags: 1
-  m_SmallMeshCulling: 1
-  m_ForceMeshLod: -1
-  m_MeshLodSelectionBias: 0
-  m_RenderingLayerMask: 1
-  m_RendererPriority: 0
-  m_Materials:
-  - {fileID: 0}
-  m_StaticBatchInfo:
-    firstSubMesh: 0
-    subMeshCount: 0
-  m_StaticBatchRoot: {fileID: 0}
-  m_ProbeAnchor: {fileID: 0}
-  m_LightProbeVolumeOverride: {fileID: 0}
-  m_ScaleInLightmap: 1
-  m_ReceiveGI: 1
-  m_PreserveUVs: 0
-  m_IgnoreNormalsForChartDetection: 0
-  m_ImportantGI: 0
-  m_StitchLightmapSeams: 1
-  m_SelectedEditorRenderState: 3
-  m_MinimumChartSize: 4
-  m_AutoUVMaxDistance: 0.5
-  m_AutoUVMaxAngle: 89
-  m_LightmapParameters: {fileID: 0}
-  m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 0
-  m_SortingLayer: 0
-  m_SortingOrder: 0
-  m_MaskInteraction: 0
-  m_AdditionalVertexStreams: {fileID: 0}
---- !u!33 &808590148
-MeshFilter:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 808590146}
-  m_Mesh: {fileID: 4300086, guid: 75bbb5035cb09084495c93bf8e644597, type: 3}
---- !u!4 &808590149
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 808590146}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 8.685472, y: 0.000000114548016, z: -9.473932}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &847263393
 GameObject:
   m_ObjectHideFlags: 0
@@ -20372,6 +20225,13 @@ MonoBehaviour:
   ticketDrainInterval: 5
   redTeamColor: {r: 1, g: 0, b: 0, a: 1}
   blueTeamColor: {r: 0, g: 0, b: 1, a: 1}
+  capturePoints:
+  - {fileID: 3000000054}
+  - {fileID: 3000000070}
+  - {fileID: 3000000003}
+  spawnPoints:
+  - {fileID: 3000000067}
+  - {fileID: 3000000019}
   _RedTickets: 0
   _BlueTickets: 0
   _MatchEnded:
@@ -20530,6 +20390,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1781373a71d4347489686b67b55ed486, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ConquestHUD
+  manager: {fileID: 3000000029}
+  capturePoints:
+  - {fileID: 3000000054}
+  - {fileID: 3000000070}
+  - {fileID: 3000000003}
   redTicketsText: {fileID: 3000000015}
   blueTicketsText: {fileID: 3000000011}
   capturePointsText: {fileID: 3000000026}
@@ -20764,5 +20629,3 @@ SceneRoots:
   - {fileID: 53306911}
   - {fileID: 1429792267}
   - {fileID: 993251995}
-  - {fileID: 61641997}
-  - {fileID: 808590149}

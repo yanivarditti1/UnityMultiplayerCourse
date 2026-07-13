@@ -4,26 +4,28 @@ using UnityEngine.InputSystem;
 
 public sealed class FirstPersonNetworkMovement : NetworkBehaviour
 {
-    [Header("References")]
-    [SerializeField] private Transform cameraRoot;
+    [Header("References")] [SerializeField]
+    private Transform cameraRoot;
+
     [SerializeField] private Camera playerCamera;
     [SerializeField] private AudioListener audioListener;
     [SerializeField] private CharacterController characterController;
 
-    [Header("Movement Settings")]
-    [SerializeField] private float moveSpeed = 6f;
+    [Header("Movement Settings")] [SerializeField]
+    private float moveSpeed = 6f;
+
     [SerializeField] private float sprintMultiplier = 6f;
     [SerializeField] private float jumpForce = 7f;
     [SerializeField] private float gravity = -9.81f;
 
-    [Header("Look Settings")]
-    [SerializeField] private float mouseSensitivity = 0.1f;
+    [Header("Look Settings")] [SerializeField]
+    private float mouseSensitivity = 0.1f;
+
     [SerializeField] private float upDownPitchLimit = 85f;
 
     [SerializeField] private PlayerAnimationController animationController;
 
-    [Networked]
-    private float VerticalVelocity { get; set; }
+    [Networked] private float VerticalVelocity { get; set; }
 
     private float _pitch;
     private bool _isLocalPlayer;
@@ -79,6 +81,18 @@ public sealed class FirstPersonNetworkMovement : NetworkBehaviour
             return;
 
         ReadFallbackInput();
+
+        CaptureTheFlagManager captureTheFlagManager =
+            CaptureTheFlagManager.Instance;
+
+        if (captureTheFlagManager != null &&
+            captureTheFlagManager.IsReady &&
+            Keyboard.current != null &&
+            Keyboard.current.gKey.wasPressedThisFrame)
+        {
+            captureTheFlagManager.RequestDrop(
+                Object.InputAuthority);
+        }
 
         if (Keyboard.current != null &&
             Keyboard.current.escapeKey.wasPressedThisFrame)
@@ -239,9 +253,26 @@ public sealed class FirstPersonNetworkMovement : NetworkBehaviour
 
         VerticalVelocity += gravity * Runner.DeltaTime;
 
+        float gameModeSpeedMultiplier = 1f;
+
+        CaptureTheFlagManager captureTheFlagManager =
+            CaptureTheFlagManager.Instance;
+
+        if (captureTheFlagManager != null &&
+            captureTheFlagManager.IsReady &&
+            captureTheFlagManager.IsCarrier(
+                Object.InputAuthority))
+        {
+            gameModeSpeedMultiplier =
+                captureTheFlagManager.CarrierSpeedMultiplier;
+        }
+
         float currentSpeed =
             moveSpeed *
-            (inputData.sprintRequested ? sprintMultiplier : 1f);
+            gameModeSpeedMultiplier *
+            (inputData.sprintRequested
+                ? sprintMultiplier
+                : 1f);
 
         Vector3 velocity = moveDirection * currentSpeed;
         velocity.y = VerticalVelocity;

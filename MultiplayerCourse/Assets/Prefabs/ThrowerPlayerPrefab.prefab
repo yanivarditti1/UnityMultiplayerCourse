@@ -559,7 +559,6 @@ GameObject:
   - component: {fileID: 4978740586288315717}
   - component: {fileID: 5245602710253449126}
   - component: {fileID: 7221408565579752386}
-  - component: {fileID: 7415364792971531288}
   - component: {fileID: 2725166591451844056}
   - component: {fileID: 2035574928608198020}
   - component: {fileID: 3661795405098710526}
@@ -570,6 +569,7 @@ GameObject:
   - component: {fileID: 1441207611138477471}
   - component: {fileID: 4656764941045708093}
   - component: {fileID: 7113785146502758552}
+  - component: {fileID: 3099508782705941265}
   m_Layer: 0
   m_Name: ThrowerPlayerPrefab
   m_TagString: Untagged
@@ -700,6 +700,7 @@ MonoBehaviour:
   - {fileID: 1441207611138477471}
   - {fileID: 4656764941045708093}
   - {fileID: 7113785146502758552}
+  - {fileID: 3099508782705941265}
   - {fileID: 4687258327691553160}
   - {fileID: 8809978536908367381}
   ForceRemoteRenderTimeframe: 0
@@ -898,6 +899,20 @@ MonoBehaviour:
   animator: {fileID: 182474316472397111}
   networkAnimator: {fileID: 4687258327691553160}
   speedSmoothTime: 0.08
+--- !u!114 &3099508782705941265
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4252853858376035391}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d414bb1fb90a4d0d9286a433c1db9077, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CaptureTheFlagPlayer
+  playerHealth: {fileID: 3661795405098710526}
+  flagAnchor: {fileID: 6731088471842130389}
 --- !u!1 &7221845788820087336
 GameObject:
   m_ObjectHideFlags: 0

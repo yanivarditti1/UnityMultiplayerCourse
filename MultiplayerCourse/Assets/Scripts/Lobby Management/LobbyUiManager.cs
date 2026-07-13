@@ -64,7 +64,7 @@ public class LobbyUiManager : MonoBehaviour
     private void SubscribeToManager()
     {
         var manager = LobbyManager.Instance;
-        if (manager == null) return;
+        if (!manager  ) return;
 
         manager.OnLobbyJoined           += HandleLobbyJoined;
         manager.OnLobbyJoinFailed       += HandleLobbyJoinFailed;
@@ -85,7 +85,7 @@ public class LobbyUiManager : MonoBehaviour
     private void UnsubscribeFromManager()
     {
         var manager = LobbyManager.Instance;
-        if (manager == null) return;
+        if (!manager ) return;
 
         manager.OnLobbyJoined           -= HandleLobbyJoined;
         manager.OnLobbyJoinFailed       -= HandleLobbyJoinFailed;
@@ -161,7 +161,7 @@ public class LobbyUiManager : MonoBehaviour
 
     private void OnJoinRoomButtonClicked()
     {
-        if (_selectedSession == null)
+        if (!_selectedSession )
         {
             SetStatus(_lobbyStatusText, "Select a session first");
             return;
@@ -235,14 +235,14 @@ public class LobbyUiManager : MonoBehaviour
             {
                 var entry = Instantiate(_sessionEntryPrefab, _sessionListContainer);
                 var label = entry.GetComponentInChildren<TextMeshProUGUI>();
-                if (label != null)
+                if (label )
                 {
                     label.text = $"{session.Name} [{session.PlayerCount}/{session.MaxPlayers}]";
                 }
             
                 //click a session to select it
                 var button = entry.GetComponent<Button>() ?? entry.GetComponentInChildren<Button>();
-                if (button != null)
+                if (button )
                 {
                     var captured = session;
                     button.onClick.AddListener(() => SelectSession(captured));

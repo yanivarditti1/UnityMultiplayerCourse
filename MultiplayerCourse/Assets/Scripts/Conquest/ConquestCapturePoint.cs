@@ -63,7 +63,7 @@ public sealed class ConquestCapturePoint : NetworkBehaviour
 
         ConquestManager manager = ConquestManager.Instance;
 
-        if (manager == null || !manager.IsReady || manager.MatchEnded)
+        if (!manager  || !manager.IsReady || manager.MatchEnded)
             return;
 
         CountPlayers(manager);
@@ -110,7 +110,7 @@ public sealed class ConquestCapturePoint : NetworkBehaviour
         {
             Collider hit = _overlapResults[i];
 
-            if (hit == null)
+            if (!hit)
                 continue;
 
             PlayerDamageReceiver receiver =
@@ -119,7 +119,7 @@ public sealed class ConquestCapturePoint : NetworkBehaviour
             PlayerHealth health =
                 hit.GetComponentInParent<PlayerHealth>();
 
-            if (receiver == null || health == null || health.IsDead)
+            if (!receiver  || !health|| health.IsDead)
                 continue;
 
             PlayerRef player = receiver.Owner;
@@ -156,7 +156,7 @@ public sealed class ConquestCapturePoint : NetworkBehaviour
     {
         Color visualColor = GetVisualColor();
 
-        if (indicatorRenderer != null)
+        if (indicatorRenderer )
             indicatorRenderer.material.color = visualColor;
 
         RefreshSmoke();
@@ -184,7 +184,7 @@ public sealed class ConquestCapturePoint : NetworkBehaviour
 
     private void RefreshSmoke()
     {
-        if (smokeParticles == null)
+        if (!smokeParticles )
             return;
 
         if (Owner == ConquestTeam.None)

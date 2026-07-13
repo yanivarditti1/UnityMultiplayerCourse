@@ -1,30 +1,29 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using Fusion;
 using UnityEngine;
 
-public sealed class ConquestManager : NetworkBehaviour
+public sealed class CaptureTheFlagManager : NetworkBehaviour
 {
-    public static ConquestManager Instance { get; private set; }
+    public static CaptureTheFlagManager Instance { get; private set; }
 
-    [Header("Tickets")]
-    [SerializeField] private int startingTickets = 100;
-    [SerializeField] private int ticketLossPerDeath = 1;
-    [SerializeField] private int ticketDrainAmount = 1;
-    [SerializeField] private float ticketDrainInterval = 5f;
+    [Header("Match")]
+    [SerializeField] private int scoreToWin = 3;
+    [SerializeField, Range(0.1f, 1f)]
+    private float carrierSpeedMultiplier = 0.65f;
 
     [Header("Teams")]
     [SerializeField] private Color redTeamColor = Color.red;
     [SerializeField] private Color blueTeamColor = Color.blue;
 
     [Header("Scene References")]
-    [SerializeField] private ConquestCapturePoint[] capturePoints;
+    [SerializeField] private CaptureTheFlagFlag flag;
     [SerializeField] private ConquestSpawnPoint[] spawnPoints;
 
     [Networked]
-    public int RedTickets { get; private set; }
+    public int RedScore { get; private set; }
 
     [Networked]
-    public int BlueTickets { get; private set; }
+    public int BlueScore { get; private set; }
 
     [Networked]
     public NetworkBool MatchEnded { get; private set; }
@@ -32,10 +31,9 @@ public sealed class ConquestManager : NetworkBehaviour
     [Networked]
     public ConquestTeam WinningTeam { get; private set; }
 
-    [Networked]
-    private TickTimer TicketDrainTimer { get; set; }
-
     public bool IsReady { get; private set; }
+    public float CarrierSpeedMultiplier => carrierSpeedMultiplier;
+    public CaptureTheFlagFlag Flag => flag;
 
     private readonly Dictionary<PlayerRef, ConquestTeam> assignedTeams = new();
     private float nextTeamRequestTime;
@@ -48,21 +46,19 @@ public sealed class ConquestManager : NetworkBehaviour
         if (!Object.HasStateAuthority)
             return;
 
-        RedTickets = startingTickets;
-        BlueTickets = startingTickets;
+        RedScore = 0;
+        BlueScore = 0;
         MatchEnded = false;
         WinningTeam = ConquestTeam.None;
-
-        TicketDrainTimer =
-            TickTimer.CreateFromSeconds(
-                Runner,
-                ticketDrainInterval);
 
         foreach (KeyValuePair<PlayerRef, PlayerManager> entry
                  in PlayerManager.Registry)
         {
-            if (entry.Value.Team != ConquestTeam.None)
+            if (entry.Value  &&
+                entry.Value.Team != ConquestTeam.None)
+            {
                 assignedTeams[entry.Key] = entry.Value.Team;
+            }
         }
     }
 
@@ -80,51 +76,20 @@ public sealed class ConquestManager : NetworkBehaviour
     {
         if (!IsReady ||
             !Runner  ||
-            !PlayerManager.Local  ||
+            !PlayerManager.Local ||
             PlayerManager.Local.Team != ConquestTeam.None ||
             Time.unscaledTime < nextTeamRequestTime)
         {
             return;
         }
 
-        nextTeamRequestTime =
-            Time.unscaledTime + 1f;
-
+        nextTeamRequestTime = Time.unscaledTime + 1f;
         RequestTeam(Runner.LocalPlayer);
     }
 
-    public override void FixedUpdateNetwork()
+    private void RequestTeam(PlayerRef player)
     {
-        if (!Object.HasStateAuthority || MatchEnded)
-            return;
-
-        if (!TicketDrainTimer.Expired(Runner))
-            return;
-
-        DrainTicketsFromObjectiveControl();
-
-        TicketDrainTimer =
-            TickTimer.CreateFromSeconds(
-                Runner,
-                ticketDrainInterval);
-    }
-
-    public void RequestTeam(PlayerRef player)
-    {
-        if (!IsReady)
-            return;
-
         RPC_RequestTeam(player);
-    }
-
-    public void ReportDeath(
-        PlayerRef victim,
-        PlayerRef attacker)
-    {
-        if (!IsReady)
-            return;
-
-        RPC_ReportDeath(victim, attacker);
     }
 
     public ConquestTeam GetTeam(PlayerRef player)
@@ -132,6 +97,7 @@ public sealed class ConquestManager : NetworkBehaviour
         if (PlayerManager.Registry.TryGetValue(
                 player,
                 out PlayerManager playerManager) &&
+            playerManager &&
             playerManager.Team != ConquestTeam.None)
         {
             return playerManager.Team;
@@ -158,6 +124,13 @@ public sealed class ConquestManager : NetworkBehaviour
                firstTeam == secondTeam;
     }
 
+    public bool IsCarrier(PlayerRef player)
+    {
+        return flag &&
+               flag.IsReady &&
+               flag.Carrier == player;
+    }
+
     public bool TryGetSpawnPoint(
         PlayerRef player,
         out Transform spawnPoint)
@@ -180,26 +153,68 @@ public sealed class ConquestManager : NetworkBehaviour
             return false;
         }
 
-        List<ConquestSpawnPoint> validSpawns = new();
+        int matchingSpawnCount = 0;
 
         foreach (ConquestSpawnPoint candidate in spawnPoints)
         {
-            if (candidate  &&
+            if (candidate != null &&
                 candidate.Team == team)
             {
-                validSpawns.Add(candidate);
+                matchingSpawnCount++;
             }
         }
 
-        if (validSpawns.Count == 0)
+        if (matchingSpawnCount == 0)
             return false;
 
-        spawnPoint =
-            validSpawns[
-                Random.Range(0, validSpawns.Count)
-            ].transform;
+        int selectedIndex = Random.Range(
+            0,
+            matchingSpawnCount);
 
-        return true;
+        foreach (ConquestSpawnPoint candidate in spawnPoints)
+        {
+            if (!candidate  ||
+                candidate.Team != team)
+            {
+                continue;
+            }
+
+            if (selectedIndex == 0)
+            {
+                spawnPoint = candidate.transform;
+                return true;
+            }
+
+            selectedIndex--;
+        }
+
+        return false;
+    }
+
+    public void RequestDrop(PlayerRef player)
+    {
+        if (!IsReady)
+            return;
+
+        RPC_RequestDrop(player);
+    }
+
+    public void ReportDeath(PlayerRef player)
+    {
+        if (!IsReady)
+            return;
+
+        RPC_ReportDeath(player);
+    }
+
+    public void TryScore(
+        PlayerRef carrier,
+        ConquestTeam baseTeam)
+    {
+        if (!IsReady)
+            return;
+
+        RPC_TryScore(carrier, baseTeam);
     }
 
     [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
@@ -251,100 +266,88 @@ public sealed class ConquestManager : NetworkBehaviour
     }
 
     [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
-    private void RPC_ReportDeath(
-        PlayerRef victim,
-        PlayerRef attacker)
+    private void RPC_RequestDrop(PlayerRef player)
     {
-        if (MatchEnded)
+        if (MatchEnded ||
+            !flag  ||
+            !flag.IsReady ||
+            flag.Carrier != player)
+        {
             return;
-
-        ConquestTeam victimTeam =
-            GetTeam(victim);
-
-        if (victimTeam == ConquestTeam.Red)
-        {
-            RedTickets =
-                Mathf.Max(
-                    0,
-                    RedTickets - ticketLossPerDeath);
-        }
-        else if (victimTeam == ConquestTeam.Blue)
-        {
-            BlueTickets =
-                Mathf.Max(
-                    0,
-                    BlueTickets - ticketLossPerDeath);
         }
 
-        CheckForWinner();
+        flag.DropAtPlayer(player);
     }
 
-    private void DrainTicketsFromObjectiveControl()
+    [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
+    private void RPC_ReportDeath(PlayerRef player)
     {
-        if (capturePoints == null ||
-            capturePoints.Length == 0)
+        if (!flag  ||
+            !flag.IsReady ||
+            flag.Carrier != player)
         {
             return;
         }
 
-        int redOwned = 0;
-        int blueOwned = 0;
+        flag.DropAtPlayer(player);
+    }
 
-        foreach (ConquestCapturePoint capturePoint
-                 in capturePoints)
+    [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
+    private void RPC_TryScore(
+        PlayerRef carrier,
+        ConquestTeam baseTeam)
+    {
+        if (MatchEnded ||
+            !flag  ||
+            !flag.IsReady ||
+            flag.Carrier != carrier ||
+            GetTeam(carrier) != baseTeam)
         {
-            if (!capturePoint  ||
-                !capturePoint.IsReady)
-            {
-                continue;
-            }
-
-            if (capturePoint.Owner == ConquestTeam.Red)
-                redOwned++;
-            else if (capturePoint.Owner == ConquestTeam.Blue)
-                blueOwned++;
+            return;
         }
 
-        if (redOwned > blueOwned)
+        if (baseTeam == ConquestTeam.Red)
         {
-            BlueTickets =
-                Mathf.Max(
-                    0,
-                    BlueTickets - ticketDrainAmount);
+            RedScore++;
         }
-        else if (blueOwned > redOwned)
+        else if (baseTeam == ConquestTeam.Blue)
         {
-            RedTickets =
-                Mathf.Max(
-                    0,
-                    RedTickets - ticketDrainAmount);
+            BlueScore++;
+        }
+        else
+        {
+            return;
         }
 
+        flag.ReturnHome();
         CheckForWinner();
     }
 
     private void CheckForWinner()
     {
-        if (RedTickets > 0 &&
-            BlueTickets > 0)
+        if (RedScore < scoreToWin &&
+            BlueScore < scoreToWin)
         {
             return;
         }
 
         MatchEnded = true;
 
-        if (RedTickets <= 0 &&
-            BlueTickets <= 0)
+        if (RedScore >= scoreToWin &&
+            BlueScore >= scoreToWin)
         {
             WinningTeam = ConquestTeam.None;
         }
-        else if (RedTickets <= 0)
-        {
-            WinningTeam = ConquestTeam.Blue;
-        }
-        else
+        else if (RedScore >= scoreToWin)
         {
             WinningTeam = ConquestTeam.Red;
         }
+        else
+        {
+            WinningTeam = ConquestTeam.Blue;
+        }
+
+        if (flag  && flag.IsReady)
+            flag.ReturnHome();
     }
 }

@@ -38,6 +38,9 @@ public class LobbyManager : MonoBehaviour, INetworkRunnerCallbacks
     [Header("Game Modes")] [SerializeField]
     private string _conquestSceneName = "ConquestScene";
 
+    [SerializeField] private string _captureTheFlagSceneName =
+        "CaptureTheFlagScene";
+
     //chat events
     public event Action<ChatMessage, string> OnChatMessageReceived;
     public event Action<string> OnChatSystemMessage;
@@ -290,10 +293,16 @@ public class LobbyManager : MonoBehaviour, INetworkRunnerCallbacks
         OnSessionListRefreshed?.Invoke(new List<SessionInfo>(_sessionsList));
         OnMatchStarted?.Invoke();
 
-        string sceneName = GetCurrentGameMode() == GameModeType.Conquest
-            ? _conquestSceneName
-            : _sceneData.gameSceneName;
+        GameModeType gameMode = GetCurrentGameMode();
 
+        string sceneName = gameMode switch
+        {
+            GameModeType.Conquest => _conquestSceneName,
+            GameModeType.CaptureTheFlag => _captureTheFlagSceneName,
+            _ => _sceneData.gameSceneName
+        };
+
+        await Runner.LoadScene(sceneName);
         await Runner.LoadScene(sceneName);
     }
 

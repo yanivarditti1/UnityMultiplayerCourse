@@ -5,12 +5,19 @@ using UnityEngine.Events;
 public sealed class CharacterSelectionManager : NetworkBehaviour
 {
     [Header("Character Slots")]
-    [SerializeField] private CharacterSlotData[] characterSlots = new CharacterSlotData[10];
+    [SerializeField]
+    private CharacterSlotData[] characterSlots =
+        new CharacterSlotData[10];
 
     [Header("UI Events")]
-    [SerializeField] private UnityEvent<int, bool> onSlotTakenChanged;
-    [SerializeField] private UnityEvent<string> onSelectionMessage;
-    [SerializeField] private UnityEvent onLocalPlayerSpawned;
+    [SerializeField]
+    private UnityEvent<int, bool> onSlotTakenChanged;
+
+    [SerializeField]
+    private UnityEvent<string> onSelectionMessage;
+
+    [SerializeField]
+    private UnityEvent onLocalPlayerSpawned;
 
     [Networked, Capacity(10)]
     private NetworkArray<PlayerRef> TakenByPlayers => default;
@@ -20,12 +27,20 @@ public sealed class CharacterSelectionManager : NetworkBehaviour
         RefreshAllSlots();
     }
 
-    public void RequestCharacter(int slotIndex, Color nameColor)
+    public void RequestCharacter(
+        int slotIndex,
+        Color nameColor)
     {
-        if (slotIndex < 0 || slotIndex >= characterSlots.Length)
+        if (slotIndex < 0 ||
+            slotIndex >= characterSlots.Length)
+        {
             return;
+        }
 
-        RPC_RequestCharacter(Runner.LocalPlayer, slotIndex, nameColor);
+        RPC_RequestCharacter(
+            Runner.LocalPlayer,
+            slotIndex,
+            nameColor);
     }
 
     [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
@@ -37,8 +52,11 @@ public sealed class CharacterSelectionManager : NetworkBehaviour
         if (!Runner.IsSharedModeMasterClient)
             return;
 
-        if (slotIndex < 0 || slotIndex >= characterSlots.Length)
+        if (slotIndex < 0 ||
+            slotIndex >= characterSlots.Length)
+        {
             return;
+        }
 
         if (TakenByPlayers[slotIndex] != PlayerRef.None)
         {
@@ -49,9 +67,16 @@ public sealed class CharacterSelectionManager : NetworkBehaviour
             return;
         }
 
-        TakenByPlayers.Set(slotIndex, requestingPlayer);
+        TakenByPlayers.Set(
+            slotIndex,
+            requestingPlayer);
+
         RPC_SlotTakenChanged(slotIndex, true);
-        RPC_CharacterApproved(requestingPlayer, slotIndex, nameColor);
+
+        RPC_CharacterApproved(
+            requestingPlayer,
+            slotIndex,
+            nameColor);
     }
 
     [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
@@ -63,12 +88,15 @@ public sealed class CharacterSelectionManager : NetworkBehaviour
         if (Runner.LocalPlayer != targetPlayer)
             return;
 
-        CharacterSlotData slot = characterSlots[slotIndex];
+        CharacterSlotData slot =
+            characterSlots[slotIndex];
 
-        if (slot.PlayerPrefab == null || slot.SpawnPoint == null)
+        if (slot.PlayerPrefab == null ||
+            slot.SpawnPoint == null)
         {
             Debug.LogError(
-                $"[CharacterSelection] Slot {slotIndex} is missing its prefab or spawn point.");
+                $"[CharacterSelection] Slot {slotIndex} " +
+                "is missing its prefab or spawn point.");
 
             onSelectionMessage?.Invoke(
                 "The selected character is not configured correctly.");
@@ -76,17 +104,35 @@ public sealed class CharacterSelectionManager : NetworkBehaviour
             return;
         }
 
-        Vector3 spawnPosition = slot.SpawnPoint.position;
-        Quaternion spawnRotation = slot.SpawnPoint.rotation;
+        Vector3 spawnPosition =
+            slot.SpawnPoint.position;
 
-        ConquestManager manager = ConquestManager.Instance;
+        Quaternion spawnRotation =
+            slot.SpawnPoint.rotation;
 
-        if (manager != null &&
-            manager.IsReady &&
-            manager.TryGetSpawnPoint(targetPlayer, out Transform teamSpawn))
+        ConquestManager conquestManager =
+            ConquestManager.Instance;
+
+        CaptureTheFlagManager captureTheFlagManager =
+            CaptureTheFlagManager.Instance;
+
+        if (conquestManager != null &&
+            conquestManager.IsReady &&
+            conquestManager.TryGetSpawnPoint(
+                targetPlayer,
+                out Transform conquestSpawn))
         {
-            spawnPosition = teamSpawn.position;
-            spawnRotation = teamSpawn.rotation;
+            spawnPosition = conquestSpawn.position;
+            spawnRotation = conquestSpawn.rotation;
+        }
+        else if (captureTheFlagManager != null &&
+                 captureTheFlagManager.IsReady &&
+                 captureTheFlagManager.TryGetSpawnPoint(
+                     targetPlayer,
+                     out Transform captureTheFlagSpawn))
+        {
+            spawnPosition = captureTheFlagSpawn.position;
+            spawnRotation = captureTheFlagSpawn.rotation;
         }
 
         NetworkObject spawnedPlayer = Runner.Spawn(
@@ -95,34 +141,46 @@ public sealed class CharacterSelectionManager : NetworkBehaviour
             rotation: spawnRotation,
             inputAuthority: targetPlayer,
             onBeforeSpawned: null,
-            flags: NetworkSpawnFlags.SharedModeStateAuthLocalPlayer);
+            flags:
+                NetworkSpawnFlags.SharedModeStateAuthLocalPlayer);
 
         if (spawnedPlayer == null)
         {
             Debug.LogError(
-                $"[CharacterSelection] Failed to spawn slot {slotIndex} for {targetPlayer}.");
+                $"[CharacterSelection] Failed to spawn " +
+                $"slot {slotIndex} for {targetPlayer}.");
 
-            TakenByPlayers.Set(slotIndex, PlayerRef.None);
+            TakenByPlayers.Set(
+                slotIndex,
+                PlayerRef.None);
+
             RPC_SlotTakenChanged(slotIndex, false);
 
-            onSelectionMessage?.Invoke("Failed to spawn the selected character.");
+            onSelectionMessage?.Invoke(
+                "Failed to spawn the selected character.");
+
             return;
         }
 
-        Runner.SetPlayerObject(targetPlayer, spawnedPlayer);
+        Runner.SetPlayerObject(
+            targetPlayer,
+            spawnedPlayer);
 
-        Debug.Log(
-            $"[CharacterSelection] Spawned {spawnedPlayer.name} for {targetPlayer}. " +
-            $"InputAuthority={spawnedPlayer.HasInputAuthority}, " +
-            $"StateAuthority={spawnedPlayer.HasStateAuthority}");
+        bool teamModeActive =
+            conquestManager != null &&
+            conquestManager.IsReady ||
+            captureTheFlagManager != null &&
+            captureTheFlagManager.IsReady;
 
         if (PlayerManager.Local != null &&
-            (manager == null || !manager.IsReady))
+            !teamModeActive)
         {
             PlayerManager.Local.SetNameColor(nameColor);
         }
 
-        onSelectionMessage?.Invoke("Character selected!");
+        onSelectionMessage?.Invoke(
+            "Character selected!");
+
         onLocalPlayerSpawned?.Invoke();
     }
 
@@ -138,17 +196,27 @@ public sealed class CharacterSelectionManager : NetworkBehaviour
     }
 
     [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
-    private void RPC_SlotTakenChanged(int slotIndex, bool isTaken)
+    private void RPC_SlotTakenChanged(
+        int slotIndex,
+        bool isTaken)
     {
-        onSlotTakenChanged?.Invoke(slotIndex, isTaken);
+        onSlotTakenChanged?.Invoke(
+            slotIndex,
+            isTaken);
     }
 
     private void RefreshAllSlots()
     {
-        for (int i = 0; i < characterSlots.Length; i++)
+        for (int i = 0;
+             i < characterSlots.Length;
+             i++)
         {
-            bool isTaken = TakenByPlayers[i] != PlayerRef.None;
-            onSlotTakenChanged?.Invoke(i, isTaken);
+            bool isTaken =
+                TakenByPlayers[i] != PlayerRef.None;
+
+            onSlotTakenChanged?.Invoke(
+                i,
+                isTaken);
         }
     }
 }

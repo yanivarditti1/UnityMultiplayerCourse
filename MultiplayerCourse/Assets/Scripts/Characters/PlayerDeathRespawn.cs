@@ -3,15 +3,15 @@ using UnityEngine;
 
 public sealed class PlayerDeathRespawn : NetworkBehaviour
 {
-    [Header("References")]
-    [SerializeField] private PlayerHealth playerHealth;
+    [Header("References")] [SerializeField]
+    private PlayerHealth playerHealth;
+
     [SerializeField] private FirstPersonNetworkMovement movement;
     [SerializeField] private GameObject visualRoot;
     [SerializeField] private GameObject redScreenOverlay;
     [SerializeField] private PlayerAnimationController animationController;
 
-    [Header("Respawn")]
-    [SerializeField] private float respawnDelay = 5f;
+    [Header("Respawn")] [SerializeField] private float respawnDelay = 5f;
 
     private TickTimer _respawnTimer;
     private bool _isDead;
@@ -76,6 +76,16 @@ public sealed class PlayerDeathRespawn : NetworkBehaviour
         if (manager != null && manager.IsReady)
             manager.ReportDeath(Object.InputAuthority, attacker);
 
+        CaptureTheFlagManager captureTheFlagManager =
+            CaptureTheFlagManager.Instance;
+
+        if (captureTheFlagManager != null &&
+            captureTheFlagManager.IsReady)
+        {
+            captureTheFlagManager.ReportDeath(
+                Object.InputAuthority);
+        }
+
         RPC_SetDeadState(true);
     }
 
@@ -87,15 +97,18 @@ public sealed class PlayerDeathRespawn : NetworkBehaviour
         Quaternion respawnRotation = _spawnRotation;
 
         ConquestManager manager = ConquestManager.Instance;
+        
+        CaptureTheFlagManager captureTheFlagManager = CaptureTheFlagManager.Instance;
 
-        if (manager != null &&
-            manager.IsReady &&
-            manager.TryGetSpawnPoint(
+        if ((manager == null || !manager.IsReady) &&
+            captureTheFlagManager != null &&
+            captureTheFlagManager.IsReady &&
+            captureTheFlagManager.TryGetSpawnPoint(
                 Object.InputAuthority,
-                out Transform teamSpawn))
+                out Transform captureTheFlagSpawn))
         {
-            respawnPosition = teamSpawn.position;
-            respawnRotation = teamSpawn.rotation;
+            respawnPosition = captureTheFlagSpawn.position;
+            respawnRotation = captureTheFlagSpawn.rotation;
         }
 
         bool controllerEnabled =
