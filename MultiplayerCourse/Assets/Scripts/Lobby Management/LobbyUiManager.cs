@@ -2,27 +2,28 @@ using System.Collections.Generic;
 using Fusion;
 using TMPro;
 using UnityEngine;
-using UnityEngine.SceneManagement;
+using System;
 using UnityEngine.UI;
 
 public class LobbyUiManager : MonoBehaviour
 {
     //panels
-    [Header("Panels")]
-    [SerializeField] private GameObject _connectPanel;
+    [Header("Panels")] [SerializeField] private GameObject _connectPanel;
     [SerializeField] private GameObject _lobbyPanel;
     [SerializeField] private GameObject _roomPanel;
-    
+
     //connect panel
-    [Header("Connect Panel")]
-    [SerializeField] private TMP_InputField _lobbyIdInputField;
+    [Header("Connect Panel")] [SerializeField]
+    private TMP_InputField _lobbyIdInputField;
+
     [SerializeField] private Button _joinLobbyButton;
     [SerializeField] private TextMeshProUGUI _connectStatusText;
-    
+
     //lobby panel
-    [Header("Lobby Panel")] 
-    [SerializeField] private Transform _sessionListContainer;
-    [SerializeField] private GameObject _sessionEntryPrefab;
+    [Header("Lobby Panel")] [SerializeField]
+    private Transform _sessionListContainer;
+
+    [SerializeField] private SessionEntryUI _sessionEntryPrefab;
     [SerializeField] private TMP_InputField _nicknameInputField;
     [SerializeField] private TMP_InputField _roomNameInputField;
     [SerializeField] private TMP_InputField _maxPlayersInputField;
@@ -31,20 +32,24 @@ public class LobbyUiManager : MonoBehaviour
     [SerializeField] private Button _leaveLobbyButton;
     [SerializeField] private Toggle _isPrivateToggle;
     [SerializeField] private TextMeshProUGUI _lobbyStatusText;
-    
+    [SerializeField] private TMP_Dropdown _sessionGameModeFilterDropdown;
+
+
     //room panel
-    [Header("Room Panel")] 
-    [SerializeField] private Transform _playerListContainer;
+    [Header("Room Panel")] [SerializeField]
+    private Transform _playerListContainer;
+
     [SerializeField] private TextMeshProUGUI _playerListLabel;
     [SerializeField] private GameObject _playerEntryPrefab;
     [SerializeField] private Button _startMatchButton;
     [SerializeField] private Button _leaveRoomButton;
     [SerializeField] private TextMeshProUGUI _roomNameText;
     [SerializeField] private TextMeshProUGUI _roomStatusText;
-    
+
     //state
     private SessionInfo _selectedSession;
-    private readonly List<GameObject> _sessionEntries = new();
+    private readonly List<SessionEntryUI> _sessionEntries = new();
+    private readonly List<SessionInfo> _cachedSessions = new();
     private readonly Dictionary<PlayerRef, GameObject> _playerEntries = new();
 
     private void Start()
@@ -52,58 +57,93 @@ public class LobbyUiManager : MonoBehaviour
         SubscribeToManager();
         ShowConnectPanel();
         SetupButtonListeners();
+        SetupSessionFilter();
     }
 
     private void OnDestroy()
     {
+        if (_sessionGameModeFilterDropdown != null)
+        {
+            _sessionGameModeFilterDropdown.onValueChanged.RemoveListener(
+                HandleSessionFilterChanged);
+        }
+
         UnsubscribeFromManager();
     }
-    
+
     #region Subscriptions
+
+    private void SetupSessionFilter()
+    {
+        if (_sessionGameModeFilterDropdown == null)
+            return;
+
+        _sessionGameModeFilterDropdown.ClearOptions();
+
+        _sessionGameModeFilterDropdown.AddOptions(
+            new List<string>
+            {
+                "All Game Modes",
+                "Free For All",
+                "Conquest",
+                "Capture The Flag"
+            });
+
+        _sessionGameModeFilterDropdown.SetValueWithoutNotify(0);
+
+        _sessionGameModeFilterDropdown.onValueChanged.AddListener(
+            HandleSessionFilterChanged);
+    }
+
+    private void HandleSessionFilterChanged(int value)
+    {
+        RefreshSessionList();
+    }
 
     private void SubscribeToManager()
     {
         var manager = LobbyManager.Instance;
-        if (!manager  ) return;
+        if (!manager) return;
 
-        manager.OnLobbyJoined           += HandleLobbyJoined;
-        manager.OnLobbyJoinFailed       += HandleLobbyJoinFailed;
-        manager.OnLobbyLeave            += HandleLobbyLeave;
-        manager.OnSessionListRefreshed  += HandleSessionListRefreshed;
-        manager.OnRoomCreated           += HandleRoomCreated;
-        manager.OnRoomCreateFailed      += HandleRoomCreateFailed;
-        manager.OnRoomJoined            += HandleRoomJoined;
-        manager.OnRoomJoinFailed        += HandleRoomJoinFailed;
-        manager.OnRoomLeft              += HandleRoomLeft;
-        manager.OnRoomListUpdate        += HandleRoomListUpdate;
-        manager.OnMatchStarted          += HandleMatchStarted;
+        manager.OnLobbyJoined += HandleLobbyJoined;
+        manager.OnLobbyJoinFailed += HandleLobbyJoinFailed;
+        manager.OnLobbyLeave += HandleLobbyLeave;
+        manager.OnSessionListRefreshed += HandleSessionListRefreshed;
+        manager.OnRoomCreated += HandleRoomCreated;
+        manager.OnRoomCreateFailed += HandleRoomCreateFailed;
+        manager.OnRoomJoined += HandleRoomJoined;
+        manager.OnRoomJoinFailed += HandleRoomJoinFailed;
+        manager.OnRoomLeft += HandleRoomLeft;
+        manager.OnRoomListUpdate += HandleRoomListUpdate;
+        manager.OnMatchStarted += HandleMatchStarted;
         manager.OnPlayerNicknameChanged += HandlePlayerNicknameChanged;
-        manager.OnGameSceneLoaded       += HandleGameSceneLoaded;
-        manager.OnSceneLoadStarted      += HandleSceneLoadStart;
+        manager.OnGameSceneLoaded += HandleGameSceneLoaded;
+        manager.OnSceneLoadStarted += HandleSceneLoadStart;
     }
 
     private void UnsubscribeFromManager()
     {
         var manager = LobbyManager.Instance;
-        if (!manager ) return;
+        if (!manager) return;
 
-        manager.OnLobbyJoined           -= HandleLobbyJoined;
-        manager.OnLobbyJoinFailed       -= HandleLobbyJoinFailed;
-        manager.OnLobbyLeave            -= HandleLobbyLeave;
-        manager.OnSessionListRefreshed  -= HandleSessionListRefreshed;
-        manager.OnRoomCreated           -= HandleRoomCreated;
-        manager.OnRoomCreateFailed      -= HandleRoomCreateFailed;
-        manager.OnRoomJoined            -= HandleRoomJoined;
-        manager.OnRoomJoinFailed        -= HandleRoomJoinFailed;
-        manager.OnRoomLeft              -= HandleRoomLeft;
-        manager.OnRoomListUpdate        -= HandleRoomListUpdate;
-        manager.OnMatchStarted          -= HandleMatchStarted;
+        manager.OnLobbyJoined -= HandleLobbyJoined;
+        manager.OnLobbyJoinFailed -= HandleLobbyJoinFailed;
+        manager.OnLobbyLeave -= HandleLobbyLeave;
+        manager.OnSessionListRefreshed -= HandleSessionListRefreshed;
+        manager.OnRoomCreated -= HandleRoomCreated;
+        manager.OnRoomCreateFailed -= HandleRoomCreateFailed;
+        manager.OnRoomJoined -= HandleRoomJoined;
+        manager.OnRoomJoinFailed -= HandleRoomJoinFailed;
+        manager.OnRoomLeft -= HandleRoomLeft;
+        manager.OnRoomListUpdate -= HandleRoomListUpdate;
+        manager.OnMatchStarted -= HandleMatchStarted;
         manager.OnPlayerNicknameChanged -= HandlePlayerNicknameChanged;
-        manager.OnGameSceneLoaded       -= HandleGameSceneLoaded;
-        manager.OnSceneLoadStarted      -= HandleSceneLoadStart;
+        manager.OnGameSceneLoaded -= HandleGameSceneLoaded;
+        manager.OnSceneLoadStarted -= HandleSceneLoadStart;
     }
+
     #endregion
-    
+
     #region ButtonWiring
 
     private void SetupButtonListeners()
@@ -138,7 +178,7 @@ public class LobbyUiManager : MonoBehaviour
             SetStatus(_lobbyStatusText, "Room name cannot be empty");
             return;
         }
-        
+
         string playerNickname = _nicknameInputField.text.Trim();
         if (string.IsNullOrEmpty(playerNickname))
         {
@@ -161,19 +201,19 @@ public class LobbyUiManager : MonoBehaviour
 
     private void OnJoinRoomButtonClicked()
     {
-        if (!_selectedSession )
+        if (!_selectedSession)
         {
             SetStatus(_lobbyStatusText, "Select a session first");
             return;
         }
-        
+
         string playerNickname = _nicknameInputField.text.Trim();
         if (string.IsNullOrEmpty(playerNickname))
         {
             SetStatus(_lobbyStatusText, "Enter a nickname first!");
             return;
         }
-        
+
         string nickName = _nicknameInputField.text.Trim();
         LobbyManager.Instance.SetNickname(nickName);
         SetLobbyButtons(false);
@@ -186,23 +226,25 @@ public class LobbyUiManager : MonoBehaviour
         _leaveRoomButton.interactable = false;
         LobbyManager.Instance.LeaveRoom();
     }
-    
+
     private void OnStartMatchButtonClicked()
     {
         LobbyManager.Instance.StartMatch();
     }
-    
+
     #endregion
-    
+
     #region EventHandlers
 
-    private void HandleLobbyJoined(List<SessionInfo> sessions)
+    private void HandleLobbyJoined(
+        List<SessionInfo> sessions)
     {
         SetStatus(_connectStatusText, "");
         ShowLobbyPanel();
         SetLobbyButtons(true);
         _leaveLobbyButton.interactable = true;
-        SetStatus(_lobbyStatusText, "In lobby. Waiting for sessions...");
+
+        HandleSessionListRefreshed(sessions);
     }
 
     private void HandleLobbyJoinFailed(string reason)
@@ -220,46 +262,18 @@ public class LobbyUiManager : MonoBehaviour
             SetConnectButtons(true);
         }
     }
-    
-    private void HandleSessionListRefreshed(List<SessionInfo> sessions)
+
+    private void HandleSessionListRefreshed(
+        List<SessionInfo> sessions)
     {
-        foreach (var entry in _sessionEntries) Destroy(entry);
-        _sessionEntries.Clear();
-        _selectedSession = null;
-        SetJoinRoomButtonActive(false);
-        
-        foreach (var session in sessions)
-        {
-            //hide private sessions
-            if (session.IsVisible)
-            {
-                var entry = Instantiate(_sessionEntryPrefab, _sessionListContainer);
-                var label = entry.GetComponentInChildren<TextMeshProUGUI>();
-                if (label )
-                {
-                    label.text = $"{session.Name} [{session.PlayerCount}/{session.MaxPlayers}]";
-                }
-            
-                //click a session to select it
-                var button = entry.GetComponent<Button>() ?? entry.GetComponentInChildren<Button>();
-                if (button )
-                {
-                    var captured = session;
-                    button.onClick.AddListener(() => SelectSession(captured));
-                
-                
-                    if (session.PlayerCount >= session.MaxPlayers)
-                    {
-                        button.interactable = false;
-                    }
-                }
-            
-                _sessionEntries.Add(entry);
-            }
-            
-        }
+        _cachedSessions.Clear();
+
+        if (sessions != null)
+            _cachedSessions.AddRange(sessions);
+
+        RefreshSessionList();
     }
-    
+
     private void HandleRoomCreated(SessionInfo info)
     {
         ShowRoomPanel();
@@ -267,20 +281,20 @@ public class LobbyUiManager : MonoBehaviour
         SetStatus(_roomStatusText, $"Hosting room: {info.Name} - waiting for players...");
         _leaveRoomButton.interactable = true;
     }
-    
+
     private void HandleRoomCreateFailed(string reason)
     {
         SetLobbyButtons(true);
         SetStatus(_lobbyStatusText, $"Failed to create room: {reason}");
     }
-    
+
     private void HandleRoomJoined(string roomName)
     {
         ShowRoomPanel();
         _roomNameText.text = roomName;
         SetStatus(_roomStatusText, "Joined room");
         _leaveRoomButton.interactable = true;
-        
+
         bool isMaster = LobbyManager.Instance.Runner.LocalPlayer.IsMasterClient;
         if (!isMaster)
         {
@@ -307,7 +321,7 @@ public class LobbyUiManager : MonoBehaviour
     {
         foreach (var entry in _playerEntries.Values) Destroy(entry);
         _playerEntries.Clear();
-        
+
         foreach (var player in players)
         {
             var entry = Instantiate(_playerEntryPrefab, _playerListContainer);
@@ -315,20 +329,22 @@ public class LobbyUiManager : MonoBehaviour
             if (label != null)
             {
                 bool isLocal = player == LobbyManager.Instance.Runner.LocalPlayer;
-                string nickname = PlayerManager.Registry.TryGetValue(player, out var pm)?
-                    pm.Nickname.ToString()
+                string nickname = PlayerManager.Registry.TryGetValue(player, out var pm)
+                    ? pm.Nickname.ToString()
                     : isLocal
                         ? PlayerDataPersistanceManager.Instance.Nickname
                         : $"Player {player.PlayerId}";
                 label.text = isLocal ? $"{nickname} (You)" : nickname;
             }
+
             _playerEntries[player] = entry;
             //_playerEntries.Add(entry);
         }
-        
-        SetStatus(_playerListLabel, $"Active Players: {players.Count} / {LobbyManager.Instance.Runner.SessionInfo.MaxPlayers}");
+
+        SetStatus(_playerListLabel,
+            $"Active Players: {players.Count} / {LobbyManager.Instance.Runner.SessionInfo.MaxPlayers}");
     }
-    
+
     private void HandleMatchStarted()
     {
         _startMatchButton.interactable = false;
@@ -342,18 +358,18 @@ public class LobbyUiManager : MonoBehaviour
         var players = new List<PlayerRef>(playersList);
         var index = players.IndexOf(player);
         if (index < 0 || index >= _playerEntries.Count) return;
-        
+
         var label = _playerEntries[index].GetComponentInChildren<TextMeshProUGUI>();*/
-        
+
         if (!_playerEntries.TryGetValue(player, out var entry)) return;
-        
+
         var label = entry.GetComponentInChildren<TextMeshProUGUI>();
         if (label == null) return;
-        
+
         bool isLocal = player == LobbyManager.Instance.Runner.LocalPlayer;
         label.text = isLocal ? $"{nickname} (You)" : $"{nickname}";
     }
-    
+
     private void HandleGameSceneLoaded()
     {
         Debug.Log("[LobbyUiManager] Game scene loaded, hiding relevant panels");
@@ -364,9 +380,9 @@ public class LobbyUiManager : MonoBehaviour
     {
         HidePanelsOnLoadScene();
     }
-    
+
     #endregion
-    
+
     #region Helpers
 
     private void ShowConnectPanel()
@@ -375,7 +391,7 @@ public class LobbyUiManager : MonoBehaviour
         _lobbyPanel.SetActive(false);
         _roomPanel.SetActive(false);
     }
-    
+
     private void ShowLobbyPanel()
     {
         _connectPanel.SetActive(false);
@@ -387,8 +403,8 @@ public class LobbyUiManager : MonoBehaviour
     {
         _connectPanel.SetActive(false);
         _lobbyPanel.SetActive(false);
-        _roomPanel.SetActive(true);   
-        
+        _roomPanel.SetActive(true);
+
         Debug.Log("show room panel");
     }
 
@@ -397,7 +413,7 @@ public class LobbyUiManager : MonoBehaviour
         _connectPanel.SetActive(false);
         _lobbyPanel.SetActive(false);
         _roomPanel.SetActive(false);
-        
+
         Debug.Log("Deactivating all panels");
     }
 
@@ -412,7 +428,7 @@ public class LobbyUiManager : MonoBehaviour
     {
         if (text != null) text.text = status;
     }
-    
+
     private void SetConnectButtons(bool newEnabled) => _joinLobbyButton.interactable = newEnabled;
     private void SetJoinRoomButtonActive(bool newActive) => _joinRoomButton.interactable = newActive;
 
@@ -422,6 +438,118 @@ public class LobbyUiManager : MonoBehaviour
         _joinLobbyButton.interactable = newEnabled;
         if (!newEnabled) SetJoinRoomButtonActive(false);
     }
-    
+
+    private void RefreshSessionList()
+    {
+        foreach (SessionEntryUI entry in _sessionEntries)
+        {
+            if (entry != null)
+                Destroy(entry.gameObject);
+        }
+
+        _sessionEntries.Clear();
+        _selectedSession = null;
+        SetJoinRoomButtonActive(false);
+
+        int displayedSessionCount = 0;
+
+        foreach (SessionInfo session in _cachedSessions)
+        {
+            if (!IsActiveSession(session))
+                continue;
+
+            GameModeType gameMode =
+                GetSessionGameMode(session);
+
+            if (!MatchesSelectedFilter(gameMode))
+                continue;
+
+            SessionEntryUI entry =
+                Instantiate(
+                    _sessionEntryPrefab,
+                    _sessionListContainer);
+
+            entry.Setup(
+                session,
+                gameMode,
+                SelectSession);
+
+            _sessionEntries.Add(entry);
+            displayedSessionCount++;
+        }
+
+        if (displayedSessionCount == 0)
+        {
+            SetStatus(
+                _lobbyStatusText,
+                GetEmptyListMessage());
+        }
+        else
+        {
+            SetStatus(
+                _lobbyStatusText,
+                $"Active sessions: {displayedSessionCount}");
+        }
+    }
+
+    private bool MatchesSelectedFilter(
+        GameModeType gameMode)
+    {
+        if (_sessionGameModeFilterDropdown == null)
+            return true;
+
+        return _sessionGameModeFilterDropdown.value switch
+        {
+            0 => true,
+            1 => gameMode == GameModeType.FreeForAll,
+            2 => gameMode == GameModeType.Conquest,
+            3 => gameMode == GameModeType.CaptureTheFlag,
+            _ => true
+        };
+    }
+
+    private static bool IsActiveSession(
+        SessionInfo session)
+    {
+        return session != null &&
+               session.IsVisible &&
+               session.IsOpen;
+    }
+
+    private static GameModeType GetSessionGameMode(
+        SessionInfo session)
+    {
+        if (session == null ||
+            !session.Properties.TryGetValue(
+                "GameMode",
+                out SessionProperty modeProperty))
+        {
+            return GameModeType.FreeForAll;
+        }
+
+        string modeValue =
+            modeProperty.PropertyValue.ToString();
+
+        return Enum.TryParse(
+            modeValue,
+            out GameModeType gameMode)
+            ? gameMode
+            : GameModeType.FreeForAll;
+    }
+
+    private string GetEmptyListMessage()
+    {
+        if (_sessionGameModeFilterDropdown == null)
+            return "No active sessions";
+
+        return _sessionGameModeFilterDropdown.value switch
+        {
+            1 => "No active Free For All sessions",
+            2 => "No active Conquest sessions",
+            3 => "No active Capture The Flag sessions",
+            _ => "No active sessions"
+        };
+    }
+
     #endregion
 }
