@@ -35,11 +35,9 @@ public class LobbyManager : MonoBehaviour, INetworkRunnerCallbacks
 
     private const string GameModePropertyKey = "GameMode";
 
-    [Header("Game Modes")] [SerializeField]
-    private string _conquestSceneName = "ConquestScene";
-
-    [SerializeField] private string _captureTheFlagSceneName =
-        "CaptureTheFlagScene";
+    [Header("Game Modes")] 
+    [SerializeField] private string _conquestSceneName = "ConquestScene";
+    [SerializeField] private string _captureTheFlagSceneName = "CaptureTheFlagScene";
 
     //chat events
     public event Action<ChatMessage, string> OnChatMessageReceived;

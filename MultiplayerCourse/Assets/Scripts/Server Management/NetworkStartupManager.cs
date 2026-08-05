@@ -2,6 +2,7 @@ using System;
 using UnityEngine;
 using System.Threading.Tasks;
 using Fusion;
+using UnityEngine.SceneManagement;
 
 public class NetworkStartupManager : MonoBehaviour
 {
@@ -72,6 +73,7 @@ public class NetworkStartupManager : MonoBehaviour
             GameMode = GameMode.Server,
             SessionName = sessionName,
             PlayerCount = maxPlayers,
+            Scene = GetCurrentSceneInfo(),
             SceneManager = VerifySceneManager(activeRunner)
         };
         
@@ -82,8 +84,6 @@ public class NetworkStartupManager : MonoBehaviour
             Debug.LogError($"[NetworkStartupManager] Failed to start server: {result.ShutdownReason}");
             return;
         }
-        
-        //await activeRunner.LoadScene(gameplaySceneName);
     }
     
     private async Task StartClientAsync()
@@ -96,6 +96,7 @@ public class NetworkStartupManager : MonoBehaviour
         {
             GameMode = GameMode.Client,
             SessionName = sessionName,
+            Scene = GetCurrentSceneInfo(),
             SceneManager = VerifySceneManager(activeRunner)
         };
         
@@ -104,8 +105,11 @@ public class NetworkStartupManager : MonoBehaviour
         if (!result.Ok)
         {
             Debug.LogError($"[NetworkStartupManager] Failed to start client: {result.ShutdownReason}");
+            ClientStartFailed?.Invoke(result.ShutdownReason.ToString());
             return;
         }
+        
+        ClientStarted?.Invoke();
     }
     
     #endregion
@@ -133,6 +137,16 @@ public class NetworkStartupManager : MonoBehaviour
             sceneManager = activeRunner.gameObject.AddComponent<NetworkSceneManagerDefault>();
         
         return sceneManager;   
+    }
+
+    private NetworkSceneInfo GetCurrentSceneInfo()
+    {
+        SceneRef sceneRef = SceneRef.FromIndex(SceneManager.GetActiveScene().buildIndex);
+
+        NetworkSceneInfo sceneInfo = new NetworkSceneInfo();
+        sceneInfo.AddSceneRef(sceneRef, LoadSceneMode.Single);
+        
+        return sceneInfo;
     }
     
     #endregion
