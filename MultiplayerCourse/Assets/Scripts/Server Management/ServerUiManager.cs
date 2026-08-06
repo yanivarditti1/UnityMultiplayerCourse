@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using Fusion;
 using TMPro;
@@ -28,6 +29,12 @@ public class ServerUiManager : MonoBehaviour
     
     [Header("References")]
     [SerializeField] private NetworkStartupManager networkStartupManager;
+    /*
+    [SerializeField] private ServerLobbyManager serverLobbyManager;  
+    */
+
+    private bool _isServerOnline = false;
+    private bool _subscribedToServerManagers = false;
     
     #endregion
 
@@ -46,9 +53,20 @@ public class ServerUiManager : MonoBehaviour
 
         if (networkStartupManager != null)
         {
+            networkStartupManager.LocalManagersReady += HandleLocalManagersReady;
+            networkStartupManager.ServerStarted += HandleServerStarted;
+            networkStartupManager.ServerStartFailed += HandleServerStartFailed;
             networkStartupManager.ClientStarted += HandleClientStarted;
             networkStartupManager.ClientStartFailed += HandleClientStartFailed;
+            
+            Debug.Log("[ServerUiManager] Client subscribed to NetworkStartupManager events");
         }
+        else
+        {
+            Debug.LogError("[ServerUiManager] NetworkStartupManager is null");
+        }
+        
+        SetConnectedStatus("[ServerUiManager] Waiting for server managers...");
         
         SetupGameModeDropdown();
     }
@@ -69,6 +87,8 @@ public class ServerUiManager : MonoBehaviour
         
         if (networkStartupManager != null)
         {
+            networkStartupManager.ServerStarted -= HandleServerStarted;
+            networkStartupManager.ServerStartFailed -= HandleServerStartFailed;
             networkStartupManager.ClientStarted -= HandleClientStarted;
             networkStartupManager.ClientStartFailed -= HandleClientStartFailed;
         }
@@ -79,6 +99,26 @@ public class ServerUiManager : MonoBehaviour
     #endregion
     
     #region Handlers
+
+    private void HandleLocalManagersReady()
+    {
+        joinServerButton.interactable = true;
+        SetConnectedStatus("[ServerUiManager] Ready to connect");
+    }
+
+    private void HandleServerStarted()
+    {
+        _isServerOnline = ManagersReady();
+        joinServerButton.interactable = _isServerOnline;
+        SetConnectedStatus("[ServerUiManager] Server online");
+    }
+    
+    private void HandleServerStartFailed(string reason)
+    {
+        _isServerOnline = ManagersReady();
+        joinServerButton.interactable = _isServerOnline;
+        SetConnectedStatus($"[ServerUiManager] Failed to start server: {reason}");
+    }
     
     private void HandleJoinServerClicked()
     {
@@ -107,9 +147,10 @@ public class ServerUiManager : MonoBehaviour
         
         GameModeType requestedGameMode = GetSelectedGameMode();
         NetworkMatchManager.Instance.RequestGameMode(requestedGameMode);
+        SetPreMatchStatus($"[ServerUiManager] Set game mode: {requestedGameMode}");
 
         confirmGameModeButton.interactable = false;
-        readyButton.interactable = true;
+        gameModeDropdown.interactable = false;
     }
 
     private void HandleReadyClicked()
@@ -123,6 +164,11 @@ public class ServerUiManager : MonoBehaviour
             return;
 
         _pendingReadyAfterNicknameChanged = true;
+        
+        Debug.Log($"[ServerUiManager] Requesting validated nickname: {requestedNickname}");
+        
+        SetPreMatchStatus($"[ServerUiManager] Pending nickname validation...");
+        
         ServerLobbyManager.Instance.RequestNickname(requestedNickname);
     }
     
@@ -135,6 +181,12 @@ public class ServerUiManager : MonoBehaviour
         {
             SetPreMatchStatus("[ServerUiManager] Only lobby leader can start match");
             return;
+        }
+
+        if (!ServerLobbyManager.Instance.CanStartMatch())
+        {
+            SetPreMatchStatus("[ServerUiManager] Cannot start match while players are not ready");
+            return;       
         }
         
         startMatchButton.interactable = false;
@@ -169,13 +221,17 @@ public class ServerUiManager : MonoBehaviour
 
     private void HandleNicknameAccepted(PlayerRef player, string nickname)
     {
-        SetPreMatchStatus($"Nickname set: {nickname}");
+        SetPreMatchStatus($"Nickname set: {nickname}\nReduesting ready...");
+        
+        nicknameInputField.interactable = false;
 
-        if (_pendingReadyAfterNicknameChanged)
+        if (!_pendingReadyAfterNicknameChanged)
         {
-            _pendingReadyAfterNicknameChanged = false;
-            ServerLobbyManager.Instance.RequestReady(true);
+            Debug.Log("[ServerUiManager] Nickname accepted without ready request");
+            return;
         }
+        
+        StartCoroutine(RequestReadyNextFrame());
     }
 
     private void HandleNicknameRejected(PlayerRef player, string reason)
@@ -191,6 +247,8 @@ public class ServerUiManager : MonoBehaviour
         {
             isReadyToggle.isOn = newReadyState;
             SetPreMatchStatus(newReadyState ? "Ready" : "Not Ready");
+            _pendingReadyAfterNicknameChanged = false;
+            readyButton.interactable = false;
         }
         
         RefreshPreMatchControls();
@@ -200,16 +258,33 @@ public class ServerUiManager : MonoBehaviour
     
     #region Helpers
 
+    private IEnumerator RequestReadyNextFrame()
+    {
+        yield return null;
+        
+        if (!ManagersReady())
+            yield break;
+        
+        Debug.Log("[ServerUiManager] Waited 1 frame, requesting ready after nickname change");
+        
+        _pendingReadyAfterNicknameChanged = false;
+        ServerLobbyManager.Instance.RequestReady(true);
+    }
+
     private bool ManagersReady()
     {
         if (ServerLobbyManager.Instance == null)
         {
+            Debug.LogError("[ServerUiManager] ServerLobbyManager not ready yet");
+            SetConnectedStatus("[ServerUiManager] ServerLobbyManager not ready yet");
             SetPreMatchStatus("[ServerUiManager] ServerLobbyManager not ready yet");
             return false;
         }
 
         if (NetworkMatchManager.Instance == null)
         {
+            Debug.LogError("[ServerUiManager] NetworkMatchManager not ready yet");
+            SetConnectedStatus("[ServerUiManager] NetworkMatchManager not ready yet");
             SetPreMatchStatus("[ServerUiManager] NetworkMatchManager not ready yet");
             return false;
         }
@@ -220,6 +295,8 @@ public class ServerUiManager : MonoBehaviour
     {
         connectPanel.SetActive(true);
         preMatchPanel.SetActive(false);
+        
+        joinServerButton.interactable = _isServerOnline;
     }
     
     private void ShowPreMatchPanel()
@@ -288,14 +365,24 @@ public class ServerUiManager : MonoBehaviour
 
     private void SubscribeToServerManagers()
     {
-        if (ServerLobbyManager.Instance == null)
+        if (_subscribedToServerManagers)
             return;
+        
+        if (ServerLobbyManager.Instance == null)
+        {
+            Debug.LogError("[ServerUiManager] ServerLobbyManager not ready yet");
+            return;
+        }
 
         ServerLobbyManager.Instance.NicknameAccepted += HandleNicknameAccepted;
         ServerLobbyManager.Instance.NicknameRejected += HandleNicknameRejected;
         ServerLobbyManager.Instance.ReadyStateChanged += HandleReadyStateChanged;
         ServerLobbyManager.Instance.LobbyLeaderChanged += HandleLobbyLeaderChanged;
         ServerLobbyManager.Instance.LobbyStateChanged += HandleLobbyStateChanged;
+        
+        Debug.Log("[ServerUiManager] Client subscribed to ServerLobbyManager events");
+        
+        _subscribedToServerManagers = true;
     }
 
     private void UnsubscribeToServerManagers()
@@ -308,6 +395,8 @@ public class ServerUiManager : MonoBehaviour
         ServerLobbyManager.Instance.ReadyStateChanged -= HandleReadyStateChanged;
         ServerLobbyManager.Instance.LobbyLeaderChanged -= HandleLobbyLeaderChanged;
         ServerLobbyManager.Instance.LobbyStateChanged -= HandleLobbyStateChanged;
+        
+        _subscribedToServerManagers = false;   
     }
 
     private void RefreshPreMatchControls()
@@ -320,7 +409,7 @@ public class ServerUiManager : MonoBehaviour
 
         bool isLeader = ServerLobbyManager.Instance.IsLocalPlayerLobbyLeader();
         bool matchWaiting = NetworkMatchManager.Instance.MatchState == ServerMatchState.WaitingForPlayers;
-        bool canChangeMode = matchWaiting && isLeader && ServerLobbyManager.Instance.ReadyPlayerCount == 0;
+        bool canChangeMode = matchWaiting && isLeader && !ServerLobbyManager.Instance.CanStartMatch();
         
         if (gameModeDropdown != null)
             gameModeDropdown.interactable = canChangeMode;

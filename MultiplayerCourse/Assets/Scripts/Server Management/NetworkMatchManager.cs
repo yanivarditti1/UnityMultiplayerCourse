@@ -21,6 +21,11 @@ public class NetworkMatchManager : NetworkBehaviour
     #endregion
     
     #region Lifecycle
+
+    private void Awake()
+    {
+        Instance = this;
+    }
     
     public override void Spawned()
     {

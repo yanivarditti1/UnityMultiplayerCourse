@@ -24,6 +24,11 @@ public class ServerLobbyManager : NetworkBehaviour, INetworkRunnerCallbacks
     public event Action LobbyStateChanged;
 
     #region Lifecycle
+
+    private void Awake()
+    {
+        Instance = this;
+    }
     
     public override void Spawned()
     {
@@ -111,9 +116,14 @@ public class ServerLobbyManager : NetworkBehaviour, INetworkRunnerCallbacks
         PlayerRef player = info.Source;
 
         if (!Players.TryGet(player, out LobbyPlayerState playerState))
+        {
+            Debug.Log($"[ServerLobbyManager] Player {player} requested nickname but is not in lobby");
             return;
+        }
         
         nickname = nickname.Trim();
+        
+        Debug.Log($"[ServerLobbyManager] Player {player} requested nickname: {nickname}");
         
         if (string.IsNullOrEmpty(nickname))
         {
@@ -162,10 +172,16 @@ public class ServerLobbyManager : NetworkBehaviour, INetworkRunnerCallbacks
         PlayerRef player = info.Source;
 
         if (!Players.TryGet(player, out LobbyPlayerState playerState))
+        {
+            Debug.Log($"[ServerLobbyManager] Player {player} requested ready status but is not in lobby");
             return;
+        }
 
         if (!playerState.HasNickname)
+        {
+            RPC_NicknameRejected(player, "You must set a nickname before you can request ready status");
             return;
+        }
         
         playerState.IsReady = newReadyState;
         

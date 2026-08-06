@@ -925,7 +925,7 @@ MonoBehaviour:
   connectStatusText: {fileID: 77393015}
   nicknameInputField: {fileID: 1617008519}
   gameModeDropdown: {fileID: 444591799}
-  startMatchButton: {fileID: 428627047}
+  startMatchButton: {fileID: 648381720}
   confirmGameModeButton: {fileID: 518009036}
   readyButton: {fileID: 428627047}
   isReadyToggle: {fileID: 1402516344}
@@ -11035,7 +11035,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 0}
-  m_AnchoredPosition: {x: 0, y: 2}
+  m_AnchoredPosition: {x: 0, y: 1.9999962}
   m_SizeDelta: {x: 0, y: 150}
   m_Pivot: {x: 0.5, y: 1}
 --- !u!114 &1323157531
@@ -11885,8 +11885,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -0.000061035156, y: 0}
-  m_SizeDelta: {x: 1820.0001, y: 852.9881}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 1900, y: 1000}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1397715798
 MonoBehaviour:
@@ -12346,8 +12346,7 @@ MonoBehaviour:
   sessionName: Yamit 2000 Test Room
   gameplaySceneName: ConquestScene
   maxPlayers: 10
-  autoStartServer: 1
-  autoStartClient: 0
+  isServer: 0
 --- !u!4 &1504655540
 Transform:
   m_ObjectHideFlags: 0
