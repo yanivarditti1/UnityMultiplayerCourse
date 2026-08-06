@@ -19,10 +19,13 @@ public class ServerLobbyManager : NetworkBehaviour, INetworkRunnerCallbacks
     //events
     public event Action<PlayerRef, string> NicknameAccepted;
     public event Action<PlayerRef, string> NicknameRejected;
+    public event Action<PlayerRef, string> NicknameChanged;
     public event Action<PlayerRef, bool> ReadyStateChanged;
     public event Action<PlayerRef> LobbyLeaderChanged;
     public event Action LobbyStateChanged;
-
+    public event Action<PlayerRef> PlayerJoinedLobby;
+    public event Action<PlayerRef> PlayerLeftLobby;
+    
     #region Lifecycle
 
     private void Awake()
@@ -54,6 +57,22 @@ public class ServerLobbyManager : NetworkBehaviour, INetworkRunnerCallbacks
     #endregion
     
     #region PublicAPI
+
+    public IEnumerable<KeyValuePair<PlayerRef, LobbyPlayerState>> GetPlayers()
+    {
+        foreach (var player in Players)
+            yield return player;
+    }
+
+    public bool TryGetPlayerState(PlayerRef player, out LobbyPlayerState playerState)
+    {
+        return Players.TryGet(player, out playerState);
+    }
+
+    public bool IsLocalPlayer(PlayerRef player)
+    {
+        return Runner != null && Runner.LocalPlayer == player;
+    }
 
     public void RequestNickname(string nickname)
     {
@@ -110,6 +129,18 @@ public class ServerLobbyManager : NetworkBehaviour, INetworkRunnerCallbacks
     
     #region RPCs
 
+    [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
+    private void RPC_PlayerJoinedLobby(PlayerRef player)
+    {
+        PlayerJoinedLobby?.Invoke(player);
+    }
+    
+    [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
+    private void RPC_PlayerLeftLobby(PlayerRef player)
+    {
+        PlayerLeftLobby?.Invoke(player);
+    }
+
     [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
     private void RPC_RequestNickname(string nickname, RpcInfo info = default)
     {
@@ -150,6 +181,7 @@ public class ServerLobbyManager : NetworkBehaviour, INetworkRunnerCallbacks
         RecalculateCounts();
         
         RPC_NicknameAccepted(player, nickname);
+        RPC_NicknameChanged(player, nickname);
         RPC_LobbyStateChanged();
     }
 
@@ -165,6 +197,11 @@ public class ServerLobbyManager : NetworkBehaviour, INetworkRunnerCallbacks
         NicknameRejected?.Invoke(player, reason);
     }
     
+    [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
+    private void RPC_NicknameChanged([RpcTarget] PlayerRef player, string nickname)
+    {
+        NicknameChanged?.Invoke(player, nickname);
+    }   
 
     [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
     private void RPC_RequestReady(bool newReadyState, RpcInfo info = default)
@@ -237,6 +274,7 @@ public class ServerLobbyManager : NetworkBehaviour, INetworkRunnerCallbacks
         }
         
         Players.Set(player, new LobbyPlayerState());
+        RPC_PlayerJoinedLobby(player);
 
         if (LobbyLeader == PlayerRef.None)
         {
@@ -256,6 +294,7 @@ public class ServerLobbyManager : NetworkBehaviour, INetworkRunnerCallbacks
             return;
 
         Players.Remove(player);
+        RPC_PlayerLeftLobby(player);
 
         if (LobbyLeader == player)
             AssignNewLobbyLeader();

@@ -29,9 +29,10 @@ public class ServerUiManager : MonoBehaviour
     
     [Header("References")]
     [SerializeField] private NetworkStartupManager networkStartupManager;
-    /*
-    [SerializeField] private ServerLobbyManager serverLobbyManager;  
-    */
+    [SerializeField] private Transform playerListContainer;
+    [SerializeField] private ServerLobbyPlayerUiEntry playerEntryPrefab;
+    
+    private readonly Dictionary<PlayerRef, ServerLobbyPlayerUiEntry> _playerEntries = new();
 
     private bool _isServerOnline = false;
     private bool _subscribedToServerManagers = false;
@@ -217,6 +218,7 @@ public class ServerUiManager : MonoBehaviour
     private void HandleLobbyLeaderChanged(PlayerRef newLeader)
     {
         RefreshPreMatchControls();
+        RefreshPlayerList();
     }
 
     private void HandleNicknameAccepted(PlayerRef player, string nickname)
@@ -251,7 +253,32 @@ public class ServerUiManager : MonoBehaviour
             readyButton.interactable = false;
         }
         
+        if (_playerEntries.TryGetValue(player, out var entry))
+            entry.SetReady(newReadyState);
+        
         RefreshPreMatchControls();
+        RefreshPlayerList();
+    }
+
+    private void HandlePlayerJoinedLobby(PlayerRef player)
+    {
+        RefreshPlayerList();
+    }
+
+    private void HandlePlayerLeftLobby(PlayerRef player)
+    {
+        if (_playerEntries.TryGetValue(player, out var entry))
+        {
+            Destroy(entry.gameObject);
+            _playerEntries.Remove(player);
+        }
+
+        RefreshPlayerList();
+    }
+
+    private void HandleNicknameChanged(PlayerRef player, string nickname)
+    {
+        RefreshPlayerList();
     }
     
     #endregion
@@ -275,7 +302,6 @@ public class ServerUiManager : MonoBehaviour
     {
         if (ServerLobbyManager.Instance == null)
         {
-            Debug.LogError("[ServerUiManager] ServerLobbyManager not ready yet");
             SetConnectedStatus("[ServerUiManager] ServerLobbyManager not ready yet");
             SetPreMatchStatus("[ServerUiManager] ServerLobbyManager not ready yet");
             return false;
@@ -283,7 +309,6 @@ public class ServerUiManager : MonoBehaviour
 
         if (NetworkMatchManager.Instance == null)
         {
-            Debug.LogError("[ServerUiManager] NetworkMatchManager not ready yet");
             SetConnectedStatus("[ServerUiManager] NetworkMatchManager not ready yet");
             SetPreMatchStatus("[ServerUiManager] NetworkMatchManager not ready yet");
             return false;
@@ -291,6 +316,37 @@ public class ServerUiManager : MonoBehaviour
 
         return true;
     }
+
+    private void RefreshPlayerList()
+    {
+        if (!ManagersReady())
+            return;
+
+        foreach (var entry in _playerEntries.Values)
+        {
+            Destroy(entry.gameObject);
+        }
+
+        _playerEntries.Clear();
+
+        foreach (var playerEntry in ServerLobbyManager.Instance.GetPlayers())
+        {
+            PlayerRef playerRef = playerEntry.Key;
+            LobbyPlayerState playerState = playerEntry.Value;
+            
+            var uiEntry = Instantiate(playerEntryPrefab, playerListContainer);
+            
+            string nickname = playerState.HasNickname?
+                playerState.Nickname.ToString() : $"Player {playerRef.PlayerId}";
+            bool isLeader = ServerLobbyManager.Instance.IsLobbyLeader(playerRef);
+            bool isLocal = ServerLobbyManager.Instance.IsLocalPlayer(playerRef);
+            
+            uiEntry.Setup(playerRef, nickname, playerState.IsReady, isLeader, isLocal);
+            
+            _playerEntries[playerRef] = uiEntry;
+        }
+    }
+    
     private void ShowConnectPanel()
     {
         connectPanel.SetActive(true);
@@ -379,10 +435,14 @@ public class ServerUiManager : MonoBehaviour
         ServerLobbyManager.Instance.ReadyStateChanged += HandleReadyStateChanged;
         ServerLobbyManager.Instance.LobbyLeaderChanged += HandleLobbyLeaderChanged;
         ServerLobbyManager.Instance.LobbyStateChanged += HandleLobbyStateChanged;
+        ServerLobbyManager.Instance.PlayerJoinedLobby += HandlePlayerJoinedLobby;
+        ServerLobbyManager.Instance.PlayerLeftLobby += HandlePlayerLeftLobby;
+        ServerLobbyManager.Instance.NicknameChanged += HandleNicknameChanged;
         
         Debug.Log("[ServerUiManager] Client subscribed to ServerLobbyManager events");
         
         _subscribedToServerManagers = true;
+        RefreshPlayerList();
     }
 
     private void UnsubscribeToServerManagers()
@@ -395,6 +455,9 @@ public class ServerUiManager : MonoBehaviour
         ServerLobbyManager.Instance.ReadyStateChanged -= HandleReadyStateChanged;
         ServerLobbyManager.Instance.LobbyLeaderChanged -= HandleLobbyLeaderChanged;
         ServerLobbyManager.Instance.LobbyStateChanged -= HandleLobbyStateChanged;
+        ServerLobbyManager.Instance.PlayerJoinedLobby -= HandlePlayerJoinedLobby;
+        ServerLobbyManager.Instance.PlayerLeftLobby -= HandlePlayerLeftLobby;
+        ServerLobbyManager.Instance.NicknameChanged -= HandleNicknameChanged;
         
         _subscribedToServerManagers = false;   
     }
