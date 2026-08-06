@@ -12,10 +12,13 @@ public class NetworkStartupManager : MonoBehaviour
     //[SerializeField] private NetworkRunner networkRunnerPrefab;
     [SerializeField] private NetworkRunner runner;
     
+    /*[Header("References")]
+    [SerializeField] private SceneDataSO sceneData;*/
+    
     //configurable
     [Header("Configuration")]
     [SerializeField] private string sessionName = "Yamit 2000 Test Room";
-    [SerializeField] private string gameplaySceneName = "ConquestScene";
+    //[SerializeField] private string gameplayDefaultSceneName = "ConquestScene";
     [SerializeField] private int maxPlayers = 10;
     
     //debugging
@@ -30,6 +33,9 @@ public class NetworkStartupManager : MonoBehaviour
     public event Action<string> ServerStartFailed;
     public event Action ClientStarted;
     public event Action<string> ClientStartFailed;
+    /*
+    public event Action ClientStopped;
+    */
     
     #endregion
     
@@ -43,6 +49,15 @@ public class NetworkStartupManager : MonoBehaviour
         {
             StartServer();
         }
+    }
+    
+    #endregion
+    
+    #region PublicAPI
+
+    public bool IsLocalPlayerServer()
+    {
+        return isServer;
     }
     
     #endregion
@@ -121,6 +136,24 @@ public class NetworkStartupManager : MonoBehaviour
 
         StartCoroutine(WaitForClientNetworkManagers());
     }
+
+    /*public async void StopClient()
+    {
+        if (runner == null)
+        {
+            ClientStopped?.Invoke();
+            return;
+        }
+        
+        NetworkRunner oldRunner = runner;
+        runner = null; 
+
+        await oldRunner.Shutdown(true);
+        
+        ClientStopped?.Invoke();
+
+        SceneManager.LoadScene(sceneData.lobbySceneName);
+    }*/
     
     #endregion
     

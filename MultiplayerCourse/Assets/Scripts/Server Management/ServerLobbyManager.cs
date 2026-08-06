@@ -24,7 +24,11 @@ public class ServerLobbyManager : NetworkBehaviour, INetworkRunnerCallbacks
     public event Action<PlayerRef> LobbyLeaderChanged;
     public event Action LobbyStateChanged;
     public event Action<PlayerRef> PlayerJoinedLobby;
+    public event Action JoinLobbyAccepted;
+    public event Action<string> JoinLobbyRejected;
     public event Action<PlayerRef> PlayerLeftLobby;
+    public event Action LeaveLobbyAccepted;
+    public event Action<string> LeaveLobbyRejected;
     
     #region Lifecycle
 
@@ -61,7 +65,12 @@ public class ServerLobbyManager : NetworkBehaviour, INetworkRunnerCallbacks
     public IEnumerable<KeyValuePair<PlayerRef, LobbyPlayerState>> GetPlayers()
     {
         foreach (var player in Players)
+        {
+            if (!player.Value.IsInLobby)
+                continue;
+            
             yield return player;
+        }
     }
 
     public bool TryGetPlayerState(PlayerRef player, out LobbyPlayerState playerState)
@@ -74,6 +83,11 @@ public class ServerLobbyManager : NetworkBehaviour, INetworkRunnerCallbacks
         return Runner != null && Runner.LocalPlayer == player;
     }
 
+    public void RequestJoinLobby()
+    {
+        RPC_RequestJoinLobby();
+    }
+
     public void RequestNickname(string nickname)
     {
         RPC_RequestNickname(nickname);
@@ -82,6 +96,11 @@ public class ServerLobbyManager : NetworkBehaviour, INetworkRunnerCallbacks
     public void RequestReady(bool newReadyState)
     {
         RPC_RequestReady(newReadyState);
+    }
+
+    public void RequestLeaveLobby()
+    {
+        RPC_RequestLeaveLobby();
     }
 
     public bool CanStartMatch()
@@ -103,6 +122,9 @@ public class ServerLobbyManager : NetworkBehaviour, INetworkRunnerCallbacks
                 continue;
 
             if (!entry.Value.HasNickname)
+                continue;
+            
+            if (!entry.Value.IsInLobby)
                 continue;
 
             var existingNickname = entry.Value.Nickname.ToString();
@@ -129,6 +151,60 @@ public class ServerLobbyManager : NetworkBehaviour, INetworkRunnerCallbacks
     
     #region RPCs
 
+    [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
+    private void RPC_RequestJoinLobby(RpcInfo info = default)
+    {
+        PlayerRef player = info.Source;
+
+        if (NetworkMatchManager.Instance != null &&
+            NetworkMatchManager.Instance.MatchState != ServerMatchState.WaitingForPlayers)
+        {
+            RPC_JoinLobbyRejected(player, "Cannot join after match has started");
+            return;
+        }
+
+        if (!Players.TryGet(player, out LobbyPlayerState playerState))
+        {
+            playerState = new LobbyPlayerState();
+        }
+        
+        if (playerState.IsInLobby)
+        {
+            RPC_JoinLobbyRejected(player, "You are already in the lobby");
+            return;
+        }
+        
+        playerState.IsInLobby = true;
+        playerState.HasNickname = false;
+        playerState.IsReady = false;
+        playerState.Nickname = default;
+
+        Players.Set(player, playerState);
+
+        if (LobbyLeader == PlayerRef.None)
+        {
+            LobbyLeader = player;
+            RPC_LobbyLeaderChanged(LobbyLeader);
+        }
+        
+        RecalculateCounts();
+        RPC_PlayerJoinedLobby(player);
+        RPC_JoinLobbyAccepted(player);
+        RPC_LobbyStateChanged();
+    }
+
+    [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
+    private void RPC_JoinLobbyAccepted([RpcTarget] PlayerRef player)
+    {
+        JoinLobbyAccepted?.Invoke();
+    }
+
+    [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
+    private void RPC_JoinLobbyRejected([RpcTarget] PlayerRef player, string reason)
+    {
+        JoinLobbyRejected?.Invoke(reason);
+    }
+
     [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
     private void RPC_PlayerJoinedLobby(PlayerRef player)
     {
@@ -142,6 +218,65 @@ public class ServerLobbyManager : NetworkBehaviour, INetworkRunnerCallbacks
     }
 
     [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
+    private void RPC_RequestLeaveLobby(RpcInfo info = default)
+    {
+        PlayerRef player = info.Source;
+
+        if (NetworkMatchManager.Instance != null &&
+            NetworkMatchManager.Instance.MatchState != ServerMatchState.WaitingForPlayers)
+        {
+            RPC_LeaveLobbyRejected(player, "Cannot leave after match has started");
+            return;
+        }
+
+        if (!Players.TryGet(player, out LobbyPlayerState playerState))
+        {
+            RPC_LeaveLobbyRejected(player, "You are not in the lobby");
+            return;
+        }
+
+        if (playerState.IsReady)
+        {
+            RPC_LeaveLobbyRejected(player, "Cannot leave while ready");
+            return;
+        }
+        
+        if (!playerState.IsInLobby)
+        {
+            RPC_LeaveLobbyRejected(player, "You are not in the lobby");
+            return;
+        }
+
+        playerState.IsInLobby = false;
+        playerState.HasNickname = false;
+        playerState.IsReady = false;
+        playerState.Nickname = default;
+
+        Players.Set(player, playerState);
+
+        if (LobbyLeader == player)
+            AssignNewLobbyLeader();
+
+        RecalculateCounts();
+
+        RPC_PlayerLeftLobby(player);
+        RPC_LeaveLobbyAccepted(player);
+        RPC_LobbyStateChanged();
+    }
+    
+    [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
+    private void RPC_LeaveLobbyAccepted([RpcTarget]PlayerRef player)
+    {
+        LeaveLobbyAccepted?.Invoke();
+    }
+    
+    [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
+    private void RPC_LeaveLobbyRejected([RpcTarget]PlayerRef player, string reason)
+    {
+        LeaveLobbyRejected?.Invoke(reason);
+    }
+
+    [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
     private void RPC_RequestNickname(string nickname, RpcInfo info = default)
     {
         PlayerRef player = info.Source;
@@ -149,6 +284,12 @@ public class ServerLobbyManager : NetworkBehaviour, INetworkRunnerCallbacks
         if (!Players.TryGet(player, out LobbyPlayerState playerState))
         {
             Debug.Log($"[ServerLobbyManager] Player {player} requested nickname but is not in lobby");
+            return;
+        }
+        
+        if (!playerState.IsInLobby)
+        {
+            RPC_NicknameRejected(player, "You are not in the lobby");
             return;
         }
         
@@ -198,7 +339,7 @@ public class ServerLobbyManager : NetworkBehaviour, INetworkRunnerCallbacks
     }
     
     [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
-    private void RPC_NicknameChanged([RpcTarget] PlayerRef player, string nickname)
+    private void RPC_NicknameChanged(PlayerRef player, string nickname)
     {
         NicknameChanged?.Invoke(player, nickname);
     }   
@@ -213,10 +354,22 @@ public class ServerLobbyManager : NetworkBehaviour, INetworkRunnerCallbacks
             Debug.Log($"[ServerLobbyManager] Player {player} requested ready status but is not in lobby");
             return;
         }
+        
+        if (!playerState.IsInLobby)
+        {
+            RPC_NicknameRejected(player, "You are not in the lobby");
+            return;
+        }
 
         if (!playerState.HasNickname)
         {
             RPC_NicknameRejected(player, "You must set a nickname before you can request ready status");
+            return;
+        }
+
+        if (playerState.IsReady && !newReadyState)
+        {
+            Debug.Log($"Cannot unready player {player} because they are already ready");
             return;
         }
         
@@ -273,7 +426,10 @@ public class ServerLobbyManager : NetworkBehaviour, INetworkRunnerCallbacks
             return;
         }
         
-        Players.Set(player, new LobbyPlayerState());
+        Players.Set(player, new LobbyPlayerState
+        {
+            IsInLobby = true
+        });
         RPC_PlayerJoinedLobby(player);
 
         if (LobbyLeader == PlayerRef.None)
@@ -389,7 +545,10 @@ public class ServerLobbyManager : NetworkBehaviour, INetworkRunnerCallbacks
         
         foreach (var player in Players)
         {
-                ConnectedPlayerCount++;
+            if (!player.Value.IsInLobby)
+                continue;
+            
+            ConnectedPlayerCount++;
             
             if (player.Value.IsReady)
                 ReadyPlayerCount++;
@@ -402,6 +561,9 @@ public class ServerLobbyManager : NetworkBehaviour, INetworkRunnerCallbacks
         
         foreach (var player in Players)
         {
+            if (!player.Value.IsInLobby)
+                continue;
+            
             LobbyLeader = player.Key;
             Debug.Log($"[ServerLobbyManager] New lobby leader assigned: {LobbyLeader}");
             

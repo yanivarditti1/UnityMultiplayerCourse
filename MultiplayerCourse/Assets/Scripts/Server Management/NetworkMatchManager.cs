@@ -81,10 +81,13 @@ public class NetworkMatchManager : NetworkBehaviour
             return;
         }
 
+        if (serverLobbyManager == null)
+            return;
+
         if (!serverLobbyManager.IsLobbyLeader(info.Source))
             return;
 
-        if (serverLobbyManager == null || !serverLobbyManager.CanStartMatch())
+        if (!serverLobbyManager.CanStartMatch())
             return;
         
         MatchState = ServerMatchState.Starting;

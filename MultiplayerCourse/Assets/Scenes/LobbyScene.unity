@@ -928,7 +928,7 @@ MonoBehaviour:
   startMatchButton: {fileID: 648381720}
   confirmGameModeButton: {fileID: 518009036}
   readyButton: {fileID: 428627047}
-  isReadyToggle: {fileID: 1402516344}
+  leaveLobbyButton: {fileID: 2016963006}
   preMatchStatusText: {fileID: 192027507}
   networkStartupManager: {fileID: 1504655539}
   playerListContainer: {fileID: 1153428417}
@@ -10023,7 +10023,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -150, y: -55}
+  m_AnchoredPosition: {x: -50, y: -65}
   m_SizeDelta: {x: 100, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1112293364
@@ -12480,7 +12480,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::NetworkStartupManager
   runner: {fileID: 2112644897}
   sessionName: Yamit 2000 Test Room
-  gameplaySceneName: ConquestScene
   maxPlayers: 10
   isServer: 0
 --- !u!4 &1504655540
@@ -12513,7 +12512,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1532765576
 RectTransform:
   m_ObjectHideFlags: 0
@@ -12529,10 +12528,10 @@ RectTransform:
   - {fileID: 1402516343}
   m_Father: {fileID: 1112293363}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 0}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 305, y: -25}
+  m_SizeDelta: {x: 200, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &1533583317
 GameObject:
