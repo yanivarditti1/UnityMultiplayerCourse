@@ -3,6 +3,7 @@ using System.Collections;
 using UnityEngine;
 using System.Threading.Tasks;
 using Fusion;
+using UnityEditor.PackageManager;
 using UnityEngine.SceneManagement;
 
 public class NetworkStartupManager : MonoBehaviour
@@ -44,8 +45,8 @@ public class NetworkStartupManager : MonoBehaviour
     private void Start()
     {
         StartCoroutine(WaitForLocalManagers());
-        
-        if (isServer)
+
+        if (ShouldRunAsServer())
         {
             StartServer();
         }
@@ -57,7 +58,7 @@ public class NetworkStartupManager : MonoBehaviour
 
     public bool IsLocalPlayerServer()
     {
-        return isServer;
+        return ShouldRunAsServer();
     }
     
     #endregion
@@ -136,24 +137,6 @@ public class NetworkStartupManager : MonoBehaviour
 
         StartCoroutine(WaitForClientNetworkManagers());
     }
-
-    /*public async void StopClient()
-    {
-        if (runner == null)
-        {
-            ClientStopped?.Invoke();
-            return;
-        }
-        
-        NetworkRunner oldRunner = runner;
-        runner = null; 
-
-        await oldRunner.Shutdown(true);
-        
-        ClientStopped?.Invoke();
-
-        SceneManager.LoadScene(sceneData.lobbySceneName);
-    }*/
     
     #endregion
     
@@ -232,6 +215,22 @@ public class NetworkStartupManager : MonoBehaviour
     private bool AreNetworkManagersReady()
     {
         return ServerLobbyManager.Instance != null && NetworkMatchManager.Instance != null;
+    }
+    
+    
+    private bool ShouldRunAsServer()
+    {
+        if (isServer) return true;
+        
+        string[] args = Environment.GetCommandLineArgs();
+
+        foreach (string arg in args)
+        {
+            if (arg == "-server")
+                return true;
+        }
+
+        return Application.isBatchMode;
     }
     
     #endregion
