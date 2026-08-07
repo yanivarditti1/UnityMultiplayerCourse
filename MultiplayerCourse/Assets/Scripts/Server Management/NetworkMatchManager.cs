@@ -59,6 +59,11 @@ public class NetworkMatchManager : NetworkBehaviour
         RPC_RequestStartMatch();
     }
     
+    public bool CanSpawnGameplayObjects()
+    {
+        return Object.HasStateAuthority && MatchState == ServerMatchState.InProgress;
+    }
+    
     #endregion
     
     #region RPC

@@ -78,6 +78,56 @@ public class ServerLobbyManager : NetworkBehaviour, INetworkRunnerCallbacks
         return Players.TryGet(player, out playerState);
     }
 
+    public bool TryGetPlayerNickname(PlayerRef player, out string nickname)
+    {
+        if (!Players.TryGet(player, out LobbyPlayerState playerState))
+        {
+            nickname = default;
+            return false;
+        }
+        
+        nickname = playerState.Nickname.ToString();
+        return true;  
+    }
+
+    public bool IsPlayerInLobby(PlayerRef player)
+    {
+        return Players.TryGet(player, out LobbyPlayerState playerState) && playerState.IsInLobby;  
+    }
+    
+    public bool IsPlayerReady(PlayerRef player)
+    {
+        return Players.TryGet(player, out LobbyPlayerState playerState) && playerState.IsReady;  
+    }
+
+    public int GetLobbyPlayerCount()
+    {
+        int count = 0;
+        
+        foreach (var player in Players)
+        {
+            if (!player.Value.IsInLobby)
+                continue;
+            
+            count++;
+        }
+        
+        return count; 
+    }
+
+    public bool TryGetGameplayElegiblePlayers(List<PlayerRef> players)
+    {
+        foreach (var player in Players)
+        {
+            if (!player.Value.IsInLobby)
+                continue;
+            
+            if (player.Value.IsReady)
+                players.Add(player.Key);
+        }
+        return players.Count > 0; 
+    }
+
     public bool IsLocalPlayer(PlayerRef player)
     {
         return Runner != null && Runner.LocalPlayer == player;
