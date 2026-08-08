@@ -4,75 +4,59 @@ using UnityEngine.InputSystem;
 
 public sealed class FirstPersonNetworkMovement : NetworkBehaviour
 {
-    [Header("References")] [SerializeField]
-    private Transform cameraRoot;
-
+    [Header("References")]
+    [SerializeField] private Transform cameraRoot;
     [SerializeField] private Camera playerCamera;
     [SerializeField] private AudioListener audioListener;
     [SerializeField] private CharacterController characterController;
+    [SerializeField] private PlayerAnimationController animationController;
 
-    [Header("Movement Settings")] [SerializeField]
-    private float moveSpeed = 6f;
-
-    [SerializeField] private float sprintMultiplier = 6f;
+    [Header("Movement Settings")]
+    [SerializeField] private float moveSpeed = 6f;
+    [SerializeField] private float sprintMultiplier = 1.5f;
     [SerializeField] private float jumpForce = 7f;
     [SerializeField] private float gravity = -9.81f;
 
-    [Header("Look Settings")] [SerializeField]
-    private float mouseSensitivity = 0.1f;
-
+    [Header("Look Settings")]
+    [SerializeField] private float mouseSensitivity = 0.1f;
     [SerializeField] private float upDownPitchLimit = 85f;
 
-    [SerializeField] private PlayerAnimationController animationController;
+    [Networked]
+    private float VerticalVelocity { get; set; }
 
-    [Networked] private float VerticalVelocity { get; set; }
+    [Networked]
+    private float NetworkPitch { get; set; }
 
-    private float _pitch;
     private bool _isLocalPlayer;
     private bool _cursorLocked;
-    private bool _loggedMissingInput;
-    private Vector2 _fallbackMoveInput;
-    private Vector2 _fallbackLookInput;
-    private bool _fallbackJumpRequested;
-    private bool _fallbackSprintRequested;
 
     public override void Spawned()
     {
-        _isLocalPlayer =
-            Object.HasInputAuthority ||
-            (Runner.GameMode == GameMode.Shared &&
-             Object.HasStateAuthority);
-
-        Debug.Log(
-            $"[Movement] Spawned player {Object.InputAuthority.PlayerId}. " +
-            $"InputAuthority={Object.HasInputAuthority}, " +
-            $"StateAuthority={Object.HasStateAuthority}, " +
-            $"LocalControl={_isLocalPlayer}, " +
-            $"ProvideInput={Runner.ProvideInput}");
+        
+        _isLocalPlayer = Object.HasInputAuthority;
 
         SetCameraActive(_isLocalPlayer);
 
         if (!_isLocalPlayer)
             return;
 
-        enabled = true;
-
-        if (characterController != null)
-            characterController.enabled = true;
-
+       
         if (FusionInputProvider.Instance != null)
+        {
             FusionInputProvider.Instance.EnsureReady(Runner);
+        }
 
         LockCursor();
     }
 
-    public override void Despawned(NetworkRunner runner, bool hasState)
+    public override void Despawned(
+        NetworkRunner runner,
+        bool hasState)
     {
         if (!_isLocalPlayer)
             return;
 
-        Cursor.lockState = CursorLockMode.None;
-        Cursor.visible = true;
+        UnlockCursor();
     }
 
     private void Update()
@@ -80,44 +64,9 @@ public sealed class FirstPersonNetworkMovement : NetworkBehaviour
         if (!_isLocalPlayer)
             return;
 
-        ReadFallbackInput();
+        HandleCursor();
 
-        CaptureTheFlagManager captureTheFlagManager =
-            CaptureTheFlagManager.Instance;
-
-        if (captureTheFlagManager != null &&
-            captureTheFlagManager.IsReady &&
-            Keyboard.current != null &&
-            Keyboard.current.gKey.wasPressedThisFrame)
-        {
-            captureTheFlagManager.RequestDrop(
-                Object.InputAuthority);
-        }
-
-        if (Keyboard.current != null &&
-            Keyboard.current.escapeKey.wasPressedThisFrame)
-        {
-            UnlockCursor();
-        }
-
-        if (!_cursorLocked &&
-            Mouse.current != null &&
-            Mouse.current.leftButton.wasPressedThisFrame)
-        {
-            LockCursor();
-        }
-    }
-
-    private void OnApplicationFocus(bool hasFocus)
-    {
-        if (!_isLocalPlayer)
-            return;
-
-        if (hasFocus && _cursorLocked)
-        {
-            Cursor.lockState = CursorLockMode.Locked;
-            Cursor.visible = false;
-        }
+        HandleCaptureTheFlagInput();
     }
 
     public override void FixedUpdateNetwork()
@@ -125,133 +74,83 @@ public sealed class FirstPersonNetworkMovement : NetworkBehaviour
         if (!Object.HasStateAuthority)
             return;
 
-        NetworkInputData inputData;
-
-        if (!GetInput(out inputData))
-        {
-            if (!_isLocalPlayer)
-                return;
-
-            inputData = ConsumeFallbackInput();
-
-            if (!_loggedMissingInput)
-            {
-                _loggedMissingInput = true;
-
-                Debug.LogWarning(
-                    $"[Movement] No Fusion input for player " +
-                    $"{Object.InputAuthority.PlayerId}. " +
-                    "Using local Shared Mode input fallback.");
-            }
-        }
-        else
-        {
-            _loggedMissingInput = false;
-            ClearOneShotFallbackInput();
-        }
+        if (!GetInput(out NetworkInputData inputData))
+            return;
 
         RotatePlayer(inputData);
-        Move(inputData);
+        MovePlayer(inputData);
     }
 
-    private void ReadFallbackInput()
+    public override void Render()
     {
-        Keyboard keyboard = Keyboard.current;
+      
+        if (!Object.HasInputAuthority)
+            return;
 
-        if (keyboard != null)
-        {
-            float horizontal = 0f;
-            float vertical = 0f;
+        if (cameraRoot == null)
+            return;
 
-            if (keyboard.aKey.isPressed)
-                horizontal -= 1f;
-
-            if (keyboard.dKey.isPressed)
-                horizontal += 1f;
-
-            if (keyboard.sKey.isPressed)
-                vertical -= 1f;
-
-            if (keyboard.wKey.isPressed)
-                vertical += 1f;
-
-            _fallbackMoveInput = new Vector2(horizontal, vertical);
-
-            if (_fallbackMoveInput.sqrMagnitude > 1f)
-                _fallbackMoveInput.Normalize();
-
-            if (keyboard.spaceKey.wasPressedThisFrame)
-                _fallbackJumpRequested = true;
-
-            _fallbackSprintRequested =
-                keyboard.leftShiftKey.isPressed ||
-                keyboard.rightShiftKey.isPressed;
-        }
-
-        if (_cursorLocked && Mouse.current != null)
-            _fallbackLookInput += Mouse.current.delta.ReadValue();
+        cameraRoot.localRotation =
+            Quaternion.Euler(
+                NetworkPitch,
+                0f,
+                0f);
     }
 
-    private NetworkInputData ConsumeFallbackInput()
+    private void RotatePlayer(
+        NetworkInputData inputData)
     {
-        NetworkInputData inputData = new NetworkInputData
-        {
-            moveInput = _fallbackMoveInput,
-            lookInput = _fallbackLookInput,
-            jumpRequested = _fallbackJumpRequested,
-            sprintRequested = _fallbackSprintRequested
-        };
+        float mouseX =
+            inputData.lookInput.x *
+            mouseSensitivity;
 
-        _fallbackLookInput = Vector2.zero;
-        _fallbackJumpRequested = false;
+        float mouseY =
+            inputData.lookInput.y *
+            mouseSensitivity;
+        
+        transform.Rotate(
+            Vector3.up * mouseX);
 
-        return inputData;
-    }
+       
+        NetworkPitch -= mouseY;
 
-    private void ClearOneShotFallbackInput()
-    {
-        _fallbackLookInput = Vector2.zero;
-        _fallbackJumpRequested = false;
-    }
-
-    private void RotatePlayer(NetworkInputData inputData)
-    {
-        float mouseX = inputData.lookInput.x * mouseSensitivity;
-        float mouseY = inputData.lookInput.y * mouseSensitivity;
-
-        transform.Rotate(Vector3.up * mouseX);
-
-        _pitch -= mouseY;
-        _pitch = Mathf.Clamp(
-            _pitch,
+        NetworkPitch = Mathf.Clamp(
+            NetworkPitch,
             -upDownPitchLimit,
             upDownPitchLimit);
-
-        if (cameraRoot != null && _isLocalPlayer)
-            cameraRoot.localRotation = Quaternion.Euler(_pitch, 0f, 0f);
     }
 
-    private void Move(NetworkInputData inputData)
+    private void MovePlayer(
+        NetworkInputData inputData)
     {
         Vector3 moveDirection =
-            transform.right * inputData.moveInput.x +
-            transform.forward * inputData.moveInput.y;
+            transform.right *
+            inputData.moveInput.x +
+            transform.forward *
+            inputData.moveInput.y;
 
         if (moveDirection.sqrMagnitude > 1f)
+        {
             moveDirection.Normalize();
+        }
 
         bool isGrounded =
-            characterController != null
-                ? characterController.isGrounded
-                : true;
+            characterController == null || characterController.isGrounded;
 
-        if (isGrounded && VerticalVelocity < 0f)
+        if (isGrounded &&
+            VerticalVelocity < 0f)
+        {
             VerticalVelocity = -2f;
+        }
 
-        if (isGrounded && inputData.jumpRequested)
+        if (isGrounded &&
+            inputData.jumpRequested)
+        {
             VerticalVelocity = jumpForce;
+        }
 
-        VerticalVelocity += gravity * Runner.DeltaTime;
+        VerticalVelocity +=
+            gravity * Runner.DeltaTime;
 
         float gameModeSpeedMultiplier = 1f;
 
@@ -264,48 +163,145 @@ public sealed class FirstPersonNetworkMovement : NetworkBehaviour
                 Object.InputAuthority))
         {
             gameModeSpeedMultiplier =
-                captureTheFlagManager.CarrierSpeedMultiplier;
+                captureTheFlagManager
+                    .CarrierSpeedMultiplier;
         }
 
         float currentSpeed =
             moveSpeed *
-            gameModeSpeedMultiplier *
-            (inputData.sprintRequested
-                ? sprintMultiplier
-                : 1f);
+            gameModeSpeedMultiplier;
 
-        Vector3 velocity = moveDirection * currentSpeed;
-        velocity.y = VerticalVelocity;
+        if (inputData.sprintRequested)
+        {
+            currentSpeed *=
+                sprintMultiplier;
+        }
+
+        Vector3 velocity =
+            moveDirection *
+            currentSpeed;
+
+        velocity.y =
+            VerticalVelocity;
 
         if (characterController != null)
-            characterController.Move(velocity * Runner.DeltaTime);
+        {
+            characterController.Move(
+                velocity *
+                Runner.DeltaTime);
+        }
         else
-            transform.position += velocity * Runner.DeltaTime;
+        {
+            transform.position +=
+                velocity *
+                Runner.DeltaTime;
+        }
 
-        if (animationController != null)
-            animationController.SetMovementSpeed(inputData.moveInput.magnitude);
+        UpdateMovementAnimation(
+            inputData);
     }
 
-    private void SetCameraActive(bool active)
+    private void UpdateMovementAnimation(
+        NetworkInputData inputData)
+    {
+        if (animationController == null)
+            return;
+
+        animationController.SetMovementSpeed(
+            inputData.moveInput.magnitude);
+    }
+
+    private void HandleCaptureTheFlagInput()
+    {
+        CaptureTheFlagManager captureTheFlagManager =
+            CaptureTheFlagManager.Instance;
+
+        if (captureTheFlagManager == null)
+            return;
+
+        if (!captureTheFlagManager.IsReady)
+            return;
+
+        if (Keyboard.current == null)
+            return;
+
+        if (!Keyboard.current.gKey
+                .wasPressedThisFrame)
+            return;
+
+        captureTheFlagManager.RequestDrop(
+            Object.InputAuthority);
+    }
+
+    private void HandleCursor()
+    {
+        if (Keyboard.current != null &&
+            Keyboard.current.escapeKey
+                .wasPressedThisFrame)
+        {
+            UnlockCursor();
+        }
+
+        if (!_cursorLocked &&
+            Mouse.current != null &&
+            Mouse.current.leftButton
+                .wasPressedThisFrame)
+        {
+            LockCursor();
+        }
+    }
+
+    private void OnApplicationFocus(
+        bool hasFocus)
+    {
+        if (!_isLocalPlayer)
+            return;
+
+        if (!hasFocus)
+            return;
+
+        if (!_cursorLocked)
+            return;
+
+        Cursor.lockState =
+            CursorLockMode.Locked;
+
+        Cursor.visible = false;
+    }
+
+    private void SetCameraActive(
+        bool active)
     {
         if (playerCamera != null)
-            playerCamera.enabled = active;
+        {
+            playerCamera.enabled =
+                active;
+        }
 
         if (audioListener != null)
-            audioListener.enabled = active;
+        {
+            audioListener.enabled =
+                active;
+        }
     }
 
     private void LockCursor()
     {
         _cursorLocked = true;
-        Cursor.lockState = CursorLockMode.Locked;
+
+        Cursor.lockState =
+            CursorLockMode.Locked;
+
         Cursor.visible = false;
     }
 
     private void UnlockCursor()
     {
         _cursorLocked = false;
-        Cursor.lockState = CursorLockMode.None;
+
+        Cursor.lockState =
+            CursorLockMode.None;
+
         Cursor.visible = true;
     }
 }

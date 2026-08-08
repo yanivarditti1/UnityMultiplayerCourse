@@ -4,219 +4,232 @@ using UnityEngine.Events;
 
 public sealed class CharacterSelectionManager : NetworkBehaviour
 {
-    [Header("Character Slots")]
-    [SerializeField]
-    private CharacterSlotData[] characterSlots =
-        new CharacterSlotData[10];
+    [Header("Player Classes")]
+    [SerializeField] private NetworkObject meleePlayerPrefab;
+    [SerializeField] private NetworkObject throwerPlayerPrefab;
+
+    [Header("Spawn Points")]
+    [SerializeField] private Transform[] spawnPoints;
 
     [Header("UI Events")]
-    [SerializeField]
-    private UnityEvent<int, bool> onSlotTakenChanged;
-
-    [SerializeField]
-    private UnityEvent<string> onSelectionMessage;
-
-    [SerializeField]
-    private UnityEvent onLocalPlayerSpawned;
+    [SerializeField] private UnityEvent<string> onSelectionMessage;
+    [SerializeField] private UnityEvent onLocalPlayerSpawned;
 
     [Networked, Capacity(10)]
-    private NetworkArray<PlayerRef> TakenByPlayers => default;
+    private NetworkArray<PlayerRef> SpawnPointOwners => default;
 
-    public override void Spawned()
+    public void SelectMelee()
     {
-        RefreshAllSlots();
+        RequestClass(ChairCombatMode.Melee);
     }
 
-    public void RequestCharacter(
-        int slotIndex,
-        Color nameColor)
+    public void SelectThrower()
     {
-        if (slotIndex < 0 ||
-            slotIndex >= characterSlots.Length)
-        {
-            return;
-        }
+        RequestClass(ChairCombatMode.Thrower);
+    }
 
-        RPC_RequestCharacter(
-            Runner.LocalPlayer,
-            slotIndex,
-            nameColor);
+    private void RequestClass(ChairCombatMode combatMode)
+    {
+        if (Runner == null)
+            return;
+
+        RPC_RequestClass(combatMode);
     }
 
     [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
-    private void RPC_RequestCharacter(
-        PlayerRef requestingPlayer,
-        int slotIndex,
-        Color nameColor = default)
+    private void RPC_RequestClass(
+        ChairCombatMode requestedClass,
+        RpcInfo info = default)
     {
-        if (!Runner.IsSharedModeMasterClient)
+        // THIS CODE EXECUTES ON THE DEDICATED SERVER.
+
+        PlayerRef requestingPlayer = info.Source;
+
+        if (requestingPlayer == PlayerRef.None)
             return;
 
-        if (slotIndex < 0 ||
-            slotIndex >= characterSlots.Length)
+        if (PlayerAlreadySpawned(requestingPlayer))
         {
-            return;
-        }
-
-        if (TakenByPlayers[slotIndex] != PlayerRef.None)
-        {
-            RPC_CharacterDenied(
+            RPC_ClassDenied(
                 requestingPlayer,
-                "This character is already taken. Pick another one.");
+                "You already selected a class.");
 
             return;
         }
 
-        TakenByPlayers.Set(
-            slotIndex,
-            requestingPlayer);
+        int spawnIndex = FindRandomAvailableSpawnPoint();
 
-        RPC_SlotTakenChanged(slotIndex, true);
+        if (spawnIndex < 0)
+        {
+            RPC_ClassDenied(
+                requestingPlayer,
+                "No spawn points are currently available.");
 
-        RPC_CharacterApproved(
-            requestingPlayer,
-            slotIndex,
-            nameColor);
-    }
-
-    [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
-    private void RPC_CharacterApproved(
-        [RpcTarget] PlayerRef targetPlayer,
-        int slotIndex,
-        Color nameColor)
-    {
-        if (Runner.LocalPlayer != targetPlayer)
             return;
+        }
 
-        CharacterSlotData slot =
-            characterSlots[slotIndex];
+        NetworkObject playerPrefab =
+            requestedClass == ChairCombatMode.Melee
+                ? meleePlayerPrefab
+                : throwerPlayerPrefab;
 
-        if (slot.PlayerPrefab == null ||
-            slot.SpawnPoint == null)
+        if (playerPrefab == null)
         {
             Debug.LogError(
-                $"[CharacterSelection] Slot {slotIndex} " +
-                "is missing its prefab or spawn point.");
+                $"[CharacterSelection] Missing prefab for {requestedClass}");
 
-            onSelectionMessage?.Invoke(
-                "The selected character is not configured correctly.");
+            RPC_ClassDenied(
+                requestingPlayer,
+                "Player prefab is missing.");
 
             return;
         }
 
-        Vector3 spawnPosition =
-            slot.SpawnPoint.position;
+        Transform spawnPoint = spawnPoints[spawnIndex];
 
-        Quaternion spawnRotation =
-            slot.SpawnPoint.rotation;
-
-        ConquestManager conquestManager =
-            ConquestManager.Instance;
-
-        CaptureTheFlagManager captureTheFlagManager =
-            CaptureTheFlagManager.Instance;
-
-        if (conquestManager != null &&
-            conquestManager.IsReady &&
-            conquestManager.TryGetSpawnPoint(
-                targetPlayer,
-                out Transform conquestSpawn))
+        if (spawnPoint == null)
         {
-            spawnPosition = conquestSpawn.position;
-            spawnRotation = conquestSpawn.rotation;
-        }
-        else if (captureTheFlagManager != null &&
-                 captureTheFlagManager.IsReady &&
-                 captureTheFlagManager.TryGetSpawnPoint(
-                     targetPlayer,
-                     out Transform captureTheFlagSpawn))
-        {
-            spawnPosition = captureTheFlagSpawn.position;
-            spawnRotation = captureTheFlagSpawn.rotation;
+            RPC_ClassDenied(
+                requestingPlayer,
+                "Selected spawn point is invalid.");
+
+            return;
         }
 
+        // Reserve the spawn point.
+        SpawnPointOwners.Set(
+            spawnIndex,
+            requestingPlayer);
+
+        // THE SERVER SPAWNS THE PLAYER.
         NetworkObject spawnedPlayer = Runner.Spawn(
-            prefab: slot.PlayerPrefab,
-            position: spawnPosition,
-            rotation: spawnRotation,
-            inputAuthority: targetPlayer,
-            onBeforeSpawned: null,
-            flags:
-                NetworkSpawnFlags.SharedModeStateAuthLocalPlayer);
+            playerPrefab,
+            spawnPoint.position,
+            spawnPoint.rotation,
+            requestingPlayer
+        );
 
         if (spawnedPlayer == null)
         {
-            Debug.LogError(
-                $"[CharacterSelection] Failed to spawn " +
-                $"slot {slotIndex} for {targetPlayer}.");
-
-            TakenByPlayers.Set(
-                slotIndex,
+            SpawnPointOwners.Set(
+                spawnIndex,
                 PlayerRef.None);
 
-            RPC_SlotTakenChanged(slotIndex, false);
-
-            onSelectionMessage?.Invoke(
-                "Failed to spawn the selected character.");
+            RPC_ClassDenied(
+                requestingPlayer,
+                "Failed to spawn player.");
 
             return;
         }
 
-        Runner.SetPlayerObject(
-            targetPlayer,
-            spawnedPlayer);
+        Debug.Log(
+            $"[CharacterSelection] Spawned {requestedClass} " +
+            $"for {requestingPlayer} at Spawn Point {spawnIndex}");
 
-        bool teamModeActive =
-            conquestManager != null &&
-            conquestManager.IsReady ||
-            captureTheFlagManager != null &&
-            captureTheFlagManager.IsReady;
+        RPC_ClassApproved(
+            requestingPlayer,
+            requestedClass);
+    }
 
-        if (PlayerManager.Local != null &&
-            !teamModeActive)
-        {
-            PlayerManager.Local.SetNameColor(nameColor);
-        }
-
+    [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
+    private void RPC_ClassApproved(
+        [RpcTarget] PlayerRef targetPlayer,
+        ChairCombatMode selectedClass)
+    {
         onSelectionMessage?.Invoke(
-            "Character selected!");
+            $"{selectedClass} selected!");
 
         onLocalPlayerSpawned?.Invoke();
     }
 
     [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
-    private void RPC_CharacterDenied(
+    private void RPC_ClassDenied(
         [RpcTarget] PlayerRef targetPlayer,
         string reason)
     {
-        if (Runner.LocalPlayer != targetPlayer)
-            return;
-
         onSelectionMessage?.Invoke(reason);
     }
 
-    [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
-    private void RPC_SlotTakenChanged(
-        int slotIndex,
-        bool isTaken)
+    private bool PlayerAlreadySpawned(PlayerRef player)
     {
-        onSlotTakenChanged?.Invoke(
-            slotIndex,
-            isTaken);
+        int count =
+            Mathf.Min(
+                spawnPoints.Length,
+                SpawnPointOwners.Length);
+
+        for (int i = 0; i < count; i++)
+        {
+            if (SpawnPointOwners[i] == player)
+                return true;
+        }
+
+        return false;
     }
 
-    private void RefreshAllSlots()
+    private int FindRandomAvailableSpawnPoint()
     {
-        for (int i = 0;
-             i < characterSlots.Length;
-             i++)
-        {
-            bool isTaken =
-                TakenByPlayers[i] != PlayerRef.None;
+        int count =
+            Mathf.Min(
+                spawnPoints.Length,
+                SpawnPointOwners.Length);
 
-            onSlotTakenChanged?.Invoke(
+        int availableCount = 0;
+
+        for (int i = 0; i < count; i++)
+        {
+            if (spawnPoints[i] == null)
+                continue;
+
+            if (SpawnPointOwners[i] != PlayerRef.None)
+                continue;
+
+            availableCount++;
+        }
+
+        if (availableCount == 0)
+            return -1;
+
+        int randomIndex =
+            Random.Range(0, availableCount);
+
+        for (int i = 0; i < count; i++)
+        {
+            if (spawnPoints[i] == null)
+                continue;
+
+            if (SpawnPointOwners[i] != PlayerRef.None)
+                continue;
+
+            if (randomIndex == 0)
+                return i;
+
+            randomIndex--;
+        }
+
+        return -1;
+    }
+
+    public void ReleasePlayerSpawnPoint(
+        PlayerRef player)
+    {
+        if (!Object.HasStateAuthority)
+            return;
+
+        int count =
+            Mathf.Min(
+                spawnPoints.Length,
+                SpawnPointOwners.Length);
+
+        for (int i = 0; i < count; i++)
+        {
+            if (SpawnPointOwners[i] != player)
+                continue;
+
+            SpawnPointOwners.Set(
                 i,
-                isTaken);
+                PlayerRef.None);
+
+            return;
         }
     }
 }

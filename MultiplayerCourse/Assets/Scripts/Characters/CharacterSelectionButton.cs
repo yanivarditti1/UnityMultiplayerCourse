@@ -1,42 +1,32 @@
-
-using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
 public sealed class CharacterSelectionButton : MonoBehaviour
 {
-    [SerializeField] private int slotIndex;
     [SerializeField] private Button button;
-    [SerializeField] private TextMeshProUGUI label;
     [SerializeField] private CharacterSelectionManager selectionManager;
-
-    private string _originalText;
-    private Image _image;
+    [SerializeField] private ChairCombatMode combatMode;
 
     private void Awake()
     {
-        _image = GetComponent<Image>();
-        _originalText = label.text;
-        button.onClick.AddListener(HandleClicked);
+        if (button != null)
+            button.onClick.AddListener(SelectClass);
     }
 
     private void OnDestroy()
     {
-        button.onClick.RemoveListener(HandleClicked);
+        if (button != null)
+            button.onClick.RemoveListener(SelectClass);
     }
 
-    public void SetTakenState(int changedSlotIndex, bool isTaken)
+    private void SelectClass()
     {
-        if (changedSlotIndex != slotIndex)
+        if (selectionManager == null)
             return;
 
-        button.interactable = !isTaken;
-        label.text = isTaken ? "Taken" : _originalText;
-    }
-
-    private void HandleClicked()
-    {
-        Color playerColor = _image != null ? _image.color : Color.white;
-        selectionManager.RequestCharacter(slotIndex, playerColor);
+        if (combatMode == ChairCombatMode.Melee)
+            selectionManager.SelectMelee();
+        else
+            selectionManager.SelectThrower();
     }
 }
