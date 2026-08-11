@@ -482,6 +482,7 @@ GameObject:
   - component: {fileID: 4579771002514411140}
   - component: {fileID: 1322853888755118462}
   - component: {fileID: 7928817680807623162}
+  - component: {fileID: 74377567035779731}
   m_Layer: 0
   m_Name: MeleePlayerPrefab
   m_TagString: Untagged
@@ -650,13 +651,13 @@ MonoBehaviour:
   playerCamera: {fileID: 6284159618578709540}
   audioListener: {fileID: 1886613306014156891}
   characterController: {fileID: 2035574928608198020}
+  animationController: {fileID: 1322853888755118462}
   moveSpeed: 5
   sprintMultiplier: 6
   jumpForce: 8
   gravity: -20
   mouseSensitivity: 0.15
   upDownPitchLimit: 80
-  animationController: {fileID: 1322853888755118462}
 --- !u!143 &2035574928608198020
 CharacterController:
   m_ObjectHideFlags: 0
@@ -845,6 +846,19 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CaptureTheFlagPlayer
   playerHealth: {fileID: 3661795405098710526}
   flagAnchor: {fileID: 7040438288519266060}
+--- !u!114 &74377567035779731
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4252853858376035391}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 83ea15b8a294eb84fbad000d03c3db59, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerDeathScoreHandler
+  playerHealth: {fileID: 3661795405098710526}
 --- !u!1 &4265908227339189125
 GameObject:
   m_ObjectHideFlags: 0

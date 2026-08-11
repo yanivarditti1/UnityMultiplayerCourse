@@ -570,6 +570,7 @@ GameObject:
   - component: {fileID: 4656764941045708093}
   - component: {fileID: 7113785146502758552}
   - component: {fileID: 3099508782705941265}
+  - component: {fileID: 1421830507207244697}
   m_Layer: 0
   m_Name: ThrowerPlayerPrefab
   m_TagString: Untagged
@@ -737,13 +738,13 @@ MonoBehaviour:
   playerCamera: {fileID: 6284159618578709540}
   audioListener: {fileID: 1886613306014156891}
   characterController: {fileID: 2035574928608198020}
+  animationController: {fileID: 7113785146502758552}
   moveSpeed: 5
   sprintMultiplier: 6
   jumpForce: 8
   gravity: -20
   mouseSensitivity: 0.15
   upDownPitchLimit: 80
-  animationController: {fileID: 7113785146502758552}
 --- !u!143 &2035574928608198020
 CharacterController:
   m_ObjectHideFlags: 0
@@ -913,6 +914,20 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CaptureTheFlagPlayer
   playerHealth: {fileID: 3661795405098710526}
   flagAnchor: {fileID: 6731088471842130389}
+--- !u!114 &1421830507207244697
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4252853858376035391}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 83ea15b8a294eb84fbad000d03c3db59, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerDeathScoreHandler
+  playerHealth: {fileID: 3661795405098710526}
+  scoreManager: {fileID: 0}
 --- !u!1 &7221845788820087336
 GameObject:
   m_ObjectHideFlags: 0

@@ -96,12 +96,12 @@ public sealed class CharacterSelectionManager : NetworkBehaviour
             return;
         }
 
-        // Reserve the spawn point.
+       
         SpawnPointOwners.Set(
             spawnIndex,
             requestingPlayer);
 
-        // THE SERVER SPAWNS THE PLAYER.
+      
         NetworkObject spawnedPlayer = Runner.Spawn(
             playerPrefab,
             spawnPoint.position,
