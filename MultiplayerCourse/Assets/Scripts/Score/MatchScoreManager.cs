@@ -11,11 +11,17 @@ public sealed class MatchScoreManager : NetworkBehaviour
     [SerializeField] private int killsToWin = 3;
     [SerializeField] private float matchDurationSeconds = 300f;
 
+    [Header("End Match Settings")]
+    [SerializeField] private float endScreenDuration = 3f;
+
     [Networked, Capacity(16)]
     private NetworkDictionary<PlayerRef, int> PlayerKills => default;
 
     [Networked]
     private TickTimer MatchTimer { get; set; }
+
+    [Networked]
+    private TickTimer EndScreenTimer { get; set; }
 
     [Networked]
     private NetworkBool MatchEnded { get; set; }
@@ -26,10 +32,17 @@ public sealed class MatchScoreManager : NetworkBehaviour
     public event Action<int, int> LocalScoreChanged;
     public event Action<float> TimerChanged;
     public event Action<PlayerRef, int> MatchFinished;
+    public event Action<float> EndCountdownChanged;
 
-    private int lastDisplayedSecond = -1;
+    // This is the event pls help
+    public event Action ReturnToLobbyRequested;
+
+    private int lastDisplayedMatchSecond = -1;
+    private int lastDisplayedEndSecond = -1;
     private int lastLocalKills = -1;
+
     private bool matchFinishedEventRaised;
+    private bool returnToLobbyEventRaised;
 
     public int KillsToWin => killsToWin;
     public bool HasMatchEnded => MatchEnded;
@@ -68,14 +81,20 @@ public sealed class MatchScoreManager : NetworkBehaviour
         Winner = PlayerRef.None;
         MatchEnded = false;
 
-        MatchTimer = TickTimer.CreateFromSeconds(
-            Runner,
-            matchDurationSeconds);
+        returnToLobbyEventRaised = false;
+        matchFinishedEventRaised = false;
+
+        MatchTimer =
+            TickTimer.CreateFromSeconds(
+                Runner,
+                matchDurationSeconds);
+
+        EndScreenTimer = TickTimer.None;
 
         Debug.Log(
             $"[Match] Started. " +
-            $"Kills to win: {killsToWin}, " +
-            $"Duration: {matchDurationSeconds} seconds");
+            $"Kills to win: {killsToWin}. " +
+            $"Duration: {matchDurationSeconds}s.");
     }
 
     public void RegisterKill(PlayerRef killer)
@@ -91,7 +110,9 @@ public sealed class MatchScoreManager : NetworkBehaviour
 
         int currentKills = 0;
 
-        if (PlayerKills.TryGet(killer, out int existingKills))
+        if (PlayerKills.TryGet(
+            killer,
+            out int existingKills))
         {
             currentKills = existingKills;
         }
@@ -104,7 +125,7 @@ public sealed class MatchScoreManager : NetworkBehaviour
 
         Debug.Log(
             $"[Match] Player {killer.PlayerId} " +
-            $"now has {currentKills}/{killsToWin} kills.");
+            $"has {currentKills}/{killsToWin} kills.");
 
         if (currentKills >= killsToWin)
         {
@@ -147,7 +168,9 @@ public sealed class MatchScoreManager : NetworkBehaviour
 
     public int GetKills(PlayerRef player)
     {
-        if (PlayerKills.TryGet(player, out int kills))
+        if (PlayerKills.TryGet(
+            player,
+            out int kills))
         {
             return kills;
         }
@@ -168,6 +191,11 @@ public sealed class MatchScoreManager : NetworkBehaviour
         MatchEnded = true;
         Winner = winner;
 
+        EndScreenTimer =
+            TickTimer.CreateFromSeconds(
+                Runner,
+                endScreenDuration);
+
         Debug.Log(
             $"[Match] Player {winner.PlayerId} won " +
             $"with {winnerKills} kills.");
@@ -185,7 +213,9 @@ public sealed class MatchScoreManager : NetworkBehaviour
         PlayerRef highestPlayer = PlayerRef.None;
         int highestKills = -1;
 
-        foreach (KeyValuePair<PlayerRef, int> entry in PlayerKills)
+        foreach (
+            KeyValuePair<PlayerRef, int> entry
+            in PlayerKills)
         {
             if (entry.Value <= highestKills)
                 continue;
@@ -197,7 +227,7 @@ public sealed class MatchScoreManager : NetworkBehaviour
         if (highestPlayer == PlayerRef.None)
         {
             Debug.LogWarning(
-                "[Match] Timer expired, but no players were found.");
+                "[Match] Timer ended but no players were found.");
 
             return;
         }
@@ -229,24 +259,44 @@ public sealed class MatchScoreManager : NetworkBehaviour
         if (!Object.HasStateAuthority)
             return;
 
-        if (MatchEnded)
+        if (!MatchEnded)
+        {
+            if (MatchTimer.Expired(Runner))
+            {
+                FinishMatchFromTimer();
+            }
+
+            return;
+        }
+
+        if (!EndScreenTimer.Expired(Runner))
             return;
 
-        if (MatchTimer.Expired(Runner))
-        {
-            FinishMatchFromTimer();
-        }
+        if (returnToLobbyEventRaised)
+            return;
+
+        returnToLobbyEventRaised = true;
+
+        Debug.Log(
+            "[Match] End countdown finished. " +
+            "Requesting return to lobby.");
+
+        ReturnToLobbyRequested?.Invoke();
     }
 
     public override void Render()
     {
-        UpdateTimerDisplay();
+        UpdateMatchTimerDisplay();
+        UpdateEndCountdownDisplay();
         RefreshLocalScore();
     }
 
-    private void UpdateTimerDisplay()
+    private void UpdateMatchTimerDisplay()
     {
         if (Runner == null)
+            return;
+
+        if (MatchEnded)
             return;
 
         float remainingTime =
@@ -255,12 +305,43 @@ public sealed class MatchScoreManager : NetworkBehaviour
         int displayedSecond =
             Mathf.CeilToInt(remainingTime);
 
-        if (displayedSecond == lastDisplayedSecond)
+        if (displayedSecond ==
+            lastDisplayedMatchSecond)
+        {
             return;
+        }
 
-        lastDisplayedSecond = displayedSecond;
+        lastDisplayedMatchSecond =
+            displayedSecond;
 
         TimerChanged?.Invoke(
+            remainingTime);
+    }
+
+    private void UpdateEndCountdownDisplay()
+    {
+        if (!MatchEnded)
+            return;
+
+        if (Runner == null)
+            return;
+
+        float remainingTime =
+            EndScreenTimer.RemainingTime(Runner) ?? 0f;
+
+        int displayedSecond =
+            Mathf.CeilToInt(remainingTime);
+
+        if (displayedSecond ==
+            lastDisplayedEndSecond)
+        {
+            return;
+        }
+
+        lastDisplayedEndSecond =
+            displayedSecond;
+
+        EndCountdownChanged?.Invoke(
             remainingTime);
     }
 
@@ -275,7 +356,8 @@ public sealed class MatchScoreManager : NetworkBehaviour
         if (localPlayer == PlayerRef.None)
             return;
 
-        int kills = GetKills(localPlayer);
+        int kills =
+            GetKills(localPlayer);
 
         if (kills == lastLocalKills)
             return;

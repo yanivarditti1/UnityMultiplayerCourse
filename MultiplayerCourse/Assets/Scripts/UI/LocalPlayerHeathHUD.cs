@@ -1,12 +1,10 @@
 using DG.Tweening;
-using Fusion;
 using UnityEngine;
 using UnityEngine.UI;
 
-public sealed class PlayerHealthBar : NetworkBehaviour
+public sealed class LocalPlayerHealthHUD : MonoBehaviour
 {
-    [Header("References")]
-    [SerializeField] private PlayerHealth playerHealth;
+    [Header("UI")]
     [SerializeField] private Image fillImage;
 
     [Header("Fill Animation")]
@@ -17,45 +15,47 @@ public sealed class PlayerHealthBar : NetworkBehaviour
     [SerializeField] private float colorDuration = 0.2f;
 
     [SerializeField] private Color fullHealthColor = Color.green;
-    [SerializeField] private Color highHealthColor = new Color(0.5f, 1f, 0.2f);
+    [SerializeField] private Color highHealthColor = Color.green;
     [SerializeField] private Color mediumHealthColor = Color.yellow;
     [SerializeField] private Color lowHealthColor = new Color(1f, 0.5f, 0f);
     [SerializeField] private Color criticalHealthColor = Color.red;
 
-    public override void Spawned()
+    private PlayerHealth currentPlayerHealth;
+
+    public void Bind(PlayerHealth playerHealth)
     {
-        if (!playerHealth || !fillImage)
+        Unbind();
+
+        currentPlayerHealth = playerHealth;
+
+        if (currentPlayerHealth == null)
             return;
 
-        playerHealth.HealthChanged.AddListener(OnHealthChanged);
+        currentPlayerHealth.HealthChanged.AddListener(OnHealthChanged);
 
         OnHealthChanged(
-            playerHealth.CurrentHealth,
-            playerHealth.MaxHealth);
+            currentPlayerHealth.CurrentHealth,
+            currentPlayerHealth.MaxHealth);
     }
 
-    public override void Despawned(
-        NetworkRunner runner,
-        bool hasState)
+    public void Unbind()
     {
-        if (playerHealth)
+        if (currentPlayerHealth != null)
         {
-            playerHealth.HealthChanged.RemoveListener(OnHealthChanged);
+            currentPlayerHealth.HealthChanged.RemoveListener(OnHealthChanged);
+            currentPlayerHealth = null;
         }
 
-        if (fillImage)
-        {
-            fillImage.DOKill();
-        }
+        fillImage.DOKill();
     }
 
-    private void OnHealthChanged(
-        int currentHealth,
-        int maxHealth)
+    private void OnDestroy()
     {
-        if (!fillImage)
-            return;
+        Unbind();
+    }
 
+    private void OnHealthChanged(int currentHealth, int maxHealth)
+    {
         if (maxHealth <= 0)
             return;
 
@@ -64,16 +64,17 @@ public sealed class PlayerHealthBar : NetworkBehaviour
 
         fillImage.DOKill();
 
-        fillImage
-            .DOFillAmount(
+        fillImage.DOFillAmount(
                 normalizedHealth,
                 fillDuration)
             .SetEase(fillEase);
 
-        fillImage
-            .DOColor(
-                GetHealthColor(normalizedHealth),
-                colorDuration);
+        Color targetColor =
+            GetHealthColor(normalizedHealth);
+
+        fillImage.DOColor(
+            targetColor,
+            colorDuration);
     }
 
     private Color GetHealthColor(float normalizedHealth)

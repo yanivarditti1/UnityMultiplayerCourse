@@ -571,6 +571,7 @@ GameObject:
   - component: {fileID: 7113785146502758552}
   - component: {fileID: 3099508782705941265}
   - component: {fileID: 1421830507207244697}
+  - component: {fileID: 5263418970153314913}
   m_Layer: 0
   m_Name: ThrowerPlayerPrefab
   m_TagString: Untagged
@@ -702,6 +703,7 @@ MonoBehaviour:
   - {fileID: 4656764941045708093}
   - {fileID: 7113785146502758552}
   - {fileID: 3099508782705941265}
+  - {fileID: 5263418970153314913}
   - {fileID: 4687258327691553160}
   - {fileID: 8809978536908367381}
   ForceRemoteRenderTimeframe: 0
@@ -927,7 +929,19 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerDeathScoreHandler
   playerHealth: {fileID: 3661795405098710526}
-  scoreManager: {fileID: 0}
+--- !u!114 &5263418970153314913
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4252853858376035391}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a9d41ad2f0ab75f4c940b350c52e1553, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::LocalPlayerHUDConnector
+  playerHealth: {fileID: 3661795405098710526}
 --- !u!1 &7221845788820087336
 GameObject:
   m_ObjectHideFlags: 0
@@ -1182,7 +1196,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: -7.7}
+  m_AnchoredPosition: {x: 0, y: -13.7}
   m_SizeDelta: {x: 100, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &8809978536908367381
@@ -1233,7 +1247,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 0, y: -10}
   m_SizeDelta: {x: 50, y: 10}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &4707142465160123420
