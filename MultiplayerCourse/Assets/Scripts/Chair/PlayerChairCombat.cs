@@ -25,6 +25,8 @@ public sealed class PlayerChairCombat : NetworkBehaviour
     [Header("Throw")]
     [SerializeField] private int throwDamage = 35;
     [SerializeField] private float throwForce = 16f;
+    
+    public ChairCombatMode CombatMode => combatMode;
 
     private float _lastAttackTime;
 

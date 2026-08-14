@@ -15,25 +15,96 @@ public sealed class PlayerHealth : NetworkBehaviour
     public bool IsDead => CurrentHealth <= 0;
 
     public UnityEvent<int, int> HealthChanged = new();
+
+    
     public UnityEvent Died = new();
+    
     public event Action<PlayerRef> DiedWithAttacker;
 
     public override void Spawned()
     {
         if (Object.HasStateAuthority)
+        {
             CurrentHealth = maxHealth;
+        }
 
         OnHealthChanged();
     }
 
-    public void RequestDamage(int damage)
+    public void RequestDamage(
+        int damage,
+        PlayerRef attacker)
     {
-        RequestDamage(damage, PlayerRef.None);
+        if (damage <= 0)
+            return;
+
+        if (Object.HasStateAuthority)
+        {
+            ApplyDamage(damage, attacker);
+            return;
+        }
+
+        RPC_RequestDamage(
+            damage,
+            attacker);
     }
 
-    public void RequestDamage(int damage, PlayerRef attacker)
+    [Rpc(
+        RpcSources.All,
+        RpcTargets.StateAuthority)]
+    private void RPC_RequestDamage(
+        int damage,
+        PlayerRef attacker)
     {
-        RPC_RequestDamage(damage, attacker);
+        ApplyDamage(
+            damage,
+            attacker);
+    }
+
+    private void ApplyDamage(
+        int damage,
+        PlayerRef attacker)
+    {
+        if (!Object.HasStateAuthority)
+            return;
+
+        if (CurrentHealth <= 0)
+            return;
+
+        CurrentHealth =
+            Mathf.Max(
+                CurrentHealth - damage,
+                0);
+
+        Debug.Log(
+            $"[Health] Player {Object.InputAuthority.PlayerId} " +
+            $"took {damage} damage. " +
+            $"Health: {CurrentHealth}/{maxHealth}");
+
+        OnHealthChanged();
+
+        if (CurrentHealth > 0)
+            return;
+
+        HandleDeath(attacker);
+    }
+
+    private void HandleDeath(
+        PlayerRef attacker)
+    {
+        
+        Died?.Invoke();
+
+        
+        DiedWithAttacker?.Invoke(attacker);
+
+       
+        if (PlayerMatchStats.TryGet(
+                Object.InputAuthority,
+                out PlayerMatchStats victimStats))
+        {
+            victimStats.AddDeath();
+        }
     }
 
     public void RestoreFullHealth()
@@ -42,30 +113,14 @@ public sealed class PlayerHealth : NetworkBehaviour
             return;
 
         CurrentHealth = maxHealth;
-        OnHealthChanged();
-    }
-
-    [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
-    private void RPC_RequestDamage(int damage, PlayerRef attacker)
-    {
-        if (CurrentHealth <= 0 || damage <= 0)
-            return;
-
-        CurrentHealth = Mathf.Max(CurrentHealth - damage, 0);
-
-        Debug.Log($"[Health] Player {Object.InputAuthority.PlayerId}: {CurrentHealth}/{maxHealth}");
 
         OnHealthChanged();
-
-        if (CurrentHealth > 0)
-            return;
-
-        Died?.Invoke();
-        DiedWithAttacker?.Invoke(attacker);
     }
 
     private void OnHealthChanged()
     {
-        HealthChanged?.Invoke(CurrentHealth, maxHealth);
+        HealthChanged?.Invoke(
+            CurrentHealth,
+            maxHealth);
     }
 }

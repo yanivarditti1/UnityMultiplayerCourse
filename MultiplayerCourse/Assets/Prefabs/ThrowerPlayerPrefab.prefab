@@ -572,6 +572,7 @@ GameObject:
   - component: {fileID: 3099508782705941265}
   - component: {fileID: 1421830507207244697}
   - component: {fileID: 5263418970153314913}
+  - component: {fileID: 4507777452734543661}
   m_Layer: 0
   m_Name: ThrowerPlayerPrefab
   m_TagString: Untagged
@@ -704,6 +705,7 @@ MonoBehaviour:
   - {fileID: 7113785146502758552}
   - {fileID: 3099508782705941265}
   - {fileID: 5263418970153314913}
+  - {fileID: 4507777452734543661}
   - {fileID: 4687258327691553160}
   - {fileID: 8809978536908367381}
   ForceRemoteRenderTimeframe: 0
@@ -942,6 +944,22 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::LocalPlayerHUDConnector
   playerHealth: {fileID: 3661795405098710526}
+--- !u!114 &4507777452734543661
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4252853858376035391}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5700cabe3489c9b45af0a7d484ed39ac, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerMatchStats
+  chairCombat: {fileID: 2703630289115125951}
+  _Kills: 0
+  _Deaths: 0
+  _CombatMode: 1
 --- !u!1 &7221845788820087336
 GameObject:
   m_ObjectHideFlags: 0
@@ -1213,6 +1231,14 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PlayerHealthBar
   playerHealth: {fileID: 3661795405098710526}
   fillImage: {fileID: 5479687203026608744}
+  fillDuration: 0.2
+  fillEase: 6
+  colorDuration: 0.2
+  fullHealthColor: {r: 0, g: 1, b: 0, a: 1}
+  highHealthColor: {r: 0.5, g: 1, b: 0.2, a: 1}
+  mediumHealthColor: {r: 1, g: 0.92156863, b: 0.015686275, a: 1}
+  lowHealthColor: {r: 1, g: 0.5, b: 0, a: 1}
+  criticalHealthColor: {r: 1, g: 0, b: 0, a: 1}
 --- !u!1 &8561775666503999169
 GameObject:
   m_ObjectHideFlags: 0
