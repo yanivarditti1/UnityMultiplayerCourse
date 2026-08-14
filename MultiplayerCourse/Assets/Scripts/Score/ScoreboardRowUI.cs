@@ -17,7 +17,7 @@ public sealed class ScoreboardRowUI : MonoBehaviour
 
     public void Setup(
         PlayerRef player,
-        string playerName,
+        string nickname,
         int kills,
         int deaths,
         ChairCombatMode combatMode)
@@ -25,21 +25,21 @@ public sealed class ScoreboardRowUI : MonoBehaviour
         Player = player;
 
         UpdateDisplay(
-            playerName,
+            nickname,
             kills,
             deaths,
             combatMode);
     }
 
     public void UpdateDisplay(
-        string playerName,
+        string nickname,
         int kills,
         int deaths,
         ChairCombatMode combatMode)
     {
         if (playerNameLabel != null)
         {
-            playerNameLabel.text = playerName;
+            playerNameLabel.text = nickname;
 
             playerNameLabel.color =
                 combatMode == ChairCombatMode.Melee

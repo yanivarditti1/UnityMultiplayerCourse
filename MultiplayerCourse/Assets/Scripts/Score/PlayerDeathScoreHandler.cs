@@ -7,12 +7,14 @@ public sealed class PlayerDeathScoreHandler : MonoBehaviour
 
     private void OnEnable()
     {
-        playerHealth.DiedWithAttacker += HandlePlayerDied;
+        if (playerHealth != null)
+            playerHealth.DiedWithAttacker += HandlePlayerDied;
     }
 
     private void OnDisable()
     {
-        playerHealth.DiedWithAttacker -= HandlePlayerDied;
+        if (playerHealth != null)
+            playerHealth.DiedWithAttacker -= HandlePlayerDied;
     }
 
     private void HandlePlayerDied(PlayerRef attacker)
@@ -20,9 +22,16 @@ public sealed class PlayerDeathScoreHandler : MonoBehaviour
         if (attacker == PlayerRef.None)
             return;
 
-        if (MatchScoreManager.Instance == null)
-            return;
-
-        MatchScoreManager.Instance.RegisterKill(attacker);
+        if (MatchScoreManager.Instance != null)
+        {
+            MatchScoreManager.Instance.RegisterKill(attacker);
+        }
+        
+        if (PlayerMatchStats.TryGet(
+                attacker,
+                out PlayerMatchStats attackerStats))
+        {
+            attackerStats.AddKill();
+        }
     }
 }

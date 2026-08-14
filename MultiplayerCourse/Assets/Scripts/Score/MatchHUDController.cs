@@ -137,9 +137,7 @@ public sealed class MatchHUDController : MonoBehaviour
 
         if (previousTimerSecond ==
             totalSeconds)
-        {
             return;
-        }
 
         bool reachedMinute =
             totalSeconds > 0 &&
@@ -164,7 +162,8 @@ public sealed class MatchHUDController : MonoBehaviour
             totalSeconds;
     }
 
-    private void AnimateTimer(float strength)
+    private void AnimateTimer(
+        float strength)
     {
         timerTransform.DOKill();
 
@@ -183,8 +182,12 @@ public sealed class MatchHUDController : MonoBehaviour
         PlayerRef winner,
         int kills)
     {
+        string nickname =
+            PlayerNicknameUtility.GetNickname(
+                winner);
+
         winnerNameText.text =
-            $"Winner: Player {winner.PlayerId}";
+            $"Winner: {nickname}";
 
         winnerKillsText.text =
             $"Kills: {kills}";
@@ -203,9 +206,7 @@ public sealed class MatchHUDController : MonoBehaviour
 
         if (previousEndCountdownSecond ==
             seconds)
-        {
             return;
-        }
 
         previousEndCountdownSecond =
             seconds;
@@ -213,13 +214,17 @@ public sealed class MatchHUDController : MonoBehaviour
         returnCountdownText.text =
             $"Returning to lobby in {seconds}...";
 
-        returnCountdownText.rectTransform
+        returnCountdownText
+            .rectTransform
             .DOKill();
 
-        returnCountdownText.rectTransform
-            .localScale = Vector3.one;
+        returnCountdownText
+            .rectTransform
+            .localScale =
+            Vector3.one;
 
-        returnCountdownText.rectTransform
+        returnCountdownText
+            .rectTransform
             .DOPunchScale(
                 Vector3.one *
                 endCountdownPunchScale,

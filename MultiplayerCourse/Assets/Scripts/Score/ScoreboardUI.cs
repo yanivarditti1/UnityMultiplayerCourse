@@ -12,6 +12,10 @@ public sealed class ScoreboardUI : MonoBehaviour
     [SerializeField] private Transform rowsParent;
     [SerializeField] private ScoreboardRowUI rowPrefab;
 
+    [Header("Blocking Panels")]
+    [SerializeField] private GameObject choosePlayerPanel;
+    [SerializeField] private GameObject endScreen;
+
     [Header("Input")]
     [SerializeField] private InputActionReference scoreboardAction;
 
@@ -27,7 +31,6 @@ public sealed class ScoreboardUI : MonoBehaviour
         _rows = new();
 
     private Tween _panelTween;
-
     private bool _isVisible;
 
     private void Awake()
@@ -54,8 +57,7 @@ public sealed class ScoreboardUI : MonoBehaviour
         PlayerMatchStats.OnAnyStatsChanged +=
             HandleStatsChanged;
 
-        PlayerManager.OnAnyNicknameChanged +=
-            HandleNicknameChanged;
+        RefreshPlayerList();
     }
 
     private void OnDisable()
@@ -77,17 +79,15 @@ public sealed class ScoreboardUI : MonoBehaviour
         PlayerMatchStats.OnAnyStatsChanged -=
             HandleStatsChanged;
 
-        PlayerManager.OnAnyNicknameChanged -=
-            HandleNicknameChanged;
-
         _panelTween?.Kill();
     }
-
-    
 
     private void HandleTabPressed(
         InputAction.CallbackContext context)
     {
+        if (IsBlocked())
+            return;
+
         ShowScoreboard();
     }
 
@@ -97,11 +97,29 @@ public sealed class ScoreboardUI : MonoBehaviour
         HideScoreboard();
     }
 
-    
+    private bool IsBlocked()
+    {
+        if (choosePlayerPanel != null &&
+            choosePlayerPanel.activeInHierarchy)
+        {
+            return true;
+        }
+
+        if (endScreen != null &&
+            endScreen.activeInHierarchy)
+        {
+            return true;
+        }
+
+        return false;
+    }
 
     private void ShowScoreboard()
     {
         if (_isVisible)
+            return;
+
+        if (IsBlocked())
             return;
 
         _isVisible = true;
@@ -160,8 +178,6 @@ public sealed class ScoreboardUI : MonoBehaviour
         scoreboardPanel.gameObject.SetActive(false);
     }
 
-   
-
     private void RefreshPlayerList()
     {
         if (rowPrefab == null ||
@@ -177,7 +193,7 @@ public sealed class ScoreboardUI : MonoBehaviour
                 .ToList();
 
         HashSet<PlayerRef> activePlayers =
-            new HashSet<PlayerRef>();
+            new();
 
         foreach (PlayerMatchStats stats in players)
         {
@@ -190,9 +206,10 @@ public sealed class ScoreboardUI : MonoBehaviour
                     player,
                     out ScoreboardRowUI row))
             {
-                row = Instantiate(
-                    rowPrefab,
-                    rowsParent);
+                row =
+                    Instantiate(
+                        rowPrefab,
+                        rowsParent);
 
                 _rows.Add(
                     player,
@@ -202,7 +219,9 @@ public sealed class ScoreboardUI : MonoBehaviour
                     Vector3.zero;
 
                 row.transform
-                    .DOScale(Vector3.one, 0.15f)
+                    .DOScale(
+                        Vector3.one,
+                        0.15f)
                     .SetEase(Ease.OutBack);
             }
 
@@ -212,23 +231,27 @@ public sealed class ScoreboardUI : MonoBehaviour
                 stats);
         }
 
-        RemoveDisconnectedPlayers(
-            activePlayers);
-
+        RemoveMissingPlayers(activePlayers);
         SortRows(players);
     }
-    
+
     private void UpdateRow(
         PlayerRef player,
         ScoreboardRowUI row,
         PlayerMatchStats stats)
     {
-        string playerName =
-            GetPlayerName(player);
+        string nickname =
+            stats.Nickname.ToString();
+
+        if (string.IsNullOrWhiteSpace(nickname))
+        {
+            nickname =
+                PlayerNicknameUtility.GetNickname(player);
+        }
 
         row.Setup(
             player,
-            playerName,
+            nickname,
             stats.Kills,
             stats.Deaths,
             stats.CombatMode);
@@ -240,9 +263,7 @@ public sealed class ScoreboardUI : MonoBehaviour
         if (!PlayerMatchStats.TryGet(
                 player,
                 out PlayerMatchStats stats))
-        {
             return;
-        }
 
         if (!_rows.TryGetValue(
                 player,
@@ -260,33 +281,7 @@ public sealed class ScoreboardUI : MonoBehaviour
         RefreshPlayerList();
     }
 
-    private void HandleNicknameChanged(
-        PlayerRef player,
-        string nickname)
-    {
-        if (!_rows.TryGetValue(
-                player,
-                out ScoreboardRowUI row))
-        {
-            return;
-        }
-
-        if (!PlayerMatchStats.TryGet(
-                player,
-                out PlayerMatchStats stats))
-        {
-            return;
-        }
-
-        row.UpdateDisplay(
-            nickname,
-            stats.Kills,
-            stats.Deaths,
-            stats.CombatMode);
-    }
-    
-
-    private void RemoveDisconnectedPlayers(
+    private void RemoveMissingPlayers(
         HashSet<PlayerRef> activePlayers)
     {
         List<PlayerRef> playersToRemove =
@@ -295,8 +290,7 @@ public sealed class ScoreboardUI : MonoBehaviour
                     !activePlayers.Contains(player))
                 .ToList();
 
-        foreach (PlayerRef player
-                 in playersToRemove)
+        foreach (PlayerRef player in playersToRemove)
         {
             if (_rows.TryGetValue(
                     player,
@@ -308,8 +302,6 @@ public sealed class ScoreboardUI : MonoBehaviour
             _rows.Remove(player);
         }
     }
-
-   
 
     private void SortRows(
         List<PlayerMatchStats> players)
@@ -326,21 +318,5 @@ public sealed class ScoreboardUI : MonoBehaviour
                 row.transform.SetSiblingIndex(i);
             }
         }
-    }
-    
-
-    private string GetPlayerName(
-        PlayerRef player)
-    {
-        if (PlayerManager.Registry.TryGetValue(
-                player,
-                out PlayerManager playerManager))
-        {
-            return playerManager
-                .Nickname
-                .ToString();
-        }
-
-        return $"Player {player.PlayerId}";
     }
 }

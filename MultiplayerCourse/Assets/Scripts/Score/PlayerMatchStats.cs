@@ -5,8 +5,7 @@ using UnityEngine;
 
 public sealed class PlayerMatchStats : NetworkBehaviour
 {
-    public static readonly Dictionary<PlayerRef, PlayerMatchStats>
-        Registry = new();
+    public static readonly Dictionary<PlayerRef, PlayerMatchStats> Registry = new();
 
     public static event Action OnPlayerListChanged;
     public static event Action<PlayerRef> OnAnyStatsChanged;
@@ -14,17 +13,19 @@ public sealed class PlayerMatchStats : NetworkBehaviour
     [Header("References")]
     [SerializeField] private PlayerChairCombat chairCombat;
 
-    [Networked, OnChangedRender(nameof(HandleStatsChanged))]
+    [Networked, OnChangedRender(nameof(HandleChanged))]
     public int Kills { get; private set; }
 
-    [Networked, OnChangedRender(nameof(HandleStatsChanged))]
+    [Networked, OnChangedRender(nameof(HandleChanged))]
     public int Deaths { get; private set; }
 
-    [Networked, OnChangedRender(nameof(HandleStatsChanged))]
+    [Networked, OnChangedRender(nameof(HandleChanged))]
     public ChairCombatMode CombatMode { get; private set; }
 
-    public PlayerRef Player =>
-        Object.InputAuthority;
+    [Networked, OnChangedRender(nameof(HandleChanged))]
+    public NetworkString<_32> Nickname { get; private set; }
+
+    public PlayerRef Player => Object.InputAuthority;
 
     public override void Spawned()
     {
@@ -40,18 +41,34 @@ public sealed class PlayerMatchStats : NetworkBehaviour
         }
 
         OnPlayerListChanged?.Invoke();
-        OnAnyStatsChanged?.Invoke(
-            Object.InputAuthority);
+        OnAnyStatsChanged?.Invoke(Object.InputAuthority);
     }
 
     public override void Despawned(
         NetworkRunner runner,
         bool hasState)
     {
-        Registry.Remove(
-            Object.InputAuthority);
+        Registry.Remove(Object.InputAuthority);
 
         OnPlayerListChanged?.Invoke();
+    }
+
+    public void SetNicknameServer(string nickname)
+    {
+        if (!Object.HasStateAuthority)
+            return;
+
+        if (string.IsNullOrWhiteSpace(nickname))
+            return;
+
+        nickname = nickname.Trim();
+
+        if (nickname.Length > 32)
+            nickname = nickname.Substring(0, 32);
+
+        Nickname = nickname;
+
+        OnAnyStatsChanged?.Invoke(Object.InputAuthority);
     }
 
     public void AddKill()
@@ -70,18 +87,15 @@ public sealed class PlayerMatchStats : NetworkBehaviour
         Deaths++;
     }
 
-    private void HandleStatsChanged()
+    private void HandleChanged()
     {
-        OnAnyStatsChanged?.Invoke(
-            Object.InputAuthority);
+        OnAnyStatsChanged?.Invoke(Object.InputAuthority);
     }
 
     public static bool TryGet(
         PlayerRef player,
         out PlayerMatchStats stats)
     {
-        return Registry.TryGetValue(
-            player,
-            out stats);
+        return Registry.TryGetValue(player, out stats);
     }
 }

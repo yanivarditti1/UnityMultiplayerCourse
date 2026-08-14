@@ -17,6 +17,7 @@ public sealed class CharacterSelectionManager : NetworkBehaviour
 
     [Networked, Capacity(10)]
     private NetworkArray<PlayerRef> SpawnPointOwners => default;
+    
 
     public void SelectMelee()
     {
@@ -28,27 +29,51 @@ public sealed class CharacterSelectionManager : NetworkBehaviour
         RequestClass(ChairCombatMode.Thrower);
     }
 
-    private void RequestClass(ChairCombatMode combatMode)
+  
+
+    private void RequestClass(
+        ChairCombatMode combatMode)
     {
         if (Runner == null)
             return;
 
-        RPC_RequestClass(combatMode);
+        string nickname =
+            GetLocalNickname();
+
+        RPC_RequestClass(
+            combatMode,
+            nickname);
     }
 
-    [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
+   
+
+    [Rpc(
+        RpcSources.All,
+        RpcTargets.StateAuthority)]
     private void RPC_RequestClass(
         ChairCombatMode requestedClass,
+        string nickname,
         RpcInfo info = default)
     {
-        // THIS CODE EXECUTES ON THE DEDICATED SERVER.
+      
 
-        PlayerRef requestingPlayer = info.Source;
+        PlayerRef requestingPlayer =
+            info.Source;
 
         if (requestingPlayer == PlayerRef.None)
             return;
 
-        if (PlayerAlreadySpawned(requestingPlayer))
+      
+
+        nickname =
+            SanitizeNickname(
+                nickname,
+                requestingPlayer);
+
+       
+
+        if (PlayerAlreadySpawned(
+                requestingPlayer))
         {
             RPC_ClassDenied(
                 requestingPlayer,
@@ -57,7 +82,10 @@ public sealed class CharacterSelectionManager : NetworkBehaviour
             return;
         }
 
-        int spawnIndex = FindRandomAvailableSpawnPoint();
+     
+
+        int spawnIndex =
+            FindRandomAvailableSpawnPoint();
 
         if (spawnIndex < 0)
         {
@@ -68,15 +96,19 @@ public sealed class CharacterSelectionManager : NetworkBehaviour
             return;
         }
 
+      
+
         NetworkObject playerPrefab =
-            requestedClass == ChairCombatMode.Melee
+            requestedClass ==
+            ChairCombatMode.Melee
                 ? meleePlayerPrefab
                 : throwerPlayerPrefab;
 
         if (playerPrefab == null)
         {
             Debug.LogError(
-                $"[CharacterSelection] Missing prefab for {requestedClass}");
+                $"[CharacterSelection] " +
+                $"Missing prefab for {requestedClass}");
 
             RPC_ClassDenied(
                 requestingPlayer,
@@ -85,7 +117,10 @@ public sealed class CharacterSelectionManager : NetworkBehaviour
             return;
         }
 
-        Transform spawnPoint = spawnPoints[spawnIndex];
+     
+
+        Transform spawnPoint =
+            spawnPoints[spawnIndex];
 
         if (spawnPoint == null)
         {
@@ -96,18 +131,20 @@ public sealed class CharacterSelectionManager : NetworkBehaviour
             return;
         }
 
-       
+      
+
         SpawnPointOwners.Set(
             spawnIndex,
             requestingPlayer);
 
       
-        NetworkObject spawnedPlayer = Runner.Spawn(
-            playerPrefab,
-            spawnPoint.position,
-            spawnPoint.rotation,
-            requestingPlayer
-        );
+
+        NetworkObject spawnedPlayer =
+            Runner.Spawn(
+                playerPrefab,
+                spawnPoint.position,
+                spawnPoint.rotation,
+                requestingPlayer);
 
         if (spawnedPlayer == null)
         {
@@ -122,16 +159,38 @@ public sealed class CharacterSelectionManager : NetworkBehaviour
             return;
         }
 
+       
+
+        if (spawnedPlayer.TryGetComponent(
+                out PlayerMatchStats matchStats))
+        {
+            matchStats.SetNicknameServer(
+                nickname);
+        }
+        else
+        {
+            Debug.LogWarning(
+                "[CharacterSelection] " +
+                "Spawned player has no PlayerMatchStats component.");
+        }
+
         Debug.Log(
-            $"[CharacterSelection] Spawned {requestedClass} " +
-            $"for {requestingPlayer} at Spawn Point {spawnIndex}");
+            $"[CharacterSelection] " +
+            $"Spawned {requestedClass} " +
+            $"for {nickname} ({requestingPlayer}) " +
+            $"at Spawn Point {spawnIndex}");
+
+       
 
         RPC_ClassApproved(
             requestingPlayer,
             requestedClass);
     }
 
-    [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
+
+    [Rpc(
+        RpcSources.StateAuthority,
+        RpcTargets.All)]
     private void RPC_ClassApproved(
         [RpcTarget] PlayerRef targetPlayer,
         ChairCombatMode selectedClass)
@@ -142,25 +201,105 @@ public sealed class CharacterSelectionManager : NetworkBehaviour
         onLocalPlayerSpawned?.Invoke();
     }
 
-    [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
+    [Rpc(
+        RpcSources.StateAuthority,
+        RpcTargets.All)]
     private void RPC_ClassDenied(
         [RpcTarget] PlayerRef targetPlayer,
         string reason)
     {
-        onSelectionMessage?.Invoke(reason);
+        onSelectionMessage?.Invoke(
+            reason);
     }
 
-    private bool PlayerAlreadySpawned(PlayerRef player)
+
+    private string GetLocalNickname()
+    {
+      
+        if (PlayerDataPersistanceManager.Instance != null)
+        {
+            string nickname =
+                PlayerDataPersistanceManager
+                    .Instance
+                    .Nickname;
+
+            if (!string.IsNullOrWhiteSpace(
+                    nickname))
+            {
+                return nickname.Trim();
+            }
+        }
+
+      
+        if (Runner != null &&
+            PlayerManager.Registry.TryGetValue(
+                Runner.LocalPlayer,
+                out PlayerManager playerManager))
+        {
+            string nickname =
+                playerManager
+                    .Nickname
+                    .ToString();
+
+            if (!string.IsNullOrWhiteSpace(
+                    nickname))
+            {
+                return nickname.Trim();
+            }
+        }
+
+        if (Runner != null)
+        {
+            return
+                $"Player {Runner.LocalPlayer.PlayerId}";
+        }
+
+        return "Player";
+    }
+
+    private string SanitizeNickname(
+        string nickname,
+        PlayerRef player)
+    {
+        if (string.IsNullOrWhiteSpace(
+                nickname))
+        {
+            return
+                $"Player {player.PlayerId}";
+        }
+
+        nickname = nickname.Trim();
+
+        if (nickname.Length > 32)
+        {
+            nickname =
+                nickname.Substring(
+                    0,
+                    32);
+        }
+
+        return nickname;
+    }
+
+    
+
+    private bool PlayerAlreadySpawned(
+        PlayerRef player)
     {
         int count =
             Mathf.Min(
                 spawnPoints.Length,
                 SpawnPointOwners.Length);
 
-        for (int i = 0; i < count; i++)
+        for (int i = 0;
+             i < count;
+             i++)
         {
-            if (SpawnPointOwners[i] == player)
+            if (SpawnPointOwners[i] ==
+                player)
+            {
                 return true;
+            }
         }
 
         return false;
@@ -175,13 +314,19 @@ public sealed class CharacterSelectionManager : NetworkBehaviour
 
         int availableCount = 0;
 
-        for (int i = 0; i < count; i++)
+       
+        for (int i = 0;
+             i < count;
+             i++)
         {
             if (spawnPoints[i] == null)
                 continue;
 
-            if (SpawnPointOwners[i] != PlayerRef.None)
+            if (SpawnPointOwners[i] !=
+                PlayerRef.None)
+            {
                 continue;
+            }
 
             availableCount++;
         }
@@ -189,16 +334,24 @@ public sealed class CharacterSelectionManager : NetworkBehaviour
         if (availableCount == 0)
             return -1;
 
+       
         int randomIndex =
-            Random.Range(0, availableCount);
+            Random.Range(
+                0,
+                availableCount);
 
-        for (int i = 0; i < count; i++)
+        for (int i = 0;
+             i < count;
+             i++)
         {
             if (spawnPoints[i] == null)
                 continue;
 
-            if (SpawnPointOwners[i] != PlayerRef.None)
+            if (SpawnPointOwners[i] !=
+                PlayerRef.None)
+            {
                 continue;
+            }
 
             if (randomIndex == 0)
                 return i;
@@ -208,6 +361,7 @@ public sealed class CharacterSelectionManager : NetworkBehaviour
 
         return -1;
     }
+    
 
     public void ReleasePlayerSpawnPoint(
         PlayerRef player)
@@ -220,10 +374,15 @@ public sealed class CharacterSelectionManager : NetworkBehaviour
                 spawnPoints.Length,
                 SpawnPointOwners.Length);
 
-        for (int i = 0; i < count; i++)
+        for (int i = 0;
+             i < count;
+             i++)
         {
-            if (SpawnPointOwners[i] != player)
+            if (SpawnPointOwners[i] !=
+                player)
+            {
                 continue;
+            }
 
             SpawnPointOwners.Set(
                 i,

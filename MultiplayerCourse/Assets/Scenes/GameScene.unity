@@ -697,6 +697,8 @@ MonoBehaviour:
   scoreboardPanel: {fileID: 399138744}
   rowsParent: {fileID: 80868372}
   rowPrefab: {fileID: 5872210156080960386, guid: 2e55f410fa7883e4a912bc46849a13d8, type: 3}
+  choosePlayerPanel: {fileID: 923692967}
+  endScreen: {fileID: 665282777}
   scoreboardAction: {fileID: -2535234910660119606, guid: 8c9f75bd977566849ba70dc32bf527a3, type: 3}
   maxDisplayedPlayers: 10
   showDuration: 0.2
