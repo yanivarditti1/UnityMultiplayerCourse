@@ -135,9 +135,9 @@ public class NetworkMatchManager : NetworkBehaviour
     private async void StartMatchOnServer(GameModeType selectedGameMode)
     {
         string sceneName = sceneData.GetSceneName(selectedGameMode);
-        await Runner.LoadScene(sceneName);
-        
         MatchState = ServerMatchState.InProgress;
+        
+        await Runner.LoadScene(sceneName);
     }
     
     #endregion

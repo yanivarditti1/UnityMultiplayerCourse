@@ -80,11 +80,13 @@ public class ServerLobbyManager : NetworkBehaviour, INetworkRunnerCallbacks
 
     public bool TryGetPlayerNickname(PlayerRef player, out string nickname)
     {
+        nickname = default;
+        
         if (!Players.TryGet(player, out LobbyPlayerState playerState))
-        {
-            nickname = default;
             return false;
-        }
+
+        if (!playerState.IsInLobby || !playerState.HasNickname)
+            return false;
         
         nickname = playerState.Nickname.ToString();
         return true;  

@@ -258,6 +258,11 @@ public class ServerUiManager : MonoBehaviour
         
         nicknameInputField.interactable = false;
 
+        if (ServerLobbyManager.Instance != null && ServerLobbyManager.Instance.Runner.LocalPlayer == player)
+        {
+            PlayerDataPersistanceManager.Instance.SetNickname(nickname);
+        }
+
         if (!_pendingReadyAfterNicknameChanged)
         {
             Debug.Log("[ServerUiManager] Nickname accepted without ready request");

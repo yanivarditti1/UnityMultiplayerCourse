@@ -8,14 +8,18 @@ public class PlayerNameTag : NetworkBehaviour
 
     public override void Spawned()
     {
-        ApplyName();
         PlayerManager.OnAnyNicknameChanged += HandleNicknameChanged;
         PlayerManager.OnAnyPlayerColorChanged += HandlePlayerColorChanged;
+        PlayerMatchStats.OnAnyStatsChanged += HandleStatsChanged;
+
+        ApplyName();
     }
 
     public override void Despawned(NetworkRunner runner, bool hasState)
     {
+        PlayerManager.OnAnyPlayerColorChanged -= HandlePlayerColorChanged;
         PlayerManager.OnAnyNicknameChanged -= HandleNicknameChanged;
+        PlayerMatchStats.OnAnyStatsChanged -= HandleStatsChanged;
     }
 
     private void HandleNicknameChanged(PlayerRef player, string nickname)
@@ -29,14 +33,24 @@ public class PlayerNameTag : NetworkBehaviour
         if (player != Object.InputAuthority) return;
         SetLabelColor(color);
     }
+    
+    private void HandleStatsChanged(PlayerRef player)
+    {
+        if (player != Object.InputAuthority) return;
+        ApplyName();
+    }
 
     private void ApplyName()
     {
-        if (PlayerManager.Registry.TryGetValue(Object.InputAuthority, out var pm))
+        /*if (PlayerManager.Registry.TryGetValue(Object.InputAuthority, out var pm))
         {
             SetLabel(pm.Nickname.ToString());
             SetLabelColor(pm.PlayerColor);
-        }
+            return;
+        }*/
+        
+        SetLabel(PlayerNicknameUtility.GetNickname(Object.InputAuthority));
+        //SetLabel($"Player {Object.InputAuthority.PlayerId}");
     }
 
     private void SetLabel(string nickname)

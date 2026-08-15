@@ -30,23 +30,40 @@ public class PlayerManager : NetworkBehaviour
     {
         _registry[Object.InputAuthority] = this;
 
+        if (Object.HasInputAuthority)
+            Local = this;
+        
         if (Object.HasStateAuthority)
         {
-            Local = this;
-
-            PlayerDataPersistanceManager data = PlayerDataPersistanceManager.Instance;
-            string nickname = string.IsNullOrEmpty(data.Nickname)
-                ? $"Player {Object.InputAuthority.PlayerId}"
-                : data.Nickname;
-
+            string nickname = $"Player {Object.InputAuthority.PlayerId}";
+            
+            if (ServerLobbyManager.Instance != null &&
+                ServerLobbyManager.Instance.TryGetPlayerNickname(Object.InputAuthority, out string lobbyNickname))
+            {
+                nickname = lobbyNickname;
+            }
+            
             Nickname = nickname;
+            
+            PlayerDataPersistanceManager data = PlayerDataPersistanceManager.Instance;
             MaxHealth = data.MaxHealth;
             PlayerCharacter = data.PlayerCharacter;
             Team = ConquestTeam.None;
         }
 
+        OnNicknameChanged();
+        OnPlayerColorChanged();
+        
         if (LobbyManager.Instance != null)
             LobbyManager.Instance.NotifyPlayerManagerSpawned();
+    }
+
+    public void SetNickname(string nickname)
+    {
+        if (!Object.HasStateAuthority)
+            return;
+        
+        Nickname = nickname;
     }
 
     public void SetNameColor(Color color)
@@ -65,7 +82,7 @@ public class PlayerManager : NetworkBehaviour
     {
         _registry.Remove(Object.InputAuthority);
 
-        if (Object.HasStateAuthority)
+        if (Object.HasInputAuthority)
             Local = null;
     }
 
