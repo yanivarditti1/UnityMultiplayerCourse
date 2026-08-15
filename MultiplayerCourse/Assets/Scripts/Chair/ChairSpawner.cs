@@ -26,6 +26,10 @@ public sealed class ChairSpawner : NetworkBehaviour
         if (!Object.HasStateAuthority)
             return;
 
+        if (NetworkMatchManager.Instance == null ||
+            NetworkMatchManager.Instance.MatchState != ServerMatchState.InProgress)
+            return;
+
         if (_currentChair != null)
             return;
 
