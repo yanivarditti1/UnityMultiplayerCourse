@@ -492,7 +492,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MatchScoreManager
   killsToWin: 3
-  matchDurationSeconds: 5
+  matchDurationSeconds: 300
   endScreenDuration: 3
 --- !u!1 &300568293
 GameObject:
@@ -5323,6 +5323,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 2164652438789654215, guid: da8bc32eb9193824594b1d46154021dc, type: 3}
+      propertyPath: SortKey
+      value: 3610993823
+      objectReference: {fileID: 0}
     - target: {fileID: 5016782659929231811, guid: da8bc32eb9193824594b1d46154021dc, type: 3}
       propertyPath: m_Name
       value: ReturnToLobbyRequester
