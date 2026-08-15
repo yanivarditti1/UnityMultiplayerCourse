@@ -24,7 +24,7 @@ public class NetworkMatchManager : NetworkBehaviour
 
     private void Awake()
     {
-        Instance = this;
+        //Instance = this;
     }
     
     public override void Spawned()
@@ -36,6 +36,12 @@ public class NetworkMatchManager : NetworkBehaviour
             MatchState = ServerMatchState.WaitingForPlayers;
             SelectedGameMode = GameModeType.FreeForAll;
             IsMatchStarted = false;
+        }
+        
+        if (Runner.SessionInfo != null)
+        {
+            Runner.SessionInfo.IsOpen = true;
+            Runner.SessionInfo.IsVisible = true;
         }
     }
 

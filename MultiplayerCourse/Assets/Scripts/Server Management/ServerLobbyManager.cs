@@ -34,7 +34,7 @@ public class ServerLobbyManager : NetworkBehaviour, INetworkRunnerCallbacks
 
     private void Awake()
     {
-        Instance = this;
+        //Instance = this;
     }
     
     public override void Spawned()
@@ -42,12 +42,33 @@ public class ServerLobbyManager : NetworkBehaviour, INetworkRunnerCallbacks
         Instance = this;
         Runner.AddCallbacks(this);
 
-        if (Object.HasStateAuthority)
+        if (!Object.HasStateAuthority)
+            return;
+        
+        LobbyLeader = PlayerRef.None;
+        ConnectedPlayerCount = 0;
+        ReadyPlayerCount = 0;
+
+        foreach (PlayerRef player in Runner.ActivePlayers)
         {
-            LobbyLeader = PlayerRef.None;
-            ConnectedPlayerCount = 0;
-            ReadyPlayerCount = 0;
+            Players.Set(player, new LobbyPlayerState
+            {
+                IsInLobby = true,
+                HasNickname = false,
+                IsReady = false,
+                Nickname = default
+            });
+            
+            if (LobbyLeader == PlayerRef.None)
+                LobbyLeader = player;
         }
+        
+        RecalculateCounts();
+        
+        if (LobbyLeader != PlayerRef.None)
+            RPC_LobbyLeaderChanged(LobbyLeader);
+        
+        RPC_LobbyStateChanged();
     }
     
     public override void Despawned(NetworkRunner runner, bool hasState)

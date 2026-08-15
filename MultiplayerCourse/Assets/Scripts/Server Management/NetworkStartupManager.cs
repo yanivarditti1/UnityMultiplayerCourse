@@ -44,9 +44,16 @@ public class NetworkStartupManager : MonoBehaviour
 
     private void Start()
     {
+        if (TryFindRunningServer(out NetworkRunner existingRunner))
+        {
+            runner = existingRunner;
+            StartCoroutine(WaitForLocalManagers());
+            return;
+        }
+        
         StartCoroutine(WaitForLocalManagers());
 
-        if (ShouldRunAsServer())
+        if (ShouldRunAsServer() && !IsRunnerAlreadyRunning())
         {
             StartServer();
         }
@@ -141,6 +148,26 @@ public class NetworkStartupManager : MonoBehaviour
     #endregion
     
     #region Helpers
+
+    private bool TryFindRunningServer(out NetworkRunner existingRunner)
+    {
+        foreach (NetworkRunner runner in FindObjectsOfType<NetworkRunner>())
+        {
+            if (!runner.IsRunning)
+                continue;
+            
+            existingRunner = runner;
+            return true;
+        }
+        
+        existingRunner = null;
+        return false;
+    }
+
+    private bool IsRunnerAlreadyRunning()
+    {
+        return runner != null && runner.IsRunning;
+    }
 
     private IEnumerator WaitForLocalManagers()
     {

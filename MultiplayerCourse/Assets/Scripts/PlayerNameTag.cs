@@ -42,15 +42,7 @@ public class PlayerNameTag : NetworkBehaviour
 
     private void ApplyName()
     {
-        /*if (PlayerManager.Registry.TryGetValue(Object.InputAuthority, out var pm))
-        {
-            SetLabel(pm.Nickname.ToString());
-            SetLabelColor(pm.PlayerColor);
-            return;
-        }*/
-        
         SetLabel(PlayerNicknameUtility.GetNickname(Object.InputAuthority));
-        //SetLabel($"Player {Object.InputAuthority.PlayerId}");
     }
 
     private void SetLabel(string nickname)

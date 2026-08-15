@@ -149,170 +149,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 14a328b35a931e342b946d7d9200e034, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CharacterSelectionManager
-  characterSlots:
-  - SlotId: 0
-    ClassType: 0
-    PlayerPrefab: {fileID: 5245602710253449126, guid: 07236e7d887297e4fba7652041552a88, type: 3}
-    SpawnPoint: {fileID: 976823835}
-  - SlotId: 1
-    ClassType: 0
-    PlayerPrefab: {fileID: 5245602710253449126, guid: 07236e7d887297e4fba7652041552a88, type: 3}
-    SpawnPoint: {fileID: 89898893}
-  - SlotId: 2
-    ClassType: 0
-    PlayerPrefab: {fileID: 5245602710253449126, guid: 07236e7d887297e4fba7652041552a88, type: 3}
-    SpawnPoint: {fileID: 1539132445}
-  - SlotId: 3
-    ClassType: 0
-    PlayerPrefab: {fileID: 5245602710253449126, guid: 07236e7d887297e4fba7652041552a88, type: 3}
-    SpawnPoint: {fileID: 1650565604}
-  - SlotId: 4
-    ClassType: 0
-    PlayerPrefab: {fileID: 5245602710253449126, guid: 07236e7d887297e4fba7652041552a88, type: 3}
-    SpawnPoint: {fileID: 1807391978}
-  - SlotId: 5
-    ClassType: 1
-    PlayerPrefab: {fileID: 5245602710253449126, guid: e679432f56874b543993e467b82c7851, type: 3}
-    SpawnPoint: {fileID: 301594664}
-  - SlotId: 6
-    ClassType: 1
-    PlayerPrefab: {fileID: 5245602710253449126, guid: e679432f56874b543993e467b82c7851, type: 3}
-    SpawnPoint: {fileID: 1006681272}
-  - SlotId: 7
-    ClassType: 1
-    PlayerPrefab: {fileID: 5245602710253449126, guid: e679432f56874b543993e467b82c7851, type: 3}
-    SpawnPoint: {fileID: 419564048}
-  - SlotId: 8
-    ClassType: 1
-    PlayerPrefab: {fileID: 5245602710253449126, guid: e679432f56874b543993e467b82c7851, type: 3}
-    SpawnPoint: {fileID: 2143334191}
-  - SlotId: 9
-    ClassType: 1
-    PlayerPrefab: {fileID: 5245602710253449126, guid: e679432f56874b543993e467b82c7851, type: 3}
-    SpawnPoint: {fileID: 1755885448}
-  onSlotTakenChanged:
-    m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 441428263}
-        m_TargetAssemblyTypeName: CharacterSelectionButton, Assembly-CSharp
-        m_MethodName: SetTakenState
-        m_Mode: 0
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
-      - m_Target: {fileID: 1699005267}
-        m_TargetAssemblyTypeName: CharacterSelectionButton, Assembly-CSharp
-        m_MethodName: SetTakenState
-        m_Mode: 0
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
-      - m_Target: {fileID: 608487720}
-        m_TargetAssemblyTypeName: CharacterSelectionButton, Assembly-CSharp
-        m_MethodName: SetTakenState
-        m_Mode: 0
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
-      - m_Target: {fileID: 847263394}
-        m_TargetAssemblyTypeName: CharacterSelectionButton, Assembly-CSharp
-        m_MethodName: SetTakenState
-        m_Mode: 0
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
-      - m_Target: {fileID: 256912391}
-        m_TargetAssemblyTypeName: CharacterSelectionButton, Assembly-CSharp
-        m_MethodName: SetTakenState
-        m_Mode: 0
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
-      - m_Target: {fileID: 1870337090}
-        m_TargetAssemblyTypeName: CharacterSelectionButton, Assembly-CSharp
-        m_MethodName: SetTakenState
-        m_Mode: 0
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
-      - m_Target: {fileID: 974528495}
-        m_TargetAssemblyTypeName: CharacterSelectionButton, Assembly-CSharp
-        m_MethodName: SetTakenState
-        m_Mode: 0
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
-      - m_Target: {fileID: 2117149674}
-        m_TargetAssemblyTypeName: CharacterSelectionButton, Assembly-CSharp
-        m_MethodName: SetTakenState
-        m_Mode: 0
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
-      - m_Target: {fileID: 1573641876}
-        m_TargetAssemblyTypeName: CharacterSelectionButton, Assembly-CSharp
-        m_MethodName: SetTakenState
-        m_Mode: 0
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
-      - m_Target: {fileID: 1017903563}
-        m_TargetAssemblyTypeName: CharacterSelectionButton, Assembly-CSharp
-        m_MethodName: SetTakenState
-        m_Mode: 0
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
+  meleePlayerPrefab: {fileID: 0}
+  throwerPlayerPrefab: {fileID: 0}
+  spawnPoints: []
   onSelectionMessage:
     m_PersistentCalls:
       m_Calls: []
@@ -830,10 +669,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 01557312863e3d84bb19c25ae4c2a046, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CharacterSelectionButton
-  slotIndex: 4
   button: {fileID: 256912392}
-  label: {fileID: 87271970}
   selectionManager: {fileID: 53306909}
+  combatMode: 0
 --- !u!114 &256912392
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1014,6 +852,63 @@ Transform:
   m_Children: []
   m_Father: {fileID: 993251995}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1001 &333628948
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 5016782659929231811, guid: da8bc32eb9193824594b1d46154021dc, type: 3}
+      propertyPath: m_Name
+      value: ReturnToLobbyRequester
+      objectReference: {fileID: 0}
+    - target: {fileID: 6755561269640773264, guid: da8bc32eb9193824594b1d46154021dc, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 639
+      objectReference: {fileID: 0}
+    - target: {fileID: 6755561269640773264, guid: da8bc32eb9193824594b1d46154021dc, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 359.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 6755561269640773264, guid: da8bc32eb9193824594b1d46154021dc, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6755561269640773264, guid: da8bc32eb9193824594b1d46154021dc, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6755561269640773264, guid: da8bc32eb9193824594b1d46154021dc, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6755561269640773264, guid: da8bc32eb9193824594b1d46154021dc, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6755561269640773264, guid: da8bc32eb9193824594b1d46154021dc, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6755561269640773264, guid: da8bc32eb9193824594b1d46154021dc, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6755561269640773264, guid: da8bc32eb9193824594b1d46154021dc, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6755561269640773264, guid: da8bc32eb9193824594b1d46154021dc, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: da8bc32eb9193824594b1d46154021dc, type: 3}
 --- !u!1 &378659069
 GameObject:
   m_ObjectHideFlags: 0
@@ -1568,10 +1463,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 01557312863e3d84bb19c25ae4c2a046, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CharacterSelectionButton
-  slotIndex: 0
   button: {fileID: 441428264}
-  label: {fileID: 415258345}
   selectionManager: {fileID: 53306909}
+  combatMode: 0
 --- !u!114 &441428264
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1978,10 +1872,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 01557312863e3d84bb19c25ae4c2a046, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CharacterSelectionButton
-  slotIndex: 2
   button: {fileID: 608487721}
-  label: {fileID: 712700019}
   selectionManager: {fileID: 53306909}
+  combatMode: 0
 --- !u!114 &608487721
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2597,10 +2490,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 01557312863e3d84bb19c25ae4c2a046, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CharacterSelectionButton
-  slotIndex: 3
   button: {fileID: 847263395}
-  label: {fileID: 99541826}
   selectionManager: {fileID: 53306909}
+  combatMode: 0
 --- !u!114 &847263395
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3170,10 +3062,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 01557312863e3d84bb19c25ae4c2a046, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CharacterSelectionButton
-  slotIndex: 6
   button: {fileID: 974528496}
-  label: {fileID: 959078687}
   selectionManager: {fileID: 53306909}
+  combatMode: 0
 --- !u!114 &974528496
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3431,10 +3322,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 01557312863e3d84bb19c25ae4c2a046, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CharacterSelectionButton
-  slotIndex: 9
   button: {fileID: 1017903564}
-  label: {fileID: 1683262738}
   selectionManager: {fileID: 53306909}
+  combatMode: 0
 --- !u!114 &1017903564
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4472,10 +4362,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 01557312863e3d84bb19c25ae4c2a046, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CharacterSelectionButton
-  slotIndex: 8
   button: {fileID: 1573641877}
-  label: {fileID: 1339097521}
   selectionManager: {fileID: 53306909}
+  combatMode: 0
 --- !u!114 &1573641877
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4780,10 +4669,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 01557312863e3d84bb19c25ae4c2a046, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CharacterSelectionButton
-  slotIndex: 1
   button: {fileID: 1699005268}
-  label: {fileID: 1447215622}
   selectionManager: {fileID: 53306909}
+  combatMode: 0
 --- !u!114 &1699005268
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5287,10 +5175,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 01557312863e3d84bb19c25ae4c2a046, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CharacterSelectionButton
-  slotIndex: 5
   button: {fileID: 1870337091}
-  label: {fileID: 404902600}
   selectionManager: {fileID: 53306909}
+  combatMode: 0
 --- !u!114 &1870337091
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5677,10 +5564,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 01557312863e3d84bb19c25ae4c2a046, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CharacterSelectionButton
-  slotIndex: 7
   button: {fileID: 2117149675}
-  label: {fileID: 490202168}
   selectionManager: {fileID: 53306909}
+  combatMode: 0
 --- !u!114 &2117149675
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5924,3 +5810,4 @@ SceneRoots:
   - {fileID: 971151758}
   - {fileID: 460991850}
   - {fileID: 2050441651}
+  - {fileID: 333628948}
