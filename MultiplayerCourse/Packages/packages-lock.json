@@ -1,5 +1,12 @@
 {
   "dependencies": {
+    "com.abb2k.abb2ktools": {
+      "version": "https://github.com/abb2k/abb2kToolsUnityPackage.git",
+      "depth": 0,
+      "source": "git",
+      "dependencies": {},
+      "hash": "e541a9238cc01b04a7231c67ef74691b3afa08c8"
+    },
     "com.unity.2d.sprite": {
       "version": "1.0.0",
       "depth": 0,

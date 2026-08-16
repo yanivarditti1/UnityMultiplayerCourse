@@ -32,18 +32,19 @@ public sealed class FirstPersonNetworkMovement : NetworkBehaviour
 
     public override void Spawned()
     {
-        
-        _isLocalPlayer = Object.HasInputAuthority;
+        _isLocalPlayer =
+            Object.HasInputAuthority;
 
-        SetCameraActive(_isLocalPlayer);
+        SetCameraActive(
+            _isLocalPlayer);
 
         if (!_isLocalPlayer)
             return;
 
-       
         if (FusionInputProvider.Instance != null)
         {
-            FusionInputProvider.Instance.EnsureReady(Runner);
+            FusionInputProvider.Instance
+                .EnsureReady(Runner);
         }
 
         LockCursor();
@@ -65,7 +66,6 @@ public sealed class FirstPersonNetworkMovement : NetworkBehaviour
             return;
 
         HandleCursor();
-
         HandleCaptureTheFlagInput();
     }
 
@@ -74,16 +74,21 @@ public sealed class FirstPersonNetworkMovement : NetworkBehaviour
         if (!Object.HasStateAuthority)
             return;
 
-        if (!GetInput(out NetworkInputData inputData))
+        if (!GetInput(
+                out NetworkInputData inputData))
+        {
             return;
+        }
 
-        RotatePlayer(inputData);
-        MovePlayer(inputData);
+        RotatePlayer(
+            inputData);
+
+        MovePlayer(
+            inputData);
     }
 
     public override void Render()
     {
-      
         if (!Object.HasInputAuthority)
             return;
 
@@ -107,17 +112,20 @@ public sealed class FirstPersonNetworkMovement : NetworkBehaviour
         float mouseY =
             inputData.lookInput.y *
             mouseSensitivity;
-        
+
+      
         transform.Rotate(
             Vector3.up * mouseX);
 
        
-        NetworkPitch -= mouseY;
+        NetworkPitch -=
+            mouseY;
 
-        NetworkPitch = Mathf.Clamp(
-            NetworkPitch,
-            -upDownPitchLimit,
-            upDownPitchLimit);
+        NetworkPitch =
+            Mathf.Clamp(
+                NetworkPitch,
+                -upDownPitchLimit,
+                upDownPitchLimit);
     }
 
     private void MovePlayer(
@@ -135,27 +143,33 @@ public sealed class FirstPersonNetworkMovement : NetworkBehaviour
         }
 
         bool isGrounded =
-            characterController == null || characterController.isGrounded;
+            characterController == null ||
+            characterController.isGrounded;
 
         if (isGrounded &&
             VerticalVelocity < 0f)
         {
-            VerticalVelocity = -2f;
+            VerticalVelocity =
+                -2f;
         }
 
         if (isGrounded &&
             inputData.jumpRequested)
         {
-            VerticalVelocity = jumpForce;
+            VerticalVelocity =
+                jumpForce;
         }
 
         VerticalVelocity +=
-            gravity * Runner.DeltaTime;
+            gravity *
+            Runner.DeltaTime;
 
-        float gameModeSpeedMultiplier = 1f;
+        float gameModeSpeedMultiplier =
+            1f;
 
-        CaptureTheFlagManager captureTheFlagManager =
-            CaptureTheFlagManager.Instance;
+        CaptureTheFlagManager
+            captureTheFlagManager =
+                CaptureTheFlagManager.Instance;
 
         if (captureTheFlagManager != null &&
             captureTheFlagManager.IsReady &&
@@ -207,14 +221,37 @@ public sealed class FirstPersonNetworkMovement : NetworkBehaviour
         if (animationController == null)
             return;
 
-        animationController.SetMovementSpeed(
-            inputData.moveInput.magnitude);
+        animationController
+            .SetMovementSpeed(
+                inputData
+                    .moveInput
+                    .magnitude);
     }
+
+  
+
+    public Vector3 GetAimDirection()
+    {
+        
+        Quaternion aimRotation =
+            Quaternion.Euler(
+                NetworkPitch,
+                transform.eulerAngles.y,
+                0f);
+
+        return
+            (aimRotation *
+             Vector3.forward)
+            .normalized;
+    }
+
+  
 
     private void HandleCaptureTheFlagInput()
     {
-        CaptureTheFlagManager captureTheFlagManager =
-            CaptureTheFlagManager.Instance;
+        CaptureTheFlagManager
+            captureTheFlagManager =
+                CaptureTheFlagManager.Instance;
 
         if (captureTheFlagManager == null)
             return;
@@ -225,18 +262,24 @@ public sealed class FirstPersonNetworkMovement : NetworkBehaviour
         if (Keyboard.current == null)
             return;
 
-        if (!Keyboard.current.gKey
+        if (!Keyboard.current
+                .gKey
                 .wasPressedThisFrame)
+        {
             return;
+        }
 
         captureTheFlagManager.RequestDrop(
             Object.InputAuthority);
     }
 
+    
+
     private void HandleCursor()
     {
         if (Keyboard.current != null &&
-            Keyboard.current.escapeKey
+            Keyboard.current
+                .escapeKey
                 .wasPressedThisFrame)
         {
             UnlockCursor();
@@ -244,7 +287,8 @@ public sealed class FirstPersonNetworkMovement : NetworkBehaviour
 
         if (!_cursorLocked &&
             Mouse.current != null &&
-            Mouse.current.leftButton
+            Mouse.current
+                .leftButton
                 .wasPressedThisFrame)
         {
             LockCursor();
@@ -266,7 +310,8 @@ public sealed class FirstPersonNetworkMovement : NetworkBehaviour
         Cursor.lockState =
             CursorLockMode.Locked;
 
-        Cursor.visible = false;
+        Cursor.visible =
+            false;
     }
 
     private void SetCameraActive(
@@ -287,21 +332,25 @@ public sealed class FirstPersonNetworkMovement : NetworkBehaviour
 
     private void LockCursor()
     {
-        _cursorLocked = true;
+        _cursorLocked =
+            true;
 
         Cursor.lockState =
             CursorLockMode.Locked;
 
-        Cursor.visible = false;
+        Cursor.visible =
+            false;
     }
 
     private void UnlockCursor()
     {
-        _cursorLocked = false;
+        _cursorLocked =
+            false;
 
         Cursor.lockState =
             CursorLockMode.None;
 
-        Cursor.visible = true;
+        Cursor.visible =
+            true;
     }
 }

@@ -573,6 +573,8 @@ GameObject:
   - component: {fileID: 1421830507207244697}
   - component: {fileID: 5263418970153314913}
   - component: {fileID: 4507777452734543661}
+  - component: {fileID: 8219403778376105856}
+  - component: {fileID: 6519764113131402075}
   m_Layer: 0
   m_Name: ThrowerPlayerPrefab
   m_TagString: Untagged
@@ -706,6 +708,8 @@ MonoBehaviour:
   - {fileID: 3099508782705941265}
   - {fileID: 5263418970153314913}
   - {fileID: 4507777452734543661}
+  - {fileID: 8219403778376105856}
+  - {fileID: 6519764113131402075}
   - {fileID: 4687258327691553160}
   - {fileID: 8809978536908367381}
   ForceRemoteRenderTimeframe: 0
@@ -746,7 +750,7 @@ MonoBehaviour:
   moveSpeed: 5
   sprintMultiplier: 6
   jumpForce: 8
-  gravity: -20
+  gravity: -15
   mouseSensitivity: 0.15
   upDownPitchLimit: 80
 --- !u!143 &2035574928608198020
@@ -824,6 +828,7 @@ MonoBehaviour:
   chairInventory: {fileID: 1752456945702998558}
   meleeChair: {fileID: 0}
   animationController: {fileID: 7113785146502758552}
+  movement: {fileID: 2725166591451844056}
   attackOrigin: {fileID: 1434063363301762774}
   thrownChairPrefab: {fileID: 379778833432809535, guid: d462b5a226423a049b5c4863c01d745f, type: 3}
   primaryAction: {fileID: -1970087260131177940, guid: 8c9f75bd977566849ba70dc32bf527a3, type: 3}
@@ -832,6 +837,8 @@ MonoBehaviour:
   throwCooldown: 0.7
   throwDamage: 35
   throwForce: 16
+  throwUpwardBoost: 0.1
+  throwSpawnDistance: 0.8
 --- !u!114 &8494592422233138640
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -960,6 +967,132 @@ MonoBehaviour:
   _Kills: 0
   _Deaths: 0
   _CombatMode: 1
+  _Nickname:
+    _length: 0
+    _data:
+      Data: 0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+--- !u!114 &8219403778376105856
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4252853858376035391}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 98cc351d74f63854a911304a5a50ee35, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerCameraBob
+  cameraRoot: {fileID: 1434063363301762774}
+  moveAction: {fileID: -1680190386980627800, guid: 052faaac586de48259a63d0c4782560b, type: 3}
+  horizontalAmount: 0.02
+  verticalAmount: 0.035
+  stepDuration: 0.16
+  returnDuration: 0.15
+--- !u!114 &6519764113131402075
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4252853858376035391}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 04ccdebfbb4b3fa46b5d0c51b6579d97, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerDamageFlashUI
+  playerHealth: {fileID: 3661795405098710526}
+  damageFlashImage: {fileID: 6981208605352510653}
+  flashAlpha: 0.45
+  fadeDuration: 0.35
+--- !u!1 &5452263724420179063
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 5532605071368724757}
+  - component: {fileID: 4675197484706874528}
+  - component: {fileID: 6981208605352510653}
+  - component: {fileID: 6726450316883528739}
+  m_Layer: 5
+  m_Name: FlashRed
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 0
+--- !u!224 &5532605071368724757
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5452263724420179063}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 3365102831228156609}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 0, y: 0}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!222 &4675197484706874528
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5452263724420179063}
+  m_CullTransparentMesh: 1
+--- !u!114 &6981208605352510653
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5452263724420179063}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
+  m_Material: {fileID: 0}
+  m_Color: {r: 1, g: 0, b: 0, a: 0.87058824}
+  m_RaycastTarget: 1
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_Sprite: {fileID: 10907, guid: 0000000000000000f000000000000000, type: 0}
+  m_Type: 1
+  m_PreserveAspect: 0
+  m_FillCenter: 1
+  m_FillMethod: 4
+  m_FillAmount: 1
+  m_FillClockwise: 1
+  m_FillOrigin: 0
+  m_UseSpriteMesh: 0
+  m_PixelsPerUnitMultiplier: 1
+--- !u!225 &6726450316883528739
+CanvasGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5452263724420179063}
+  m_Enabled: 1
+  m_Alpha: 1
+  m_Interactable: 1
+  m_BlocksRaycasts: 1
+  m_IgnoreParentGroups: 0
 --- !u!1 &7221845788820087336
 GameObject:
   m_ObjectHideFlags: 0
@@ -992,6 +1125,7 @@ RectTransform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 5726928503072652534}
+  - {fileID: 5532605071368724757}
   m_Father: {fileID: 6657155236269583765}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}

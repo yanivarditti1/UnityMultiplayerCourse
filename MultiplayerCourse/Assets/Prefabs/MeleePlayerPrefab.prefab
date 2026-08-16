@@ -202,6 +202,7 @@ RectTransform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 6283648426245654348}
+  - {fileID: 3423088679452626816}
   m_Father: {fileID: 6657155236269583765}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -485,6 +486,8 @@ GameObject:
   - component: {fileID: 74377567035779731}
   - component: {fileID: 7498765453801446192}
   - component: {fileID: 8251544525244211143}
+  - component: {fileID: -6646215845145137144}
+  - component: {fileID: 1586945917643922183}
   m_Layer: 0
   m_Name: MeleePlayerPrefab
   m_TagString: Untagged
@@ -619,6 +622,8 @@ MonoBehaviour:
   - {fileID: 7928817680807623162}
   - {fileID: 7498765453801446192}
   - {fileID: 8251544525244211143}
+  - {fileID: -6646215845145137144}
+  - {fileID: 1586945917643922183}
   - {fileID: 6266351309998327707}
   - {fileID: 6029332601057970713}
   ForceRemoteRenderTimeframe: 0
@@ -659,7 +664,7 @@ MonoBehaviour:
   moveSpeed: 5
   sprintMultiplier: 6
   jumpForce: 8
-  gravity: -20
+  gravity: -15
   mouseSensitivity: 0.15
   upDownPitchLimit: 80
 --- !u!143 &2035574928608198020
@@ -737,6 +742,7 @@ MonoBehaviour:
   chairInventory: {fileID: 1752456945702998558}
   meleeChair: {fileID: 2551247925203341577}
   animationController: {fileID: 1322853888755118462}
+  movement: {fileID: 2725166591451844056}
   attackOrigin: {fileID: 4539718576532956061}
   thrownChairPrefab: {fileID: 379778833432809535, guid: d462b5a226423a049b5c4863c01d745f, type: 3}
   primaryAction: {fileID: -1970087260131177940, guid: 8c9f75bd977566849ba70dc32bf527a3, type: 3}
@@ -745,6 +751,8 @@ MonoBehaviour:
   throwCooldown: 0.7
   throwDamage: 35
   throwForce: 16
+  throwUpwardBoost: 0.1
+  throwSpawnDistance: 0.8
 --- !u!114 &4059940285979615771
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -892,6 +900,44 @@ MonoBehaviour:
   _Kills: 0
   _Deaths: 0
   _CombatMode: 0
+  _Nickname:
+    _length: 0
+    _data:
+      Data: 0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+--- !u!114 &-6646215845145137144
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4252853858376035391}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 98cc351d74f63854a911304a5a50ee35, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerCameraBob
+  cameraRoot: {fileID: 1434063363301762774}
+  moveAction: {fileID: -1680190386980627800, guid: 052faaac586de48259a63d0c4782560b, type: 3}
+  horizontalAmount: 0.02
+  verticalAmount: 0.035
+  stepDuration: 0.16
+  returnDuration: 0.15
+--- !u!114 &1586945917643922183
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4252853858376035391}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 04ccdebfbb4b3fa46b5d0c51b6579d97, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerDamageFlashUI
+  playerHealth: {fileID: 3661795405098710526}
+  damageFlashImage: {fileID: 1993025042191280653}
+  flashAlpha: 0.45
+  fadeDuration: 0.35
 --- !u!1 &4265908227339189125
 GameObject:
   m_ObjectHideFlags: 0
@@ -1009,6 +1055,94 @@ CapsuleCollider:
   m_Height: 2
   m_Direction: 1
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!1 &6009282776843604001
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 3423088679452626816}
+  - component: {fileID: 8963762460524038658}
+  - component: {fileID: 1993025042191280653}
+  - component: {fileID: 3856179575726505484}
+  m_Layer: 5
+  m_Name: RedFlash
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 0
+--- !u!224 &3423088679452626816
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6009282776843604001}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 4559169590048849051}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 0, y: 0}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!222 &8963762460524038658
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6009282776843604001}
+  m_CullTransparentMesh: 1
+--- !u!114 &1993025042191280653
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6009282776843604001}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
+  m_Material: {fileID: 0}
+  m_Color: {r: 1, g: 0, b: 0, a: 0.89411765}
+  m_RaycastTarget: 1
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_Sprite: {fileID: 10907, guid: 0000000000000000f000000000000000, type: 0}
+  m_Type: 1
+  m_PreserveAspect: 0
+  m_FillCenter: 1
+  m_FillMethod: 4
+  m_FillAmount: 1
+  m_FillClockwise: 1
+  m_FillOrigin: 0
+  m_UseSpriteMesh: 0
+  m_PixelsPerUnitMultiplier: 1
+--- !u!225 &3856179575726505484
+CanvasGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6009282776843604001}
+  m_Enabled: 1
+  m_Alpha: 1
+  m_Interactable: 1
+  m_BlocksRaycasts: 1
+  m_IgnoreParentGroups: 0
 --- !u!1 &7634935875471915251
 GameObject:
   m_ObjectHideFlags: 0

@@ -8,6 +8,7 @@ public sealed class PlayerChairCombat : NetworkBehaviour
     [SerializeField] private PlayerChairInventory chairInventory;
     [SerializeField] private PlayerMeleeChair meleeChair;
     [SerializeField] private PlayerAnimationController animationController;
+    [SerializeField] private FirstPersonNetworkMovement movement;
 
     [SerializeField] private Transform attackOrigin;
     [SerializeField] private NetworkObject thrownChairPrefab;
@@ -25,8 +26,15 @@ public sealed class PlayerChairCombat : NetworkBehaviour
     [Header("Throw")]
     [SerializeField] private int throwDamage = 35;
     [SerializeField] private float throwForce = 16f;
+
     
-    public ChairCombatMode CombatMode => combatMode;
+    [SerializeField] private float throwUpwardBoost = 0.1f;
+
+   
+    [SerializeField] private float throwSpawnDistance = 0.8f;
+
+    public ChairCombatMode CombatMode =>
+        combatMode;
 
     private float _lastAttackTime;
 
@@ -35,15 +43,23 @@ public sealed class PlayerChairCombat : NetworkBehaviour
         if (!Object.HasInputAuthority)
             return;
 
-        primaryAction.action.Enable();
+        if (primaryAction != null)
+        {
+            primaryAction.action.Enable();
+        }
     }
 
-    public override void Despawned(NetworkRunner runner, bool hasState)
+    public override void Despawned(
+        NetworkRunner runner,
+        bool hasState)
     {
         if (!Object.HasInputAuthority)
             return;
 
-        primaryAction.action.Disable();
+        if (primaryAction != null)
+        {
+            primaryAction.action.Disable();
+        }
     }
 
     private void Update()
@@ -51,63 +67,147 @@ public sealed class PlayerChairCombat : NetworkBehaviour
         if (!Object.HasInputAuthority)
             return;
 
-        if (!primaryAction.action.WasPressedThisFrame())
+        if (primaryAction == null)
+            return;
+
+        if (!primaryAction
+                .action
+                .WasPressedThisFrame())
+        {
+            return;
+        }
+
+        if (chairInventory == null)
             return;
 
         if (!chairInventory.HasChair)
             return;
 
-        if (combatMode == ChairCombatMode.Melee)
+        if (combatMode ==
+            ChairCombatMode.Melee)
+        {
             TryMeleeAttack();
+        }
         else
+        {
             TryThrowAttack();
+        }
     }
+
+  
 
     private void TryMeleeAttack()
     {
-        if (Time.time < _lastAttackTime + meleeCooldown)
+        if (Time.time <
+            _lastAttackTime +
+            meleeCooldown)
+        {
             return;
+        }
 
-        _lastAttackTime = Time.time;
+        _lastAttackTime =
+            Time.time;
 
-        meleeChair.Attack();
+        if (meleeChair != null)
+        {
+            meleeChair.Attack();
+        }
     }
+
+   
 
     private void TryThrowAttack()
     {
-        if (Time.time < _lastAttackTime + throwCooldown)
+        if (Time.time <
+            _lastAttackTime +
+            throwCooldown)
+        {
             return;
+        }
 
-        _lastAttackTime = Time.time;
+        _lastAttackTime =
+            Time.time;
 
         RPC_ThrowChair();
     }
 
-    [Rpc(RpcSources.InputAuthority, RpcTargets.StateAuthority)]
+    [Rpc(
+        RpcSources.InputAuthority,
+        RpcTargets.StateAuthority)]
     private void RPC_ThrowChair()
     {
-        animationController.PlayThrow();
+        if (attackOrigin == null)
+            return;
+
+        if (thrownChairPrefab == null)
+            return;
+
+        
+
+        if (animationController != null)
+        {
+            animationController.PlayThrow();
+        }
+
+       
+
+        Vector3 throwDirection;
+
+        if (movement != null)
+        {
+            throwDirection =
+                movement.GetAimDirection();
+        }
+        else
+        {
+            throwDirection =
+                attackOrigin.forward;
+        }
+
+        
+        throwDirection =
+            (throwDirection +
+             Vector3.up *
+             throwUpwardBoost)
+            .normalized;
+
+       
 
         Vector3 spawnPosition =
             attackOrigin.position +
-            attackOrigin.forward * 0.8f;
+            throwDirection *
+            throwSpawnDistance;
 
+        
+
+        Quaternion spawnRotation =
+            Quaternion.LookRotation(
+                throwDirection,
+                Vector3.up);
+
+        
         NetworkObject thrownChair =
             Runner.Spawn(
                 thrownChairPrefab,
                 spawnPosition,
-                attackOrigin.rotation,
+                spawnRotation,
                 Object.InputAuthority);
 
-        if (thrownChair.TryGetComponent(out ThrownChairProjectile projectile))
+        
+
+        if (thrownChair.TryGetComponent(
+                out ThrownChairProjectile projectile))
         {
             projectile.Launch(
-                attackOrigin.forward,
+                throwDirection,
                 throwForce,
                 throwDamage,
                 Object.InputAuthority);
         }
 
-        chairInventory.RequestConsumeChair();
+       
+
+        chairInventory
+            .RequestConsumeChair();
     }
 }

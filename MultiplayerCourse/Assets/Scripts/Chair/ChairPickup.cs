@@ -4,14 +4,25 @@ using UnityEngine;
 public sealed class ChairPickup : NetworkBehaviour
 {
     private bool _wasPickedUp;
+    private ChairSpawner _spawner;
 
-    private void OnTriggerEnter(Collider other)
+    public void SetSpawner(
+        ChairSpawner spawner)
+    {
+        _spawner = spawner;
+    }
+
+    private void OnTriggerEnter(
+        Collider other)
     {
         if (_wasPickedUp)
             return;
 
-        if (!other.TryGetComponent(out PlayerChairInventory inventory))
+        if (!other.TryGetComponent(
+                out PlayerChairInventory inventory))
+        {
             return;
+        }
 
         if (!inventory.Object.HasInputAuthority)
             return;
@@ -24,13 +35,22 @@ public sealed class ChairPickup : NetworkBehaviour
         RPC_RequestDespawn();
     }
 
-    [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
+    [Rpc(
+        RpcSources.All,
+        RpcTargets.StateAuthority)]
     private void RPC_RequestDespawn()
     {
         if (_wasPickedUp)
             return;
 
         _wasPickedUp = true;
+
+        if (_spawner != null)
+        {
+            _spawner.NotifyChairPickedUp(
+                Object);
+        }
+
         Runner.Despawn(Object);
     }
 }

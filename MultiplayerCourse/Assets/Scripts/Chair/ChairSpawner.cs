@@ -12,6 +12,7 @@ public sealed class ChairSpawner : NetworkBehaviour
 
     private NetworkObject _currentChair;
     private TickTimer _respawnTimer;
+    private bool _waitingForRespawn;
 
     public override void Spawned()
     {
@@ -26,14 +27,10 @@ public sealed class ChairSpawner : NetworkBehaviour
         if (!Object.HasStateAuthority)
             return;
 
-        if (NetworkMatchManager.Instance == null ||
-            NetworkMatchManager.Instance.MatchState != ServerMatchState.InProgress)
+        if (!_waitingForRespawn)
             return;
 
-        if (_currentChair != null)
-            return;
-
-        if (!_respawnTimer.ExpiredOrNotRunning(Runner))
+        if (!_respawnTimer.Expired(Runner))
             return;
 
         SpawnChair();
@@ -41,10 +38,60 @@ public sealed class ChairSpawner : NetworkBehaviour
 
     private void SpawnChair()
     {
-        Vector3 position = spawnPoint != null ? spawnPoint.position : transform.position;
-        Quaternion rotation = spawnPoint != null ? spawnPoint.rotation : transform.rotation;
+        if (chairPrefab == null)
+        {
+            Debug.LogError("[ChairSpawner] Chair prefab is missing.");
+            return;
+        }
 
-        _currentChair = Runner.Spawn(chairPrefab, position, rotation);
-        _respawnTimer = TickTimer.CreateFromSeconds(Runner, respawnDelay);
+        Vector3 position =
+            spawnPoint != null
+                ? spawnPoint.position
+                : transform.position;
+
+        Quaternion rotation =
+            spawnPoint != null
+                ? spawnPoint.rotation
+                : transform.rotation;
+
+        _currentChair = Runner.Spawn(
+            chairPrefab,
+            position,
+            rotation,
+            onBeforeSpawned: (runner, spawnedObject) =>
+            {
+                if (spawnedObject.TryGetComponent(
+                        out ChairPickup pickup))
+                {
+                    pickup.SetSpawner(this);
+                }
+            });
+
+        _waitingForRespawn = false;
+
+        Debug.Log("[ChairSpawner] Chair spawned.");
+    }
+
+    public void NotifyChairPickedUp(
+        NetworkObject chair)
+    {
+        if (!Object.HasStateAuthority)
+            return;
+
+        if (_currentChair != chair)
+            return;
+
+        _currentChair = null;
+
+        _waitingForRespawn = true;
+
+        _respawnTimer =
+            TickTimer.CreateFromSeconds(
+                Runner,
+                respawnDelay);
+
+        Debug.Log(
+            $"[ChairSpawner] Chair picked up. " +
+            $"Respawn in {respawnDelay} seconds.");
     }
 }

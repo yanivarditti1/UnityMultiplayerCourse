@@ -923,6 +923,7 @@ MonoBehaviour:
   preMatchPanel: {fileID: 1397715796}
   joinServerButton: {fileID: 628462945}
   connectStatusText: {fileID: 77393015}
+  timeoutWaitTime: 5
   nicknameInputField: {fileID: 1617008519}
   gameModeDropdown: {fileID: 444591799}
   startMatchButton: {fileID: 648381720}
