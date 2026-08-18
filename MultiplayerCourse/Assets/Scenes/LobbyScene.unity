@@ -12536,7 +12536,7 @@ MonoBehaviour:
   runner: {fileID: 2112644897}
   sessionName: Yamit 2000 Test Room
   maxPlayers: 10
-  isServer: 1
+  isServer: 0
 --- !u!4 &1504655540
 Transform:
   m_ObjectHideFlags: 0

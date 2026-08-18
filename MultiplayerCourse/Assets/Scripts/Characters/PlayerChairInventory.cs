@@ -9,6 +9,9 @@ public sealed class PlayerChairInventory : NetworkBehaviour
     
     [SerializeField] private AudioSource chairAudioSource;
     [SerializeField] private AudioClip chairPickupClip;
+    
+    [Range(0f, 1f)]
+    [SerializeField] private float pickupVolume = 1f;
 
     [Networked, OnChangedRender(nameof(OnChairStateChanged))]
     public bool HasChair { get; private set; }
@@ -38,7 +41,8 @@ public sealed class PlayerChairInventory : NetworkBehaviour
             return;
 
         chairAudioSource.PlayOneShot(
-            chairPickupClip);
+            chairPickupClip,
+            pickupVolume);
     }
 
     public void RequestConsumeChair()
