@@ -1,4 +1,4 @@
-using Fusion;
+ using Fusion;
 using UnityEngine;
 
 public sealed class ChairPickup : NetworkBehaviour
@@ -31,6 +31,7 @@ public sealed class ChairPickup : NetworkBehaviour
             return;
 
         inventory.RequestReceiveChair();
+        inventory.PlayChairPickupSound();
 
         RPC_RequestDespawn();
     }

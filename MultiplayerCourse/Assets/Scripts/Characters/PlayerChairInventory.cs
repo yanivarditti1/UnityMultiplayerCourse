@@ -6,6 +6,9 @@ public sealed class PlayerChairInventory : NetworkBehaviour
     [Header("References")]
     [SerializeField] private Transform chairHoldPoint;
     [SerializeField] private GameObject heldChairVisual;
+    
+    [SerializeField] private AudioSource chairAudioSource;
+    [SerializeField] private AudioClip chairPickupClip;
 
     [Networked, OnChangedRender(nameof(OnChairStateChanged))]
     public bool HasChair { get; private set; }
@@ -25,6 +28,17 @@ public sealed class PlayerChairInventory : NetworkBehaviour
     public void RequestReceiveChair()
     {
         RPC_RequestReceiveChair();
+    }
+    public void PlayChairPickupSound()
+    {
+        if (chairAudioSource == null)
+            return;
+
+        if (chairPickupClip == null)
+            return;
+
+        chairAudioSource.PlayOneShot(
+            chairPickupClip);
     }
 
     public void RequestConsumeChair()
