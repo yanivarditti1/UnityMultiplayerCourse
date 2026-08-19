@@ -3,10 +3,14 @@ using UnityEngine;
 
 public sealed class ThrownChairProjectile : NetworkBehaviour
 {
+    [Header("Projectile")]
     [SerializeField] private float lifetime = 2.5f;
     [SerializeField] private float hitRadius = 0.45f;
     [SerializeField] private float gravity = -25f;
     [SerializeField] private Vector3 spinSpeed = new(240f, 0f, 0f);
+
+    [Header("Break SFX")]
+    [SerializeField] private NetworkObject chairBreakSFXPrefab;
 
     private Vector3 _velocity;
     private int _damage;
@@ -34,9 +38,11 @@ public sealed class ThrownChairProjectile : NetworkBehaviour
             return;
         }
 
-        _velocity.y += gravity * Runner.DeltaTime;
+        _velocity.y +=
+            gravity * Runner.DeltaTime;
 
-        Vector3 startPosition = transform.position;
+        Vector3 startPosition =
+            transform.position;
 
         transform.position +=
             _velocity * Runner.DeltaTime;
@@ -71,8 +77,23 @@ public sealed class ThrownChairProjectile : NetworkBehaviour
                     _owner);
             }
 
+            SpawnBreakSound(
+                hit.point);
+
             Runner.Despawn(Object);
         }
+    }
+
+    private void SpawnBreakSound(
+        Vector3 position)
+    {
+        if (chairBreakSFXPrefab == null)
+            return;
+
+        Runner.Spawn(
+            chairBreakSFXPrefab,
+            position,
+            Quaternion.identity);
     }
 
     public void Launch(

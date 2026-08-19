@@ -8,6 +8,7 @@ public sealed class PlayerMeleeChair : NetworkBehaviour
     [SerializeField] private ChairSwingAnimation swingAnimation;
     [SerializeField] private PlayerMeleeHitbox meleeHitbox;
     [SerializeField] private PlayerAnimationController animationController;
+    [SerializeField] private NetworkObject chairBreakSFXPrefab;
 
     [Header("Settings")]
     [SerializeField] private int damage = 15;
@@ -79,6 +80,14 @@ public sealed class PlayerMeleeChair : NetworkBehaviour
         if (_successfulHits >= hitsUntilBreak)
         {
             _successfulHits = 0;
+
+            if (chairBreakSFXPrefab != null)
+            {
+                Runner.Spawn(
+                    chairBreakSFXPrefab,
+                    transform.position,
+                    Quaternion.identity);
+            }
 
             chairInventory.RequestConsumeChair();
 

@@ -731,6 +731,7 @@ MonoBehaviour:
   heldChairVisual: {fileID: 6975475625302908087}
   chairAudioSource: {fileID: 6885725052989452057}
   chairPickupClip: {fileID: 8300000, guid: 6f23578fa0820574e8a1f8e5101960bc, type: 3}
+  pickupVolume: 1
   _HasChair: 0
 --- !u!114 &2703630289115125951
 MonoBehaviour:
@@ -813,6 +814,7 @@ MonoBehaviour:
   swingAnimation: {fileID: 5226047406885308156}
   meleeHitbox: {fileID: 746302389717296660}
   animationController: {fileID: 1322853888755118462}
+  chairBreakSFXPrefab: {fileID: 8780423883508115102, guid: 6f60ecf7fc5ec344c86d50477c227d39, type: 3}
   damage: 15
   hitsUntilBreak: 3
   hitboxActiveTime: 0.15

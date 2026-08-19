@@ -2305,8 +2305,6 @@ MonoBehaviour:
   - {fileID: 8300000, guid: 3f14855c5ccccd949b77f9f1a5449cc0, type: 3}
   - {fileID: 8300000, guid: ecc0e2ce3997de142b50913aa933a340, type: 3}
   - {fileID: 8300000, guid: 3f0a955ebe59b204faa318341785ec80, type: 3}
-  _CurrentSongIndex: 0
-  _SongStartTime: 0
 --- !u!4 &776255127
 Transform:
   m_ObjectHideFlags: 0
@@ -6447,6 +6445,67 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: da8bc32eb9193824594b1d46154021dc, type: 3}
+--- !u!1001 &1447364463484134698
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 2079048976028196280, guid: 6f60ecf7fc5ec344c86d50477c227d39, type: 3}
+      propertyPath: m_Name
+      value: ChairBreakSFX
+      objectReference: {fileID: 0}
+    - target: {fileID: 7092108677375514006, guid: 6f60ecf7fc5ec344c86d50477c227d39, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 37.84503
+      objectReference: {fileID: 0}
+    - target: {fileID: 7092108677375514006, guid: 6f60ecf7fc5ec344c86d50477c227d39, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7092108677375514006, guid: 6f60ecf7fc5ec344c86d50477c227d39, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: -7.95868
+      objectReference: {fileID: 0}
+    - target: {fileID: 7092108677375514006, guid: 6f60ecf7fc5ec344c86d50477c227d39, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7092108677375514006, guid: 6f60ecf7fc5ec344c86d50477c227d39, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7092108677375514006, guid: 6f60ecf7fc5ec344c86d50477c227d39, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7092108677375514006, guid: 6f60ecf7fc5ec344c86d50477c227d39, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7092108677375514006, guid: 6f60ecf7fc5ec344c86d50477c227d39, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7092108677375514006, guid: 6f60ecf7fc5ec344c86d50477c227d39, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7092108677375514006, guid: 6f60ecf7fc5ec344c86d50477c227d39, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8780423883508115102, guid: 6f60ecf7fc5ec344c86d50477c227d39, type: 3}
+      propertyPath: SortKey
+      value: 2566216134
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 6f60ecf7fc5ec344c86d50477c227d39, type: 3}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
@@ -6467,3 +6526,4 @@ SceneRoots:
   - {fileID: 910105230}
   - {fileID: 228151044}
   - {fileID: 1107726882}
+  - {fileID: 1447364463484134698}

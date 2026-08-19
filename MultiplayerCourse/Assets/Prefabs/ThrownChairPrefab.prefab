@@ -148,3 +148,4 @@ MonoBehaviour:
   hitRadius: 0.5
   gravity: -25
   spinSpeed: {x: 240, y: 0, z: 0}
+  chairBreakSFXPrefab: {fileID: 8780423883508115102, guid: 6f60ecf7fc5ec344c86d50477c227d39, type: 3}
