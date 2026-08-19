@@ -32,6 +32,7 @@ public class ServerUiManager : MonoBehaviour
     [SerializeField] private NetworkStartupManager networkStartupManager;
     [SerializeField] private Transform playerListContainer;
     [SerializeField] private ServerLobbyPlayerUiEntry playerEntryPrefab;
+    [SerializeField] private GameObject chatRoot;
     
     private readonly Dictionary<PlayerRef, ServerLobbyPlayerUiEntry> _playerEntries = new();
 
@@ -206,7 +207,7 @@ public class ServerUiManager : MonoBehaviour
 
     private void HandleClientStarted()
     {
-        ShowPreMatchPanel();
+        //ShowPreMatchPanel();
         SetConnectedStatus("Connected to server");
         SubscribeToServerManagers();
         
@@ -531,6 +532,8 @@ public class ServerUiManager : MonoBehaviour
     {
         connectPanel.SetActive(true);
         preMatchPanel.SetActive(false);
+        if (chatRoot)
+            chatRoot.SetActive(false);
 
         bool isServer = networkStartupManager != null && networkStartupManager.IsLocalPlayerServer();
         
@@ -541,6 +544,8 @@ public class ServerUiManager : MonoBehaviour
     {
         connectPanel.SetActive(false);
         preMatchPanel.SetActive(true);
+        if (chatRoot)
+            chatRoot.SetActive(true);
     }
 
     private void SetupGameModeDropdown()

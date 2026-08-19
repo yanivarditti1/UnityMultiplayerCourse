@@ -29,20 +29,18 @@ public class ChatUI : MonoBehaviour
     private readonly Queue<GameObject> _messageObjects = new Queue<GameObject>();
     private float _lastMessageTime;
     private Canvas _parentCanvas;
-    private bool _subscribedToChat = false;
 
 
+    #region Lifecycle
     private void Awake()
     {
         _parentCanvas = GetComponentInParent<Canvas>();
         
         // Initialize UI
-        if (chatPanel)
-            chatPanel.SetActive(_isChatOpen);
-            chatPanel.SetActive(_isChatOpen);
+        // if (chatPanel)
+        //     chatPanel.SetActive(_isChatOpen);
+
         UpdatePlaceholderText();
-        DontDestroyOnLoad(transform.root.gameObject);
-    
     }
 
     // ChatUI.cs OnEnable
@@ -51,21 +49,23 @@ public class ChatUI : MonoBehaviour
        if (sendButton != null)
               sendButton.onClick.AddListener(SendMessage);
       
-          if (toggleChatButton != null)
-              toggleChatButton.onClick.AddListener(ToggleChat);
+       if (toggleChatButton != null)
+           toggleChatButton.onClick.AddListener(ToggleChat);
       
-          if (messageInputField != null)
-          {
-              messageInputField.onEndEdit.AddListener(OnInputEndEdit);
-              messageInputField.onValueChanged.AddListener(OnInputValueChanged);
-          }
+       if (messageInputField != null)
+       {
+           messageInputField.onEndEdit.AddListener(OnInputEndEdit);
+           messageInputField.onValueChanged.AddListener(OnInputValueChanged);
+       }
       
-          if (LobbyManager.Instance == null) return;
-          LobbyManager.Instance.OnChatMessageReceived += OnMessageReceived;
-          LobbyManager.Instance.OnChatErrorReceived   += OnChatError;
-          TrySubscribeToChat();
-
-
+       // if (LobbyManager.Instance == null) return;
+       // LobbyManager.Instance.OnChatMessageReceived += OnMessageReceived;
+       // LobbyManager.Instance.OnChatErrorReceived   += OnChatError;
+       
+       ChatManager.OnMessageReceived += HandleOnMessageReceived;
+       ChatManager.OnChatError += HandleOnChatError;
+       
+       //TrySubscribeToChat();
     }
 
     void OnDisable()
@@ -82,24 +82,19 @@ public class ChatUI : MonoBehaviour
             messageInputField.onValueChanged.RemoveListener(OnInputValueChanged);
         }
 
-        if (LobbyManager.Instance == null) return;
-        LobbyManager.Instance.OnChatMessageReceived -= OnMessageReceived;
-        LobbyManager.Instance.OnChatErrorReceived   -= OnChatError;
-    }
-    private void TrySubscribeToChat()
-    {
-        if (_subscribedToChat) return;
-        if (LobbyManager.Instance == null) return;
-
-        LobbyManager.Instance.OnChatMessageReceived += OnMessageReceived;
-        LobbyManager.Instance.OnChatErrorReceived   += OnChatError;
-        _subscribedToChat = true;
+        // if (LobbyManager.Instance == null) return;
+        // LobbyManager.Instance.OnChatMessageReceived -= HandleOnMessageReceived;
+        // LobbyManager.Instance.OnChatErrorReceived   -= HandleOnChatError;
+        
+        ChatManager.OnMessageReceived -= HandleOnMessageReceived;
+        ChatManager.OnChatError -= HandleOnChatError;
     }
 
     private void Update()
     {
-        if (!_subscribedToChat)
-            TrySubscribeToChat();
+        // if (!_subscribedToChat)
+        //     TrySubscribeToChat();
+        
         if (Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter))
         {
             if (!_isChatOpen)
@@ -126,8 +121,12 @@ public class ChatUI : MonoBehaviour
             }
         }
     }
+    
+    #endregion
+    
+    #region EventHandlers
 
-    private void OnMessageReceived(ChatMessage message, string senderNickname)
+    private void HandleOnMessageReceived(ChatMessage message, string senderNickname)
     {
         DisplayMessage(message, senderNickname);
 
@@ -140,12 +139,16 @@ public class ChatUI : MonoBehaviour
         }
     }
 
-    private void OnChatError(string errorMessage)
+    private void HandleOnChatError(string errorMessage)
     {
         // Display error as system message
         var systemMessage = new ChatMessage(default, errorMessage, ChatMessageType.System);
         DisplayMessage(systemMessage, "System");
     }
+    
+    #endregion
+    
+    #region Helpers
 
     private void DisplayMessage(ChatMessage message, string senderNickname)
     {
@@ -235,7 +238,7 @@ public class ChatUI : MonoBehaviour
             OpenChat();
     }
 
-    public void OpenChat()
+    private void OpenChat()
     {
         _isChatOpen = true;
         
@@ -251,7 +254,7 @@ public class ChatUI : MonoBehaviour
         _lastMessageTime = Time.time;
     }
 
-    public void CloseChat()
+    private void CloseChat()
     {
         _isChatOpen = false;
         
@@ -271,7 +274,7 @@ public class ChatUI : MonoBehaviour
         if (string.IsNullOrEmpty(messageText))
             return;
 
-        ChatManager.Instance.SendMessage(messageText);
+        ChatManager.Instance.SendChatMessage(messageText);
         
         // Clear input field
         messageInputField.text = "";
@@ -341,4 +344,6 @@ public class ChatUI : MonoBehaviour
                 Destroy(messageObj);
         }
     }
+    
+    #endregion
 }

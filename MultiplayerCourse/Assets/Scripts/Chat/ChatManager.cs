@@ -12,6 +12,7 @@ public class ChatManager : NetworkBehaviour
     [Header("Settings")]
     [SerializeField] private int maxMessageHistory = 100;
     [SerializeField] private float messageTimeoutSeconds = 300f; // 5 minutes
+    [SerializeField] private int maxMessageLength = 200;
     
     // Event fired when a new chat message is received
     public static event Action<ChatMessage, string> OnMessageReceived;
@@ -27,17 +28,19 @@ public class ChatManager : NetworkBehaviour
     
     // Cache for player nicknames to avoid lookups
     private readonly Dictionary<PlayerRef, string> _playerNicknames = new Dictionary<PlayerRef, string>();
+    
+    #region Lifecycle
     public override void Spawned()
     {
         if (_instance == null)
         {
             _instance = this;
             PlayerManager.OnAnyNicknameChanged += OnPlayerNicknameChanged;
-            Debug.Log($"[ChatManager] Spawned. LobbyManager.Instance null: {LobbyManager.Instance == null}");
+            // Debug.Log($"[ChatManager] Spawned. LobbyManager.Instance null: {LobbyManager.Instance == null}");
 
             // Tell LobbyManager chat is ready
-            if (LobbyManager.Instance != null)
-                LobbyManager.Instance.NotifyChatManagerSpawned();
+            // if (LobbyManager.Instance != null)
+            //     LobbyManager.Instance.NotifyChatManagerSpawned();
 
             Debug.Log("[ChatManager] Spawned and ready");
         }
@@ -55,6 +58,18 @@ public class ChatManager : NetworkBehaviour
             _instance = null;
         }
     }
+    
+    private void Update()
+    {
+        // Clean up old messages periodically
+        if (_messageHistory.Count > 0)
+        {
+            float currentTime = Time.time;
+            _messageHistory.RemoveAll(msg => currentTime - msg.Timestamp > messageTimeoutSeconds);
+        }
+    }
+    
+    #endregion
 
     private void OnPlayerNicknameChanged(PlayerRef player, string nickname)
     {
@@ -62,7 +77,7 @@ public class ChatManager : NetworkBehaviour
     }
 
     // Sends a chat message. Supports both global messages and private messages with /msg command
-    public void SendMessage(string messageText)
+    public void SendChatMessage(string messageText)
     {
         if (string.IsNullOrWhiteSpace(messageText))
             return;
@@ -83,7 +98,7 @@ public class ChatManager : NetworkBehaviour
     // Sends a global message to all players in the room
     public void SendGlobalMessage(string messageText)
     {
-        RPC_SendGlobalMessage(Runner.LocalPlayer, messageText);
+        RPC_RequestSendGlobalMessage(messageText);
     }
     
     public void SendPrivateMessage(string targetNickname, string messageText)
@@ -96,49 +111,26 @@ public class ChatManager : NetworkBehaviour
             return;
         }
 
-        RPC_SendPrivateMessage(Runner.LocalPlayer, targetPlayer, messageText);
+        RPC_RequestSendPrivateMessage(targetPlayer, messageText);
     }
-
-    /*private void ParseAndSendPrivateMessage(string fullMessage)
-    {
-        // Format: /msg PlayerName Message content here
-        string[] parts = fullMessage.Split(' ', 3);
-        
-        if (parts.Length < 3)
-        {
-            OnChatError?.Invoke("Private message format: /msg PlayerName Your message here");
-            return;
-        }
-
-        string targetNickname = parts[1];
-        string messageContent = parts[2];
-        
-        SendPrivateMessage(targetNickname, messageContent);
-    }
-    */
 
     private PlayerRef FindPlayerByNickname(string nickname)
     {
-        // First check our cached nicknames
-        foreach (var kvp in _playerNicknames)
-        {
-            if (string.Equals(kvp.Value, nickname, StringComparison.OrdinalIgnoreCase))
-            {
-                return kvp.Key;
-            }
-        }
+        if (ServerLobbyManager.Instance == null)
+            return PlayerRef.None;
 
-        // If not found in cache, try to get from PlayerManager instances
-        var allPlayerManagers = FindObjectsOfType<PlayerManager>();
-        foreach (var playerManager in allPlayerManagers)
+        //search active players list
+        var playersList = ServerLobbyManager.Instance.GetPlayers();
+        foreach (var entry in playersList)
         {
-            if (string.Equals(playerManager.Nickname.Value, nickname, StringComparison.OrdinalIgnoreCase))
-            {
-                _playerNicknames[playerManager.Object.InputAuthority] = nickname;
-                return playerManager.Object.InputAuthority;
-            }
-        }
-
+            if (!entry.Value.HasNickname)
+                continue;
+            
+            string existingNickname = entry.Value.Nickname.ToString();
+            if (string.Equals(existingNickname, nickname, StringComparison.OrdinalIgnoreCase))
+                return entry.Key;
+        } 
+        
         return PlayerRef.None;
     }
 
@@ -146,36 +138,77 @@ public class ChatManager : NetworkBehaviour
     {
         // Check cache first
         if (_playerNicknames.TryGetValue(player, out string cachedNickname))
-        {
             return cachedNickname;
-        }
 
-        // Try to find PlayerManager for this player
-        var playerManager = FindObjectsOfType<PlayerManager>()
-            .FirstOrDefault(pm => pm.Object.InputAuthority == player);
-            
-        if (playerManager != null)
+        // If not found in cache, try to get from server
+        if (ServerLobbyManager.Instance != null &&
+            ServerLobbyManager.Instance.TryGetPlayerNickname(player, out string lobbyNickname))
         {
-            string nickname = playerManager.Nickname.Value;
-            _playerNicknames[player] = nickname;
-            return nickname;
+            _playerNicknames[player] = lobbyNickname;
+            return lobbyNickname;
         }
 
-        return $"Player {player}";
+        return $"Player {player.PlayerId}";
     }
 
     #region RPCs
 
-    // RPC for sending global chat messages to all players
-    [Rpc(RpcSources.All, RpcTargets.All)]
-    private void RPC_SendGlobalMessage(PlayerRef sender, string messageText)
+    // request to send global chat message
+    [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
+    private void RPC_RequestSendGlobalMessage(string messageText, RpcInfo info = default)
+    {
+        PlayerRef sender = info.Source;
+        
+        if (!CanPlayerChat(sender))
+        {
+            Debug.Log($"[ChatManager] {sender} tried to send global message but is not allowed");
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(messageText))
+            return;
+        
+        messageText = messageText.Trim();
+        
+        if (messageText.Length > maxMessageLength)
+            messageText = messageText.Substring(0, maxMessageLength);
+        
+        RPC_ReceiveGlobalMessage(sender, messageText);
+    }
+
+    [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
+    private void RPC_ReceiveGlobalMessage(PlayerRef sender, string messageText)
     {
         var message = new ChatMessage(sender, messageText, ChatMessageType.Global);
         ProcessReceivedMessage(message);
     }
 
+    [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
+    private void RPC_RequestSendPrivateMessage(PlayerRef target, string messageText, RpcInfo info = default)
+    {
+        PlayerRef sender = info.Source;
 
-    [Rpc(RpcSources.All, RpcTargets.All)]
+        if (!CanPlayerChat(sender))
+            return;
+        
+        if (!CanPlayerChat(target))
+            return;
+
+        if (sender == target)
+            return;
+        
+        if (string.IsNullOrWhiteSpace(messageText))
+            return;
+        
+        messageText = messageText.Trim();
+        
+        if (messageText.Length > maxMessageLength)
+            messageText = messageText.Substring(0, maxMessageLength);
+        
+        RPC_SendPrivateMessage(sender, target, messageText);
+    }
+
+    [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
     private void RPC_SendPrivateMessage(PlayerRef sender, PlayerRef target, string messageText)
     {
         // Only the sender and target should process this message
@@ -187,6 +220,13 @@ public class ChatManager : NetworkBehaviour
     }
 
     #endregion
+    
+    #region Helpers
+
+    private bool CanPlayerChat(PlayerRef player)
+    {
+        return ServerLobbyManager.Instance != null && ServerLobbyManager.Instance.IsPlayerInLobby(player);
+    }
 
     private void ProcessReceivedMessage(ChatMessage message)
     {
@@ -223,14 +263,6 @@ public class ChatManager : NetworkBehaviour
     {
         OnChatError?.Invoke(message);
     }
-
-    private void Update()
-    {
-        // Clean up old messages periodically
-        if (_messageHistory.Count > 0)
-        {
-            float currentTime = Time.time;
-            _messageHistory.RemoveAll(msg => currentTime - msg.Timestamp > messageTimeoutSeconds);
-        }
-    }
+    
+    #endregion
 }
