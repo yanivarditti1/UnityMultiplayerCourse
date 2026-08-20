@@ -110,18 +110,14 @@ public sealed class MatchScoreManager : NetworkBehaviour
 
         int currentKills = 0;
 
-        if (PlayerKills.TryGet(
-            killer,
-            out int existingKills))
+        if (PlayerKills.TryGet(killer, out int existingKills))
         {
             currentKills = existingKills;
         }
 
         currentKills++;
 
-        PlayerKills.Set(
-            killer,
-            currentKills);
+        PlayerKills.Set(killer, currentKills);
 
         Debug.Log(
             $"[Match] Player {killer.PlayerId} " +
@@ -129,9 +125,7 @@ public sealed class MatchScoreManager : NetworkBehaviour
 
         if (currentKills >= killsToWin)
         {
-            FinishMatch(
-                killer,
-                currentKills);
+            FinishMatch(killer, currentKills);
         }
     }
 
@@ -178,9 +172,7 @@ public sealed class MatchScoreManager : NetworkBehaviour
         return 0;
     }
 
-    private void FinishMatch(
-        PlayerRef winner,
-        int winnerKills)
+    private void FinishMatch(PlayerRef winner, int winnerKills)
     {
         if (!Object.HasStateAuthority)
             return;
@@ -191,18 +183,20 @@ public sealed class MatchScoreManager : NetworkBehaviour
         MatchEnded = true;
         Winner = winner;
 
-        EndScreenTimer =
-            TickTimer.CreateFromSeconds(
-                Runner,
-                endScreenDuration);
+        EndScreenTimer = TickTimer.CreateFromSeconds(Runner, endScreenDuration);
+        
+        var summaryJson = BuildMatchSummaryJson(winner, winnerKills);
+        
+        var currentGameMode = NetworkMatchManager.Instance != null 
+            ? NetworkMatchManager.Instance.SelectedGameMode.ToString()
+            : "Unknown";
 
         Debug.Log(
-            $"[Match] Player {winner.PlayerId} won " +
+            $"[Match] Player {winner.PlayerId} won a {currentGameMode} in {matchDurationSeconds}s. " +
             $"with {winnerKills} kills.");
 
-        RPC_MatchFinished(
-            winner,
-            winnerKills);
+        RPC_MatchFinished(winner, winnerKills);
+        RPC_MatchSummaryReceived(summaryJson);
     }
 
     private void FinishMatchFromTimer()
@@ -237,9 +231,7 @@ public sealed class MatchScoreManager : NetworkBehaviour
             highestKills);
     }
 
-    [Rpc(
-        RpcSources.StateAuthority,
-        RpcTargets.All)]
+    [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
     private void RPC_MatchFinished(
         PlayerRef winner,
         int winnerKills)
@@ -252,6 +244,18 @@ public sealed class MatchScoreManager : NetworkBehaviour
         MatchFinished?.Invoke(
             winner,
             winnerKills);
+    }
+
+    [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
+    private void RPC_MatchSummaryReceived(string summaryJson)
+    {
+        MatchSummaryData matchSummary = JsonUtility.FromJson<MatchSummaryData>(summaryJson);
+        
+        Debug.Log(
+            $"[Match] Match summary received: " +
+            $"{matchSummary.WinnerNickname} " +
+            $"won a {matchSummary.GameMode} in {matchSummary.MatchDurationSeconds}s. " +
+            $"with {matchSummary.WinnerKills} kills.");
     }
 
     public override void FixedUpdateNetwork()
@@ -329,11 +333,9 @@ public sealed class MatchScoreManager : NetworkBehaviour
         float remainingTime =
             EndScreenTimer.RemainingTime(Runner) ?? 0f;
 
-        int displayedSecond =
-            Mathf.CeilToInt(remainingTime);
+        int displayedSecond = Mathf.CeilToInt(remainingTime);
 
-        if (displayedSecond ==
-            lastDisplayedEndSecond)
+        if (displayedSecond == lastDisplayedEndSecond)
         {
             return;
         }
@@ -341,8 +343,7 @@ public sealed class MatchScoreManager : NetworkBehaviour
         lastDisplayedEndSecond =
             displayedSecond;
 
-        EndCountdownChanged?.Invoke(
-            remainingTime);
+        EndCountdownChanged?.Invoke(remainingTime);
     }
 
     private void RefreshLocalScore()
@@ -350,8 +351,7 @@ public sealed class MatchScoreManager : NetworkBehaviour
         if (Runner == null)
             return;
 
-        PlayerRef localPlayer =
-            Runner.LocalPlayer;
+        PlayerRef localPlayer = Runner.LocalPlayer;
 
         if (localPlayer == PlayerRef.None)
             return;
@@ -364,9 +364,28 @@ public sealed class MatchScoreManager : NetworkBehaviour
 
         lastLocalKills = kills;
 
-        LocalScoreChanged?.Invoke(
-            kills,
-            killsToWin);
+        LocalScoreChanged?.Invoke(kills, killsToWin);
+    }
+
+    private MatchSummaryData BuildMatchSummary(PlayerRef winner, int winnerKills)
+    {
+        var currentGameMode = NetworkMatchManager.Instance != null 
+            ? NetworkMatchManager.Instance.SelectedGameMode.ToString()
+                : "Unknown";
+
+        return new MatchSummaryData
+        {
+            WinnerNickname = PlayerNicknameUtility.GetNickname(winner),
+            WinnerKills = winnerKills,
+            MatchDurationSeconds = matchDurationSeconds,
+            GameMode = currentGameMode
+        };
+    }
+
+    private string BuildMatchSummaryJson(PlayerRef winner, int winnerKills)
+    {
+        MatchSummaryData matchSummary = BuildMatchSummary(winner, winnerKills);
+        return JsonUtility.ToJson(matchSummary);   
     }
 
     [ContextMenu("DEBUG - Give Local Player Kill")]
