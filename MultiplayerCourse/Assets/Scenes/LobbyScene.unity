@@ -18156,7 +18156,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::LobbyMusicController
   audioSource: {fileID: 2144265216}
   musicClip: {fileID: 8300000, guid: a6e8b6a315b42b643b420bedeebdb32c, type: 3}
-  volume: 0.019
+  volume: 0.4
   syncCheckInterval: 1
   allowedDrift: 0.01
 --- !u!4 &2144265215
