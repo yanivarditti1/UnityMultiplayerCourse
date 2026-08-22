@@ -577,6 +577,7 @@ GameObject:
   - component: {fileID: 6519764113131402075}
   - component: {fileID: 980689710194745661}
   - component: {fileID: 9033091695269405052}
+  - component: {fileID: 146331799195354139}
   m_Layer: 0
   m_Name: ThrowerPlayerPrefab
   m_TagString: Untagged
@@ -713,6 +714,7 @@ MonoBehaviour:
   - {fileID: 8219403778376105856}
   - {fileID: 6519764113131402075}
   - {fileID: 980689710194745661}
+  - {fileID: 146331799195354139}
   - {fileID: 4687258327691553160}
   - {fileID: 8809978536908367381}
   ForceRemoteRenderTimeframe: 0
@@ -817,6 +819,7 @@ MonoBehaviour:
   heldChairVisual: {fileID: 6975475625302908087}
   chairAudioSource: {fileID: 9033091695269405052}
   chairPickupClip: {fileID: 8300000, guid: 6f23578fa0820574e8a1f8e5101960bc, type: 3}
+  pickupVolume: 1
   _HasChair: 0
 --- !u!114 &2703630289115125951
 MonoBehaviour:
@@ -1130,6 +1133,25 @@ AudioSource:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
+--- !u!114 &146331799195354139
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4252853858376035391}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2a8983876d3f936449867f1fc5ec72a9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::LocalPlayerVisualHider
+  playerRenderers:
+  - {fileID: 182474316468311031}
+  - {fileID: 182474316468311029}
+  - {fileID: 182474316468311029}
+  - {fileID: 182474316468311027}
+  - {fileID: 182474316468311025}
+  - {fileID: 182474316468311039}
 --- !u!1 &5452263724420179063
 GameObject:
   m_ObjectHideFlags: 0
@@ -1729,6 +1751,31 @@ MonoBehaviour:
 --- !u!4 &182474316463391735 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 400288, guid: e729e33f4bb379b4aaad01113afc4213, type: 3}
+  m_PrefabInstance: {fileID: 182474316463003735}
+  m_PrefabAsset: {fileID: 0}
+--- !u!137 &182474316468311025 stripped
+SkinnedMeshRenderer:
+  m_CorrespondingSourceObject: {fileID: 13700006, guid: e729e33f4bb379b4aaad01113afc4213, type: 3}
+  m_PrefabInstance: {fileID: 182474316463003735}
+  m_PrefabAsset: {fileID: 0}
+--- !u!137 &182474316468311027 stripped
+SkinnedMeshRenderer:
+  m_CorrespondingSourceObject: {fileID: 13700004, guid: e729e33f4bb379b4aaad01113afc4213, type: 3}
+  m_PrefabInstance: {fileID: 182474316463003735}
+  m_PrefabAsset: {fileID: 0}
+--- !u!137 &182474316468311029 stripped
+SkinnedMeshRenderer:
+  m_CorrespondingSourceObject: {fileID: 13700002, guid: e729e33f4bb379b4aaad01113afc4213, type: 3}
+  m_PrefabInstance: {fileID: 182474316463003735}
+  m_PrefabAsset: {fileID: 0}
+--- !u!137 &182474316468311031 stripped
+SkinnedMeshRenderer:
+  m_CorrespondingSourceObject: {fileID: 13700000, guid: e729e33f4bb379b4aaad01113afc4213, type: 3}
+  m_PrefabInstance: {fileID: 182474316463003735}
+  m_PrefabAsset: {fileID: 0}
+--- !u!137 &182474316468311039 stripped
+SkinnedMeshRenderer:
+  m_CorrespondingSourceObject: {fileID: 13700008, guid: e729e33f4bb379b4aaad01113afc4213, type: 3}
   m_PrefabInstance: {fileID: 182474316463003735}
   m_PrefabAsset: {fileID: 0}
 --- !u!95 &182474316472397111 stripped

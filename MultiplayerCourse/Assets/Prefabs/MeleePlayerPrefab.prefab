@@ -490,6 +490,7 @@ GameObject:
   - component: {fileID: 1586945917643922183}
   - component: {fileID: 4857043293127329197}
   - component: {fileID: 6885725052989452057}
+  - component: {fileID: 7225257026632043254}
   m_Layer: 0
   m_Name: MeleePlayerPrefab
   m_TagString: Untagged
@@ -627,6 +628,7 @@ MonoBehaviour:
   - {fileID: -6646215845145137144}
   - {fileID: 1586945917643922183}
   - {fileID: 4857043293127329197}
+  - {fileID: 7225257026632043254}
   - {fileID: 6266351309998327707}
   - {fileID: 6029332601057970713}
   ForceRemoteRenderTimeframe: 0
@@ -1065,6 +1067,20 @@ AudioSource:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
+--- !u!114 &7225257026632043254
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4252853858376035391}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2a8983876d3f936449867f1fc5ec72a9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::LocalPlayerVisualHider
+  playerRenderers:
+  - {fileID: 1730198756732051416}
 --- !u!1 &4265908227339189125
 GameObject:
   m_ObjectHideFlags: 0
@@ -1666,6 +1682,14 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 7040438288519266060}
     m_Modifications:
+    - target: {fileID: 1289489598981699342, guid: ebc4580c7ed532b4cb07171aed640d52, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1345698752400476813, guid: ebc4580c7ed532b4cb07171aed640d52, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 2858590657992640146, guid: ebc4580c7ed532b4cb07171aed640d52, type: 3}
       propertyPath: m_Name
       value: VisualRoot
@@ -1742,6 +1766,11 @@ PrefabInstance:
       insertIndex: -1
       addedObject: {fileID: 6266351309998327707}
   m_SourcePrefab: {fileID: 100100000, guid: ebc4580c7ed532b4cb07171aed640d52, type: 3}
+--- !u!137 &1730198756732051416 stripped
+SkinnedMeshRenderer:
+  m_CorrespondingSourceObject: {fileID: 1456449872743509261, guid: ebc4580c7ed532b4cb07171aed640d52, type: 3}
+  m_PrefabInstance: {fileID: 879538845427446485}
+  m_PrefabAsset: {fileID: 0}
 --- !u!4 &2365707333680148221 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 3233603921231911976, guid: ebc4580c7ed532b4cb07171aed640d52, type: 3}
