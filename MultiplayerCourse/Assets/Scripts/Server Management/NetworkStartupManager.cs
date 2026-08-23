@@ -3,7 +3,6 @@ using System.Collections;
 using UnityEngine;
 using System.Threading.Tasks;
 using Fusion;
-using UnityEditor.PackageManager;
 using UnityEngine.SceneManagement;
 
 public class NetworkStartupManager : MonoBehaviour

@@ -1,5 +1,4 @@
 using Fusion;
-using UnityEngine;
 
 public struct LobbyPlayerState : INetworkStruct
 {

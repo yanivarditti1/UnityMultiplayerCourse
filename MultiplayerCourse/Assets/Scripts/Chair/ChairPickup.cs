@@ -1,4 +1,4 @@
- using Fusion;
+using Fusion;
 using UnityEngine;
 
 public sealed class ChairPickup : NetworkBehaviour

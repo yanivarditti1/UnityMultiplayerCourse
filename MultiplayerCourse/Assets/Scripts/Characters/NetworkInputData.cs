@@ -1,6 +1,5 @@
 using Fusion;
 using UnityEngine;
-using UnityEngine.InputSystem;
 
 
 public struct NetworkInputData : INetworkInput
